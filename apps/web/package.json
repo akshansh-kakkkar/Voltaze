@@ -8,11 +8,13 @@
 		"start": "next start"
 	},
 	"dependencies": {
-		"@voltaze/env": "workspace:*",
-		"@voltaze/ui": "workspace:*",
 		"@neondatabase/auth": "^0.2.0-beta.1",
 		"@prisma/client": "catalog:",
+		"@voltaze/schema": "workspace:*",
+		"@voltaze/env": "workspace:*",
+		"@voltaze/ui": "workspace:*",
 		"babel-plugin-react-compiler": "^1.0.0",
+		"date-fns": "^4.1.0",
 		"dotenv": "catalog:",
 		"lucide-react": "catalog:",
 		"next": "^16.2.0",

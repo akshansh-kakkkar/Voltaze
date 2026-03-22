@@ -45,6 +45,9 @@ router.post(
 	ctrl.purchase,
 );
 
+// User Tickets (authenticated)
+router.get("/user", requireAuth, ctrl.getUserTickets);
+
 // Check-in (authenticated)
 router.post(
 	"/check-in",

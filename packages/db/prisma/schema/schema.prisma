@@ -177,6 +177,23 @@ enum FormFieldType {
   @@schema("public")
 }
 
+enum RegistrationStatus {
+  PENDING
+  APPROVED
+  DECLINED
+  CANCELLED
+
+  @@schema("public")
+}
+
+enum EventMediaType {
+  IMAGE
+  VIDEO
+  DOCUMENT
+
+  @@schema("public")
+}
+
 model UserProfile {
   id      String @id @default(cuid())
   userId  String @unique
@@ -267,7 +284,8 @@ model Event {
   postalCode String?
   latitude   Float?
   longitude  Float?
-  onlineUrl  String?
+  onlineUrl    String?
+  recordingUrl String?
 
   timezone String   @default("UTC")
   startsAt DateTime
@@ -298,9 +316,12 @@ model Event {
   formFields   FormField[]
   invites      Invite[]
   waitlist     Waitlist[]
-  updates      EventUpdate[]
-  certificates Certificate[]
-  analytics    EventAnalytics[]
+  updates       EventUpdate[]
+  certificates  Certificate[]
+  analytics     EventAnalytics[]
+  media         EventMedia[]
+  savedBy       SavedEvent[]
+  registrations EventRegistration[]
 
   @@index([orgId])
   @@index([seriesId])
@@ -576,6 +597,66 @@ model Invite {
   @@schema("public")
 }
 
+model EventMedia {
+  id       String         @id @default(cuid())
+  eventId  String
+  url      String
+  type     EventMediaType @default(IMAGE)
+  caption  String?
+  position Int            @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@map("event_media")
+  @@schema("public")
+}
+
+model SavedEvent {
+  userId  String
+  eventId String
+
+  createdAt DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@id([userId, eventId])
+  @@index([userId])
+  @@index([eventId])
+  @@map("saved_events")
+  @@schema("public")
+}
+
+/// Free RSVP / request-to-join when `Event.isApprovalRequired` or for no-ticket flows (Luma-style).
+model EventRegistration {
+  id     String             @id @default(cuid())
+  eventId String
+  userId String?
+  email  String
+  name   String?
+  status RegistrationStatus @default(PENDING)
+
+  /// Optional custom question answers keyed by field id or label.
+  answers Json?
+
+  reviewedAt DateTime?
+  reviewNote String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, email])
+  @@index([eventId, status])
+  @@index([userId])
+  @@map("event_registrations")
+  @@schema("public")
+}
+
 model TicketTier {
   id          String           @id @default(cuid())
   eventId     String
@@ -636,11 +717,17 @@ model Ticket {
   status      TicketStatus @default(VALID)
   metadata    Json?
 
+  /// Seats covered by this row (one QR/code can represent multiple seats until you split into per-attendee rows).
+  quantity Int @default(1)
+
+  attendeeName  String?
+  attendeeEmail String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tier      TicketTier     @relation(fields: [tierId], references: [id], onDelete: Restrict)
-  promoCode PromoCode?     @relation(fields: [promoCodeId], references: [id], onDelete: SetNull)
+  tier      TicketTier @relation(fields: [tierId], references: [id], onDelete: Restrict)
+  promoCode PromoCode? @relation(fields: [promoCodeId], references: [id], onDelete: SetNull)
   payment   Payment?
   checkIns  CheckIn[]
   responses FormResponse[]
@@ -671,10 +758,14 @@ model Payment {
   id       String @id @default(cuid())
   ticketId String @unique
 
+  /// Extra ticket rows included in the same Razorpay order (multi-tier cart).
+  bundleTicketIds Json?
+
   razorpayOrderId  String?                @unique
   razorpayPaymentId String?               @unique
   orderStatus      RazorpayOrderStatus @default(CREATED)
 
+  /// Amount in smallest currency unit (paise for INR).
   amount   Int
   currency String @default("INR")
 

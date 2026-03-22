@@ -70,110 +70,212 @@ export async function validatePromoCode(eventId: string, code: string) {
 
 // ── Purchase ──
 
+type CartLine = { tierId: string; quantity: number };
+
+function normalizeCart(input: PurchaseTicketInput): CartLine[] {
+	if (input.items?.length) return input.items;
+	if (input.tierId) return [{ tierId: input.tierId, quantity: input.quantity }];
+	throw new AppError("Invalid purchase payload", 400, "INVALID_PURCHASE");
+}
+
+/** `tier.price` is stored in whole INR (rupees). Razorpay uses paise. */
+function rupeesToPaise(rupees: number): number {
+	return Math.round(rupees * 100);
+}
+
 export async function purchaseTicket(
 	eventId: string,
 	userId: string,
 	userEmail: string,
 	input: PurchaseTicketInput,
 ) {
-	const tier = await db.ticketTier.findUnique({ where: { id: input.tierId } });
-	if (!tier || tier.eventId !== eventId) throw new NotFoundError("Ticket tier");
+	const lines = normalizeCart(input);
+	const now = new Date();
 
-	// Check availability
-	if (tier.quantity !== null && tier.sold + input.quantity > tier.quantity) {
-		throw new AppError("Not enough tickets available", 400, "SOLD_OUT");
+	const tiers = await db.ticketTier.findMany({
+		where: { id: { in: lines.map((l) => l.tierId) } },
+	});
+	const tierById = new Map(tiers.map((t) => [t.id, t]));
+
+	for (const line of lines) {
+		const tier = tierById.get(line.tierId);
+		if (!tier || tier.eventId !== eventId) {
+			throw new NotFoundError("Ticket tier");
+		}
+		if (tier.quantity !== null && tier.sold + line.quantity > tier.quantity) {
+			throw new AppError("Not enough tickets available", 400, "SOLD_OUT");
+		}
+		if (tier.salesStart && now < tier.salesStart) {
+			throw new AppError("Sales haven't started", 400, "NOT_ON_SALE");
+		}
+		if (tier.salesEnd && now > tier.salesEnd) {
+			throw new AppError("Sales have ended", 400, "SALES_ENDED");
+		}
+		if (line.quantity < tier.minPerOrder || line.quantity > tier.maxPerOrder) {
+			throw new AppError(
+				`Quantity must be between ${tier.minPerOrder} and ${tier.maxPerOrder}`,
+				400,
+				"INVALID_QUANTITY",
+			);
+		}
 	}
 
-	// Check sales window
-	const now = new Date();
-	if (tier.salesStart && now < tier.salesStart)
-		throw new AppError("Sales haven't started", 400, "NOT_ON_SALE");
-	if (tier.salesEnd && now > tier.salesEnd)
-		throw new AppError("Sales have ended", 400, "SALES_ENDED");
+	let subtotalRupee = 0;
+	for (const line of lines) {
+		const tier = tierById.get(line.tierId);
+		if (!tier) throw new NotFoundError("Ticket tier");
+		subtotalRupee += tier.price * line.quantity;
+	}
 
-	// Apply promo code
-	let discount = 0;
+	let discountRupee = 0;
 	let promoCodeId: string | undefined;
 	if (input.promoCode) {
 		const promo = await validatePromoCode(eventId, input.promoCode);
 		if (promo) {
 			promoCodeId = promo.id;
-			discount =
+			discountRupee =
 				promo.type === "PERCENT"
-					? Math.floor((tier.price * promo.value) / 100)
-					: promo.value;
+					? Math.floor((subtotalRupee * promo.value) / 100)
+					: Math.min(promo.value, subtotalRupee);
 		}
 	}
 
-	const finalPrice = Math.max(0, tier.price - discount) * input.quantity;
-	const ticketCode = generateTicketCode();
+	const totalRupee = Math.max(0, subtotalRupee - discountRupee);
+	const totalPaise = rupeesToPaise(totalRupee);
 
-	// Free ticket — issue immediately
-	if (finalPrice === 0) {
-		const ticket = await db.$transaction(async (tx) => {
-			await tx.ticketTier.update({
-				where: { id: tier.id },
-				data: { sold: { increment: input.quantity } },
-			});
+	const rzpClientOrderId = generateId("order");
 
+	// Free order — issue immediately
+	if (totalPaise === 0) {
+		const tickets = await db.$transaction(async (tx) => {
+			const created: Awaited<ReturnType<typeof tx.ticket.create>>[] = [];
+			for (const line of lines) {
+				const tier = tierById.get(line.tierId);
+				if (!tier) throw new NotFoundError("Ticket tier");
+				await tx.ticketTier.update({
+					where: { id: tier.id },
+					data: { sold: { increment: line.quantity } },
+				});
+				created.push(
+					await tx.ticket.create({
+						data: {
+							code: generateTicketCode(),
+							tierId: tier.id,
+							userId,
+							promoCodeId,
+							status: "VALID",
+							quantity: line.quantity,
+						},
+					}),
+				);
+			}
 			if (promoCodeId) {
 				await tx.promoCode.update({
 					where: { id: promoCodeId },
 					data: { timesUsed: { increment: 1 } },
 				});
 			}
-
-			return tx.ticket.create({
-				data: {
-					code: ticketCode,
-					tierId: tier.id,
-					userId,
-					promoCodeId,
-					status: "VALID",
-				},
-			});
+			return created;
 		});
 
-		return { ticket, paymentRequired: false };
+		const primaryTicket = tickets.at(0);
+		if (!primaryTicket) {
+			throw new AppError("No tickets created", 500, "INTERNAL_ERROR");
+		}
+
+		return {
+			tickets,
+			primaryTicket,
+			paymentRequired: false,
+		};
 	}
 
-	// Paid ticket — create Razorpay order
-	const orderId = generateId("order");
+	// Paid — one Razorpay order for the whole cart; payment row on primary ticket
+	const firstLine = lines.at(0);
+	if (!firstLine) throw new AppError("Empty cart", 400, "INVALID_INPUT");
+	const primaryTier = tierById.get(firstLine.tierId);
+	if (!primaryTier) throw new NotFoundError("Ticket tier");
 
-	const ticket = await db.$transaction(async (tx) => {
-		const t = await tx.ticket.create({
-			data: {
-				code: ticketCode,
-				tierId: tier.id,
-				userId,
-				promoCodeId,
-				status: "VALID",
-			},
-		});
+	const { tickets, razorpayOrderId } = await db.$transaction(async (tx) => {
+		const created: Awaited<ReturnType<typeof tx.ticket.create>>[] = [];
+		for (const line of lines) {
+			const tier = tierById.get(line.tierId);
+			if (!tier) throw new NotFoundError("Ticket tier");
+			created.push(
+				await tx.ticket.create({
+					data: {
+						code: generateTicketCode(),
+						tierId: tier.id,
+						userId,
+						promoCodeId,
+						status: "VALID",
+						quantity: line.quantity,
+					},
+				}),
+			);
+		}
+		const primary = created.at(0);
+		if (!primary)
+			throw new AppError("No tickets created", 500, "INTERNAL_ERROR");
+		const rest = created.slice(1);
 
 		const rzpOrder = await createRazorpayOrder({
-			orderId,
-			amount: finalPrice,
+			orderId: rzpClientOrderId,
+			amount: totalPaise,
 			customerId: userId,
 			customerEmail: userEmail,
-			description: `Ticket purchase for event at ${tier.eventId}`,
-			receipt: t.id,
+			description: `Tickets for event ${eventId}`,
+			receipt: primary.id,
 		});
 
 		await tx.payment.create({
 			data: {
-				ticketId: t.id,
+				ticketId: primary.id,
+				bundleTicketIds: rest.length ? rest.map((t) => t.id) : undefined,
 				razorpayOrderId: rzpOrder.id,
 				orderStatus: "CREATED",
-				amount: finalPrice,
-				currency: tier.currency,
+				amount: totalPaise,
+				currency: primaryTier.currency,
 			},
 		});
 
-		return t;
+		if (promoCodeId) {
+			await tx.promoCode.update({
+				where: { id: promoCodeId },
+				data: { timesUsed: { increment: 1 } },
+			});
+		}
+
+		return { tickets: created, razorpayOrderId: rzpOrder.id };
 	});
 
-	return { ticket, paymentRequired: true, orderId };
+	const primaryTicket = tickets.at(0);
+	if (!primaryTicket) {
+		throw new AppError("No tickets created", 500, "INTERNAL_ERROR");
+	}
+
+	return {
+		tickets,
+		primaryTicket,
+		paymentRequired: true,
+		razorpayOrderId,
+		amountPaise: totalPaise,
+		currency: primaryTier.currency,
+	};
+}
+
+// ── User Tickets ──
+
+export async function getUserTickets(userId: string) {
+	return db.ticket.findMany({
+		where: { userId },
+		include: {
+			tier: {
+				include: { event: true },
+			},
+		},
+		orderBy: { createdAt: "desc" },
+	});
 }
 
 // ── Check-in ──

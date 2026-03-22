@@ -61,16 +61,20 @@ export async function handlePaymentSucceeded(payload: WebhookPayload) {
 			},
 		});
 
-		// Increment sold count for the ticket tier
-		const ticket = await tx.ticket.findUnique({
-			where: { id: payment.ticketId },
-		});
+		const extraIds = Array.isArray(payment.bundleTicketIds)
+			? (payment.bundleTicketIds as string[])
+			: [];
 
-		if (ticket) {
-			await tx.ticketTier.update({
-				where: { id: ticket.tierId },
-				data: { sold: { increment: 1 } },
-			});
+		const ticketIds = [payment.ticketId, ...extraIds];
+
+		for (const tid of ticketIds) {
+			const ticket = await tx.ticket.findUnique({ where: { id: tid } });
+			if (ticket) {
+				await tx.ticketTier.update({
+					where: { id: ticket.tierId },
+					data: { sold: { increment: ticket.quantity } },
+				});
+			}
 		}
 	});
 }

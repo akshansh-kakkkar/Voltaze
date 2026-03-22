@@ -1,23 +1,24 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 
 import "../index.css";
-import Header from "@/components/header";
 import Providers from "@/components/providers";
+import { SiteHeader } from "@/components/site-header";
 
-const geistSans = Geist({
-	variable: "--font-geist-sans",
+const inter = Inter({
+	variable: "--font-inter",
 	subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-	variable: "--font-geist-mono",
+const spaceGrotesk = Space_Grotesk({
+	variable: "--font-display",
 	subsets: ["latin"],
+	weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
-	title: "voltaze",
-	description: "voltaze",
+	title: "Voltaze — Events & tickets",
+	description: "Host and discover events. The Kinetic Monolith.",
 };
 
 export default function RootLayout({
@@ -28,11 +29,11 @@ export default function RootLayout({
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<body
-				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+				className={`${inter.variable} ${spaceGrotesk.variable} bg-background font-sans text-foreground antialiased`}
 			>
 				<Providers>
-					<div className="grid h-svh grid-rows-[auto_1fr]">
-						<Header />
+					<div className="grid min-h-svh grid-rows-[auto_1fr]">
+						<SiteHeader />
 						{children}
 					</div>
 				</Providers>

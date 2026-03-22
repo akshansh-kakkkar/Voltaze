@@ -8,11 +8,13 @@ export const env = createEnv({
 	},
 	client: {
 		NEXT_PUBLIC_SERVER_URL: z.url(),
+		NEXT_PUBLIC_RAZORPAY_KEY_ID: z.string().min(1),
 	},
 	runtimeEnv: {
 		NEON_AUTH_BASE_URL: process.env.NEON_AUTH_BASE_URL,
 		NEON_AUTH_COOKIE_SECRET: process.env.NEON_AUTH_COOKIE_SECRET,
 		NEXT_PUBLIC_SERVER_URL: process.env.NEXT_PUBLIC_SERVER_URL,
+		NEXT_PUBLIC_RAZORPAY_KEY_ID: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
 	},
 	emptyStringAsUndefined: true,
 });

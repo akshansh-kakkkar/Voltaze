@@ -21,8 +21,6 @@ declare global {
  * Auth middleware — validates the NeonDB Auth session.
  *
  * Expects a Bearer token in the Authorization header.
- * The token is verified against the NeonDB Auth API
- * which returns the authenticated user's info.
  */
 export async function requireAuth(
 	req: Request,
@@ -40,30 +38,12 @@ export async function requireAuth(
 			throw new UnauthorizedError("Missing token");
 		}
 
-		// Decode the JWT payload to extract user info.
-		// NeonDB Auth tokens are JWTs with user claims.
-		const parts = token.split(".");
-		if (parts.length !== 3) {
-			throw new UnauthorizedError("Invalid token format");
+		const user = await authenticateBearerToken(token);
+		if (!user) {
+			throw new UnauthorizedError("Invalid or expired token");
 		}
 
-		const payload = JSON.parse(Buffer.from(parts[1]!, "base64url").toString());
-
-		if (!payload.sub || !payload.email) {
-			throw new UnauthorizedError("Invalid token claims");
-		}
-
-		// Check expiration
-		if (payload.exp && Date.now() / 1000 > payload.exp) {
-			throw new UnauthorizedError("Token expired");
-		}
-
-		req.user = {
-			id: payload.sub,
-			email: payload.email,
-			name: payload.name ?? "",
-			image: payload.picture,
-		};
+		req.user = user;
 
 		await upsertUserProfile(req.user);
 
@@ -92,25 +72,11 @@ export async function optionalAuth(
 
 	try {
 		const token = authHeader.slice(7);
-		const parts = token.split(".");
-		if (parts.length !== 3) return next();
+		const user = await authenticateBearerToken(token);
+		if (!user) return next();
 
-		const payload = JSON.parse(Buffer.from(parts[1]!, "base64url").toString());
-
-		if (
-			payload.sub &&
-			payload.email &&
-			(!payload.exp || Date.now() / 1000 <= payload.exp)
-		) {
-			req.user = {
-				id: payload.sub,
-				email: payload.email,
-				name: payload.name ?? "",
-				image: payload.picture,
-			};
-
-			await upsertUserProfile(req.user);
-		}
+		req.user = user;
+		await upsertUserProfile(req.user);
 	} catch {
 		// Silently continue without auth
 	}
@@ -133,4 +99,108 @@ async function upsertUserProfile(user: AuthUser) {
 			image: user.image || null,
 		},
 	});
+}
+
+async function authenticateBearerToken(
+	token: string,
+): Promise<AuthUser | null> {
+	const jwtPayload = decodeJwtPayload(token);
+	if (jwtPayload) {
+		const jwtUser = toAuthUser(jwtPayload);
+		if (jwtUser) return jwtUser;
+	}
+
+	return await fetchAuthUserFromNeon(token);
+}
+
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+	const parts = token.split(".");
+	if (parts.length !== 3) return null;
+	const payloadPart = parts[1];
+	if (!payloadPart) return null;
+
+	try {
+		return JSON.parse(Buffer.from(payloadPart, "base64url").toString());
+	} catch {
+		return null;
+	}
+}
+
+function toAuthUser(payload: Record<string, unknown>): AuthUser | null {
+	const exp = typeof payload.exp === "number" ? payload.exp : undefined;
+	if (exp && Date.now() / 1000 > exp) return null;
+
+	const id =
+		typeof payload.sub === "string"
+			? payload.sub
+			: typeof payload.userId === "string"
+				? payload.userId
+				: null;
+	const email = typeof payload.email === "string" ? payload.email : null;
+
+	if (!id || !email) return null;
+
+	return {
+		id,
+		email,
+		name: typeof payload.name === "string" ? payload.name : "",
+		image: typeof payload.picture === "string" ? payload.picture : undefined,
+	};
+}
+
+async function fetchAuthUserFromNeon(token: string): Promise<AuthUser | null> {
+	const upstreamBase = process.env.NEON_AUTH_BASE_URL?.replace(/\/$/, "");
+	const webOrigin = process.env.CORS_ORIGIN?.replace(/\/$/, "");
+	const sessionEndpoints = [
+		upstreamBase ? `${upstreamBase}/get-session` : null,
+		webOrigin ? `${webOrigin}/api/auth/get-session` : null,
+	].filter((url): url is string => Boolean(url));
+
+	if (!sessionEndpoints.length) return null;
+
+	try {
+		for (const sessionEndpoint of sessionEndpoints) {
+			const response = await fetch(sessionEndpoint, {
+				method: "GET",
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			});
+
+			if (!response.ok) continue;
+
+			const sessionData = (await response.json()) as {
+				user?: {
+					id?: unknown;
+					email?: unknown;
+					name?: unknown;
+					image?: unknown;
+				};
+			};
+
+			if (
+				typeof sessionData.user?.id !== "string" ||
+				typeof sessionData.user?.email !== "string"
+			) {
+				continue;
+			}
+
+			return {
+				id: sessionData.user.id,
+				email: sessionData.user.email,
+				name:
+					typeof sessionData.user.name === "string"
+						? sessionData.user.name
+						: "",
+				image:
+					typeof sessionData.user.image === "string"
+						? sessionData.user.image
+						: undefined,
+			};
+		}
+
+		return null;
+	} catch {
+		return null;
+	}
 }

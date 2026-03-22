@@ -6,7 +6,7 @@ import { dateSchema, idSchema } from "./common";
 export const createTicketTierSchema = z.object({
 	name: z.string().min(1).max(100),
 	description: z.string().max(500).optional(),
-	price: z.number().int().min(0).default(0), // paise
+	price: z.number().int().min(0).default(0), // whole INR (rupees); server converts to paise for Razorpay
 	currency: z.string().length(3).default("INR"),
 	quantity: z.number().int().positive().optional(), // null = unlimited
 	minPerOrder: z.number().int().min(1).default(1),
@@ -47,11 +47,26 @@ export type UpdatePromoCodeInput = z.infer<typeof updatePromoCodeSchema>;
 
 // ── Purchase Ticket ──
 
-export const purchaseTicketSchema = z.object({
-	tierId: idSchema,
-	quantity: z.number().int().min(1).max(10).default(1),
-	promoCode: z.string().optional(),
-});
+export const purchaseTicketSchema = z
+	.object({
+		tierId: idSchema.optional(),
+		quantity: z.number().int().min(1).max(10).default(1),
+		items: z
+			.array(
+				z.object({
+					tierId: idSchema,
+					quantity: z.number().int().min(1).max(10),
+				}),
+			)
+			.min(1)
+			.max(20)
+			.optional(),
+		promoCode: z.string().optional(),
+	})
+	.refine((v) => Boolean(v.items?.length || v.tierId), {
+		message: "Provide tierId or items",
+		path: ["tierId"],
+	});
 
 export type PurchaseTicketInput = z.infer<typeof purchaseTicketSchema>;
 

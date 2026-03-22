@@ -45,6 +45,7 @@ export const createEventSchema = z
 		// Config
 		format: eventFormat.default("IN_PERSON"),
 		visibility: eventVisibility.default("PUBLIC"),
+		status: eventStatus.optional(),
 		capacity: z.number().int().positive().optional(),
 		isApprovalRequired: z.boolean().default(false),
 

@@ -4,8 +4,10 @@ import { NeonAuthUIProvider } from "@neondatabase/auth/react/ui";
 import { Toaster } from "@voltaze/ui/components/sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
+import { useEffect } from "react";
+import { apiClient } from "@/lib/api/client";
 import { authClient } from "@/lib/auth/client";
+import { CartProvider } from "@/lib/cart-context";
 import { ThemeProvider } from "./theme-provider";
 
 type AuthLinkProps = {
@@ -16,6 +18,13 @@ type AuthLinkProps = {
 
 export default function Providers({ children }: { children: React.ReactNode }) {
 	const router = useRouter();
+
+	useEffect(() => {
+		apiClient.setAuthTokenGetter(async () => {
+			const { data: session } = await authClient.getSession();
+			return session?.session?.token ?? null;
+		});
+	}, []);
 
 	const navigate = (href: string) => {
 		router.push(href as never);
@@ -49,12 +58,14 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 		>
 			<ThemeProvider
 				attribute="class"
-				defaultTheme="system"
+				defaultTheme="light"
 				enableSystem
 				disableTransitionOnChange
 			>
-				{children}
-				<Toaster richColors />
+				<CartProvider>
+					{children}
+					<Toaster richColors />
+				</CartProvider>
 			</ThemeProvider>
 		</NeonAuthUIProvider>
 	);

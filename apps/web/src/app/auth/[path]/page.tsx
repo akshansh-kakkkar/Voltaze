@@ -15,8 +15,10 @@ export default async function AuthPage({
 	const { path } = await params;
 
 	return (
-		<main className="container mx-auto flex max-w-3xl grow flex-col items-center justify-center p-4">
-			<AuthView path={path} />
+		<main className="flex min-h-svh grow flex-col items-center justify-center bg-muted px-6 py-16">
+			<div className="w-full max-w-md bg-card p-8 md:p-10">
+				<AuthView path={path} />
+			</div>
 		</main>
 	);
 }

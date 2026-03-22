@@ -66,6 +66,9 @@ export async function getEventBySlug(slug: string) {
 		},
 	});
 	if (!event) throw new NotFoundError("Event");
+	if (event.status !== "PUBLISHED") {
+		throw new NotFoundError("Event");
+	}
 	return event;
 }
 

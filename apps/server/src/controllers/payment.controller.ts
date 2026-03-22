@@ -22,55 +22,76 @@ export async function webhook(req: Request, res: Response) {
 }
 
 export async function initializePayment(req: Request, res: Response) {
-	const { ticketId, amount, description } = req.body;
+	const { ticketId, amount, description } = req.body as {
+		ticketId?: string;
+		amount?: number;
+		description?: string;
+	};
 
-	// Verify ticket exists and get tier info
+	if (!ticketId) {
+		throw new AppError("ticketId is required", 400, "INVALID_BODY");
+	}
+
 	const ticket = await db.ticket.findUnique({
 		where: { id: ticketId },
-		include: { tier: true },
+		include: { tier: true, payment: true },
 	});
 
 	if (!ticket) {
 		throw new NotFoundError("Ticket");
 	}
 
-	// Fetch user profile to get email
+	// Purchase flow already created Razorpay order — return it (idempotent).
+	if (ticket.payment?.razorpayOrderId) {
+		return res.json({
+			ok: true,
+			payment: {
+				id: ticket.payment.id,
+				razorpayOrderId: ticket.payment.razorpayOrderId,
+				amount: ticket.payment.amount,
+				currency: ticket.payment.currency,
+			},
+		});
+	}
+
 	const userProfile = await db.userProfile.findUnique({
 		where: { userId: ticket.userId },
 	});
 
 	const customerEmail = userProfile?.email || `${ticket.userId}@voltaze.local`;
-
-	// Create order in DB
 	const orderId = generateId("order");
-	const payment = await db.payment.create({
-		data: {
-			ticketId,
-			amount, // amount should be in paise
-			orderStatus: "CREATED",
-		},
-	});
+	const amountPaise = amount ?? 0;
 
-	// Create Razorpay order
+	const paymentRow =
+		ticket.payment ??
+		(await db.payment.create({
+			data: {
+				ticketId,
+				amount: amountPaise,
+				orderStatus: "CREATED",
+				currency: ticket.tier.currency,
+			},
+		}));
+
 	const razorpayOrder = await createRazorpayOrder({
 		orderId,
-		amount,
+		amount: amountPaise,
 		customerId: ticket.userId,
 		customerEmail,
-		description,
-		receipt: payment.id,
+		description: description ?? "Voltaze tickets",
+		receipt: paymentRow.id,
 	});
 
-	// Update payment with Razorpay order ID
 	const updatedPayment = await db.payment.update({
-		where: { id: payment.id },
+		where: { id: paymentRow.id },
 		data: {
 			razorpayOrderId: razorpayOrder.id,
+			...(amountPaise > 0 ? { amount: amountPaise } : {}),
 		},
 	});
 
 	res.json({
-		success: true,
+		ok: true,
 		payment: {
 			id: updatedPayment.id,
 			razorpayOrderId: razorpayOrder.id,
