@@ -81,9 +81,9 @@ enum PaymentGateway {
 // ─────────────────────────────────────────────
 
 model User {
-  id            String   @id @default(cuid())
+  id            String   @id @default(ulid())
   name          String?
-  email         String   @unique
+  email         String
   emailVerified Boolean  @default(false)
   image         String?
   role          UserRole @default(USER)
@@ -93,51 +93,59 @@ model User {
   accounts      Account[]
   sessions      Session[]
   attendees     Attendee[]
-  hostedEvents  Event[]        @relation("hostedEvents")
+  hostedEvents  Event[]  @relation("hostedEvents")
+
+  @@unique([email])
+  @@map("user")
 }
 
 model Session {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  token     String   @unique
+  id        String   @id @default(ulid())
   expiresAt DateTime
+  token     String  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([token])
   @@index([userId])
+  @@map("session")
 }
 
 model Account {
-  id                String   @id @default(cuid())
-  userId            String
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  provider          String
-  providerAccountId String
-  refreshToken      String?
-  accessToken       String?
-  expiresAt         Int?
-  tokenType         String?
-  scope             String?
-  idToken           String?
-  sessionState      String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                    String    @id @default(ulid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
-  @@unique([provider, providerAccountId])
   @@index([userId])
+  @@map("account")
 }
 
 // identifier = email or phone, no userId required — supports pre-signup verification
 model Verification {
-  id         String   @id @default(cuid())
-  identifier String   // email or phone number
-  token      String   @unique
-  type       String   // "email" | "phone" | "twoFactor"
+  id         String   @id
+  identifier String 
+  value      String
   expiresAt  DateTime
   createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([identifier])
+  @@map("verification")
 }
 
 // ─────────────────────────────────────────────
