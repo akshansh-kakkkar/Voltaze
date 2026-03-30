@@ -3,9 +3,13 @@ import { z } from "zod";
 
 export type { Attendee };
 
+const ulidSchema = z
+	.string()
+	.regex(/^[0-9A-HJKMNP-TV-Z]{26}$/i, "Invalid ULID");
+
 export const attendeeSchema = z.object({
 	id: z.string().cuid(),
-	userId: z.string().cuid().nullable(),
+	userId: ulidSchema.nullable(),
 	eventId: z.string().cuid(),
 	name: z.string(),
 	email: z.string().email(),
@@ -21,7 +25,7 @@ export const createAttendeeSchema = attendeeSchema
 		updatedAt: true,
 	})
 	.extend({
-		userId: z.string().cuid().optional().nullable(),
+		userId: ulidSchema.optional().nullable(),
 		eventId: z.string().cuid(),
 		name: z.string().min(1).max(100),
 		email: z.string().email(),
@@ -44,7 +48,7 @@ export const updateAttendeeSchema = createAttendeeSchema.partial().extend({
 
 export const attendeeFilterSchema = z.object({
 	eventId: z.string().cuid().optional(),
-	userId: z.string().cuid().optional(),
+	userId: ulidSchema.optional(),
 	search: z.string().optional(),
 	page: z.coerce.number().int().positive().default(1),
 	limit: z.coerce.number().int().positive().max(100).default(20),

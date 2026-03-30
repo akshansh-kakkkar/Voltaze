@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+const ulidSchema = z
+	.string()
+	.regex(/^[0-9A-HJKMNP-TV-Z]{26}$/i, "Invalid ULID");
+
 export const idParamSchema = z.object({
 	id: z.string().cuid(),
 });
@@ -29,5 +33,5 @@ export const paymentIdParamSchema = z.object({
 });
 
 export const userIdParamSchema = z.object({
-	userId: z.string().cuid(),
+	userId: ulidSchema,
 });

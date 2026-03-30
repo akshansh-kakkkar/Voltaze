@@ -3,11 +3,34 @@ import { z } from "zod";
 
 export type { Event, TicketTier };
 
+const ulidSchema = z
+	.string()
+	.regex(/^[0-9A-HJKMNP-TV-Z]{26}$/i, "Invalid ULID");
+
+function validateDateRange(
+	startDate: Date | null | undefined,
+	endDate: Date | null | undefined,
+	path: string,
+	ctx: z.RefinementCtx,
+) {
+	if (!startDate || !endDate) {
+		return;
+	}
+
+	if (endDate < startDate) {
+		ctx.addIssue({
+			code: "custom",
+			path: [path],
+			message: `${path} must be greater than or equal to start date`,
+		});
+	}
+}
+
 export const eventSchema = z.object({
 	id: z.string().cuid(),
 	name: z.string(),
 	slug: z.string(),
-	userId: z.string().cuid().nullable(),
+	userId: ulidSchema.nullable(),
 	coverUrl: z.string(),
 	thumbnail: z.string(),
 	venueName: z.string(),
@@ -48,40 +71,57 @@ export const createEventSchema = eventSchema
 		mode: z.enum(["ONLINE", "OFFLINE"]),
 		visibility: z.enum(["PUBLIC", "PRIVATE"]),
 		description: z.string().min(1).max(5000),
+	})
+	.superRefine((value, ctx) => {
+		validateDateRange(value.startDate, value.endDate, "endDate", ctx);
 	});
 
-export const updateEventSchema = createEventSchema.partial().extend({
-	name: z.string().min(1).max(200).optional(),
-	coverUrl: z.string().url().optional(),
-	thumbnail: z.string().url().optional(),
-	venueName: z.string().min(1).max(200).optional(),
-	address: z.string().min(1).max(500).optional(),
-	latitude: z.string().optional(),
-	longitude: z.string().optional(),
-	timezone: z.string().optional(),
-	startDate: z.coerce.date().optional(),
-	endDate: z.coerce.date().optional(),
-	type: z.enum(["FREE", "PAID"]).optional(),
-	mode: z.enum(["ONLINE", "OFFLINE"]).optional(),
-	visibility: z.enum(["PUBLIC", "PRIVATE"]).optional(),
-	status: z.enum(["DRAFT", "PUBLISHED", "CANCELLED", "COMPLETED"]).optional(),
-	description: z.string().min(1).max(5000).optional(),
-});
+export const updateEventSchema = createEventSchema
+	.partial()
+	.extend({
+		name: z.string().min(1).max(200).optional(),
+		coverUrl: z.string().url().optional(),
+		thumbnail: z.string().url().optional(),
+		venueName: z.string().min(1).max(200).optional(),
+		address: z.string().min(1).max(500).optional(),
+		latitude: z.string().optional(),
+		longitude: z.string().optional(),
+		timezone: z.string().optional(),
+		startDate: z.coerce.date().optional(),
+		endDate: z.coerce.date().optional(),
+		type: z.enum(["FREE", "PAID"]).optional(),
+		mode: z.enum(["ONLINE", "OFFLINE"]).optional(),
+		visibility: z.enum(["PUBLIC", "PRIVATE"]).optional(),
+		status: z.enum(["DRAFT", "PUBLISHED", "CANCELLED", "COMPLETED"]).optional(),
+		description: z.string().min(1).max(5000).optional(),
+	})
+	.superRefine((value, ctx) => {
+		validateDateRange(value.startDate, value.endDate, "endDate", ctx);
+	});
 
-export const eventFilterSchema = z.object({
-	userId: z.string().cuid().optional(),
-	status: z.enum(["DRAFT", "PUBLISHED", "CANCELLED", "COMPLETED"]).optional(),
-	type: z.enum(["FREE", "PAID"]).optional(),
-	mode: z.enum(["ONLINE", "OFFLINE"]).optional(),
-	visibility: z.enum(["PUBLIC", "PRIVATE"]).optional(),
-	search: z.string().optional(),
-	startDateFrom: z.coerce.date().optional(),
-	startDateTo: z.coerce.date().optional(),
-	page: z.coerce.number().int().positive().default(1),
-	limit: z.coerce.number().int().positive().max(100).default(20),
-	sortBy: z.enum(["createdAt", "startDate", "name"]).default("createdAt"),
-	sortOrder: z.enum(["asc", "desc"]).default("desc"),
-});
+export const eventFilterSchema = z
+	.object({
+		userId: ulidSchema.optional(),
+		status: z.enum(["DRAFT", "PUBLISHED", "CANCELLED", "COMPLETED"]).optional(),
+		type: z.enum(["FREE", "PAID"]).optional(),
+		mode: z.enum(["ONLINE", "OFFLINE"]).optional(),
+		visibility: z.enum(["PUBLIC", "PRIVATE"]).optional(),
+		search: z.string().optional(),
+		startDateFrom: z.coerce.date().optional(),
+		startDateTo: z.coerce.date().optional(),
+		page: z.coerce.number().int().positive().default(1),
+		limit: z.coerce.number().int().positive().max(100).default(20),
+		sortBy: z.enum(["createdAt", "startDate", "name"]).default("createdAt"),
+		sortOrder: z.enum(["asc", "desc"]).default("desc"),
+	})
+	.superRefine((value, ctx) => {
+		validateDateRange(
+			value.startDateFrom,
+			value.startDateTo,
+			"startDateTo",
+			ctx,
+		);
+	});
 
 export const eventTicketTierParamsSchema = z.object({
 	eventId: z.string().cuid(),
@@ -122,21 +162,29 @@ export const createTicketTierSchema = ticketTierSchema
 	})
 	.extend({
 		name: z.string().min(1).max(100),
-		description: z.string().max(500).optional(),
+		description: z.string().max(500).optional().nullable(),
 		price: z.number().int().min(0),
 		maxQuantity: z.number().int().positive(),
-		salesStart: z.coerce.date().optional(),
-		salesEnd: z.coerce.date().optional(),
+		salesStart: z.coerce.date().optional().nullable(),
+		salesEnd: z.coerce.date().optional().nullable(),
+	})
+	.superRefine((value, ctx) => {
+		validateDateRange(value.salesStart, value.salesEnd, "salesEnd", ctx);
 	});
 
-export const updateTicketTierSchema = createTicketTierSchema.partial().extend({
-	name: z.string().min(1).max(100).optional(),
-	description: z.string().max(500).optional(),
-	price: z.number().int().min(0).optional(),
-	maxQuantity: z.number().int().positive().optional(),
-	salesStart: z.coerce.date().optional(),
-	salesEnd: z.coerce.date().optional(),
-});
+export const updateTicketTierSchema = createTicketTierSchema
+	.partial()
+	.extend({
+		name: z.string().min(1).max(100).optional(),
+		description: z.string().max(500).optional().nullable(),
+		price: z.number().int().min(0).optional(),
+		maxQuantity: z.number().int().positive().optional(),
+		salesStart: z.coerce.date().optional().nullable(),
+		salesEnd: z.coerce.date().optional().nullable(),
+	})
+	.superRefine((value, ctx) => {
+		validateDateRange(value.salesStart, value.salesEnd, "salesEnd", ctx);
+	});
 
 export const createEventTicketTierSchema = createTicketTierSchema.omit({
 	eventId: true,

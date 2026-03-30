@@ -15,7 +15,7 @@ export const paymentSchema = z.object({
 	deletedAt: z.date().nullable(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
-});
+}) satisfies z.ZodType<Payment>;
 
 export const createPaymentSchema = paymentSchema
 	.omit({
@@ -30,14 +30,18 @@ export const createPaymentSchema = paymentSchema
 	.extend({
 		orderId: z.string().cuid(),
 		amount: z.number().int().positive(),
-		currency: z.string().default("INR"),
+		currency: z
+			.string()
+			.trim()
+			.regex(/^[A-Z]{3}$/)
+			.default("INR"),
 		gateway: z.enum(["RAZORPAY"]),
 	});
 
 export const updatePaymentSchema = createPaymentSchema.partial().extend({
 	status: z.enum(["PENDING", "SUCCESS", "FAILED", "REFUNDED"]).optional(),
-	transactionId: z.string().optional(),
-	gatewayMeta: z.unknown().optional(),
+	transactionId: z.string().optional().nullable(),
+	gatewayMeta: z.unknown().optional().nullable(),
 });
 
 export const razorpayWebhookEventSchema = z.enum([
@@ -70,6 +74,11 @@ export const razorpayWebhookSchema = z.object({
 
 export const paymentFilterSchema = z.object({
 	orderId: z.string().cuid().optional(),
+	currency: z
+		.string()
+		.trim()
+		.regex(/^[A-Z]{3}$/)
+		.optional(),
 	gateway: z.enum(["RAZORPAY"]).optional(),
 	status: z.enum(["PENDING", "SUCCESS", "FAILED", "REFUNDED"]).optional(),
 	transactionId: z.string().optional(),

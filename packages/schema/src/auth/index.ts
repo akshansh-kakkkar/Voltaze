@@ -141,7 +141,6 @@ export const verificationSchema = z.object({
 }) satisfies z.ZodType<Verification>;
 
 export const createVerificationSchema = verificationSchema.omit({
-	id: true,
 	createdAt: true,
 	updatedAt: true,
 });
