@@ -950,6 +950,156 @@ async function seedDetailed(): Promise<DetailedSeedResult> {
 		},
 	});
 
+	await prisma.payment.upsert({
+		where: { id: seedIds.payments.summitNehaSuccess },
+		update: {
+			orderId: summitNehaOrder.id,
+			amount: summitStandardTier.price,
+			currency: "INR",
+			gateway: PaymentGateway.RAZORPAY,
+			transactionId: "seed_txn_summit_neha_success",
+			gatewayMeta: {
+				scenario: "summit-standard-success",
+				seededAt: seededAt.toISOString(),
+			},
+			status: PaymentStatus.SUCCESS,
+			deletedAt: null,
+		},
+		create: {
+			id: seedIds.payments.summitNehaSuccess,
+			orderId: summitNehaOrder.id,
+			amount: summitStandardTier.price,
+			currency: "INR",
+			gateway: PaymentGateway.RAZORPAY,
+			transactionId: "seed_txn_summit_neha_success",
+			gatewayMeta: {
+				scenario: "summit-standard-success",
+				seededAt: seededAt.toISOString(),
+			},
+			status: PaymentStatus.SUCCESS,
+		},
+	});
+
+	await prisma.payment.upsert({
+		where: { id: seedIds.payments.summitKabirSuccess },
+		update: {
+			orderId: summitKabirOrder.id,
+			amount: summitProTier.price,
+			currency: "INR",
+			gateway: PaymentGateway.RAZORPAY,
+			transactionId: "seed_txn_summit_kabir_success",
+			gatewayMeta: {
+				scenario: "summit-pro-success",
+				seededAt: seededAt.toISOString(),
+			},
+			status: PaymentStatus.SUCCESS,
+			deletedAt: null,
+		},
+		create: {
+			id: seedIds.payments.summitKabirSuccess,
+			orderId: summitKabirOrder.id,
+			amount: summitProTier.price,
+			currency: "INR",
+			gateway: PaymentGateway.RAZORPAY,
+			transactionId: "seed_txn_summit_kabir_success",
+			gatewayMeta: {
+				scenario: "summit-pro-success",
+				seededAt: seededAt.toISOString(),
+			},
+			status: PaymentStatus.SUCCESS,
+		},
+	});
+
+	await prisma.payment.upsert({
+		where: { id: seedIds.payments.summitWalkInRefunded },
+		update: {
+			orderId: summitWalkInOrder.id,
+			amount: summitStandardTier.price,
+			currency: "INR",
+			gateway: PaymentGateway.RAZORPAY,
+			transactionId: "seed_txn_summit_walkin_refunded",
+			gatewayMeta: {
+				scenario: "summit-walkin-cancel-refund",
+				seededAt: seededAt.toISOString(),
+			},
+			status: PaymentStatus.REFUNDED,
+			deletedAt: null,
+		},
+		create: {
+			id: seedIds.payments.summitWalkInRefunded,
+			orderId: summitWalkInOrder.id,
+			amount: summitStandardTier.price,
+			currency: "INR",
+			gateway: PaymentGateway.RAZORPAY,
+			transactionId: "seed_txn_summit_walkin_refunded",
+			gatewayMeta: {
+				scenario: "summit-walkin-cancel-refund",
+				seededAt: seededAt.toISOString(),
+			},
+			status: PaymentStatus.REFUNDED,
+		},
+	});
+
+	await prisma.payment.upsert({
+		where: { id: seedIds.payments.meetupAaravSuccess },
+		update: {
+			orderId: meetupAaravOrder.id,
+			amount: meetupAccessTier.price,
+			currency: "INR",
+			gateway: PaymentGateway.RAZORPAY,
+			transactionId: "seed_txn_meetup_aarav_success",
+			gatewayMeta: {
+				scenario: "meetup-free-success",
+				seededAt: seededAt.toISOString(),
+			},
+			status: PaymentStatus.SUCCESS,
+			deletedAt: null,
+		},
+		create: {
+			id: seedIds.payments.meetupAaravSuccess,
+			orderId: meetupAaravOrder.id,
+			amount: meetupAccessTier.price,
+			currency: "INR",
+			gateway: PaymentGateway.RAZORPAY,
+			transactionId: "seed_txn_meetup_aarav_success",
+			gatewayMeta: {
+				scenario: "meetup-free-success",
+				seededAt: seededAt.toISOString(),
+			},
+			status: PaymentStatus.SUCCESS,
+		},
+	});
+
+	await prisma.payment.upsert({
+		where: { id: seedIds.payments.foundersNehaPending },
+		update: {
+			orderId: foundersNehaOrder.id,
+			amount: foundersInviteTier.price,
+			currency: "INR",
+			gateway: PaymentGateway.RAZORPAY,
+			transactionId: "seed_txn_founders_neha_pending",
+			gatewayMeta: {
+				scenario: "founders-draft-pending",
+				seededAt: seededAt.toISOString(),
+			},
+			status: PaymentStatus.PENDING,
+			deletedAt: null,
+		},
+		create: {
+			id: seedIds.payments.foundersNehaPending,
+			orderId: foundersNehaOrder.id,
+			amount: foundersInviteTier.price,
+			currency: "INR",
+			gateway: PaymentGateway.RAZORPAY,
+			transactionId: "seed_txn_founders_neha_pending",
+			gatewayMeta: {
+				scenario: "founders-draft-pending",
+				seededAt: seededAt.toISOString(),
+			},
+			status: PaymentStatus.PENDING,
+		},
+	});
+
 	const summitNehaTicket = await prisma.ticket.upsert({
 		where: { id: seedIds.tickets.summitNehaStandard },
 		update: {
@@ -1099,156 +1249,6 @@ async function seedDetailed(): Promise<DetailedSeedResult> {
 			type: PassType.GENERAL,
 			status: PassStatus.USED,
 			code: "VTZ-MEETUP-AARAV-USED",
-		},
-	});
-
-	await prisma.payment.upsert({
-		where: { id: seedIds.payments.summitNehaSuccess },
-		update: {
-			orderId: summitNehaOrder.id,
-			amount: summitStandardTier.price,
-			currency: "INR",
-			gateway: PaymentGateway.RAZORPAY,
-			transactionId: "seed_txn_summit_neha_success",
-			gatewayMeta: {
-				scenario: "summit-standard-success",
-				seededAt: seededAt.toISOString(),
-			},
-			status: PaymentStatus.SUCCESS,
-			deletedAt: null,
-		},
-		create: {
-			id: seedIds.payments.summitNehaSuccess,
-			orderId: summitNehaOrder.id,
-			amount: summitStandardTier.price,
-			currency: "INR",
-			gateway: PaymentGateway.RAZORPAY,
-			transactionId: "seed_txn_summit_neha_success",
-			gatewayMeta: {
-				scenario: "summit-standard-success",
-				seededAt: seededAt.toISOString(),
-			},
-			status: PaymentStatus.SUCCESS,
-		},
-	});
-
-	await prisma.payment.upsert({
-		where: { id: seedIds.payments.summitKabirSuccess },
-		update: {
-			orderId: summitKabirOrder.id,
-			amount: summitProTier.price,
-			currency: "INR",
-			gateway: PaymentGateway.RAZORPAY,
-			transactionId: "seed_txn_summit_kabir_success",
-			gatewayMeta: {
-				scenario: "summit-pro-success",
-				seededAt: seededAt.toISOString(),
-			},
-			status: PaymentStatus.SUCCESS,
-			deletedAt: null,
-		},
-		create: {
-			id: seedIds.payments.summitKabirSuccess,
-			orderId: summitKabirOrder.id,
-			amount: summitProTier.price,
-			currency: "INR",
-			gateway: PaymentGateway.RAZORPAY,
-			transactionId: "seed_txn_summit_kabir_success",
-			gatewayMeta: {
-				scenario: "summit-pro-success",
-				seededAt: seededAt.toISOString(),
-			},
-			status: PaymentStatus.SUCCESS,
-		},
-	});
-
-	await prisma.payment.upsert({
-		where: { id: seedIds.payments.summitWalkInRefunded },
-		update: {
-			orderId: summitWalkInOrder.id,
-			amount: summitStandardTier.price,
-			currency: "INR",
-			gateway: PaymentGateway.RAZORPAY,
-			transactionId: "seed_txn_summit_walkin_refunded",
-			gatewayMeta: {
-				scenario: "summit-walkin-cancel-refund",
-				seededAt: seededAt.toISOString(),
-			},
-			status: PaymentStatus.REFUNDED,
-			deletedAt: null,
-		},
-		create: {
-			id: seedIds.payments.summitWalkInRefunded,
-			orderId: summitWalkInOrder.id,
-			amount: summitStandardTier.price,
-			currency: "INR",
-			gateway: PaymentGateway.RAZORPAY,
-			transactionId: "seed_txn_summit_walkin_refunded",
-			gatewayMeta: {
-				scenario: "summit-walkin-cancel-refund",
-				seededAt: seededAt.toISOString(),
-			},
-			status: PaymentStatus.REFUNDED,
-		},
-	});
-
-	await prisma.payment.upsert({
-		where: { id: seedIds.payments.meetupAaravSuccess },
-		update: {
-			orderId: meetupAaravOrder.id,
-			amount: meetupAccessTier.price,
-			currency: "INR",
-			gateway: PaymentGateway.RAZORPAY,
-			transactionId: "seed_txn_meetup_aarav_success",
-			gatewayMeta: {
-				scenario: "meetup-free-success",
-				seededAt: seededAt.toISOString(),
-			},
-			status: PaymentStatus.SUCCESS,
-			deletedAt: null,
-		},
-		create: {
-			id: seedIds.payments.meetupAaravSuccess,
-			orderId: meetupAaravOrder.id,
-			amount: meetupAccessTier.price,
-			currency: "INR",
-			gateway: PaymentGateway.RAZORPAY,
-			transactionId: "seed_txn_meetup_aarav_success",
-			gatewayMeta: {
-				scenario: "meetup-free-success",
-				seededAt: seededAt.toISOString(),
-			},
-			status: PaymentStatus.SUCCESS,
-		},
-	});
-
-	await prisma.payment.upsert({
-		where: { id: seedIds.payments.foundersNehaPending },
-		update: {
-			orderId: foundersNehaOrder.id,
-			amount: foundersInviteTier.price,
-			currency: "INR",
-			gateway: PaymentGateway.RAZORPAY,
-			transactionId: "seed_txn_founders_neha_pending",
-			gatewayMeta: {
-				scenario: "founders-draft-pending",
-				seededAt: seededAt.toISOString(),
-			},
-			status: PaymentStatus.PENDING,
-			deletedAt: null,
-		},
-		create: {
-			id: seedIds.payments.foundersNehaPending,
-			orderId: foundersNehaOrder.id,
-			amount: foundersInviteTier.price,
-			currency: "INR",
-			gateway: PaymentGateway.RAZORPAY,
-			transactionId: "seed_txn_founders_neha_pending",
-			gatewayMeta: {
-				scenario: "founders-draft-pending",
-				seededAt: seededAt.toISOString(),
-			},
-			status: PaymentStatus.PENDING,
 		},
 	});
 

@@ -724,6 +724,134 @@
 			]
 		},
 		{
+			"name": "Payments",
+			"item": [
+				{
+					"name": "List Payments",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/payments?page=1&limit=20"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Payment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Store created payment id when successful', function () {",
+									"  if (pm.response.code !== 201) {",
+									"    return;",
+									"  }",
+									"  const body = pm.response.json();",
+									"  pm.expect(body).to.have.property('id');",
+									"  pm.collectionVariables.set('paymentId', body.id);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orderId\": \"{{orderId}}\",\n  \"amount\": 99900,\n  \"currency\": \"INR\",\n  \"gateway\": \"RAZORPAY\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{baseUrl}}/payments"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Payment By Id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/payments/{{paymentId}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Payment (ADMIN/HOST)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.collectionVariables.set('paymentTransactionId', `pay_postman_${Date.now()}`);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"SUCCESS\",\n  \"transactionId\": \"{{paymentTransactionId}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{baseUrl}}/payments/{{paymentId}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Razorpay Webhook",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-razorpay-signature",
+								"value": "{{razorpaySignature}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"event\": \"payment.captured\",\n  \"payload\": {\n    \"payment\": {\n      \"id\": \"{{paymentTransactionId}}\",\n      \"order_id\": \"{{orderId}}\",\n      \"amount\": 99900,\n      \"currency\": \"INR\",\n      \"status\": \"captured\"\n    }\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{baseUrl}}/payments/webhook/razorpay"
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "Tickets",
 			"item": [
 				{
@@ -981,134 +1109,6 @@
 						"method": "GET",
 						"header": [],
 						"url": "{{baseUrl}}/check-ins/{{checkInId}}"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Payments",
-			"item": [
-				{
-					"name": "List Payments",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": "{{baseUrl}}/payments?page=1&limit=20"
-					},
-					"response": []
-				},
-				{
-					"name": "Create Payment",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"type": "text/javascript",
-								"exec": [
-									"pm.test('Store created payment id when successful', function () {",
-									"  if (pm.response.code !== 201) {",
-									"    return;",
-									"  }",
-									"  const body = pm.response.json();",
-									"  pm.expect(body).to.have.property('id');",
-									"  pm.collectionVariables.set('paymentId', body.id);",
-									"});"
-								]
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"orderId\": \"{{orderId}}\",\n  \"amount\": 99900,\n  \"currency\": \"INR\",\n  \"gateway\": \"RAZORPAY\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": "{{baseUrl}}/payments"
-					},
-					"response": []
-				},
-				{
-					"name": "Get Payment By Id",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": "{{baseUrl}}/payments/{{paymentId}}"
-					},
-					"response": []
-				},
-				{
-					"name": "Update Payment (ADMIN/HOST)",
-					"event": [
-						{
-							"listen": "prerequest",
-							"script": {
-								"type": "text/javascript",
-								"exec": [
-									"pm.collectionVariables.set('paymentTransactionId', `pay_postman_${Date.now()}`);"
-								]
-							}
-						}
-					],
-					"request": {
-						"method": "PATCH",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"status\": \"SUCCESS\",\n  \"transactionId\": \"{{paymentTransactionId}}\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": "{{baseUrl}}/payments/{{paymentId}}"
-					},
-					"response": []
-				},
-				{
-					"name": "Razorpay Webhook",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "x-razorpay-signature",
-								"value": "{{razorpaySignature}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"event\": \"payment.captured\",\n  \"payload\": {\n    \"payment\": {\n      \"id\": \"{{paymentTransactionId}}\",\n      \"order_id\": \"{{orderId}}\",\n      \"amount\": 99900,\n      \"currency\": \"INR\",\n      \"status\": \"captured\"\n    }\n  }\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": "{{baseUrl}}/payments/webhook/razorpay"
 					},
 					"response": []
 				}
