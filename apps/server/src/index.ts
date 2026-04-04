@@ -1,11 +1,11 @@
 import { env } from "@voltaze/env/server";
 import cors from "cors";
 import express from "express";
-import eventRouter from "./routes/event_routes";
-import orderRouter from "./routes/order_routes";
-import passRouter from "./routes/pass_routes";
-import paymentRouter from "./routes/payment_routes";
-import ticketRouter from "./routes/ticket_routes";
+import eventRouter from "./modules/event/event.routes";
+import orderRouter from "./modules/order/order.routes";
+import passRouter from "./modules/pass/pass.routes";
+import paymentRouter from "./modules/payment/payment.routes";
+import ticketRouter from "./modules/ticket/ticket.routes";
 
 const app = express();
 
