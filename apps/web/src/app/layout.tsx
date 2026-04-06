@@ -1,5 +1,5 @@
-import "@mantine/core/styles.css";
 import "./globals.css";
+
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import { AppProviders } from "@/shared/providers";
@@ -22,7 +22,7 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="en" className={poppins.variable}>
-			<body className="antialiased font-poppins">
+			<body className="font-poppins antialiased">
 				<AppProviders>{children}</AppProviders>
 			</body>
 		</html>
