@@ -12,6 +12,7 @@ import {
 	securityHeadersMiddleware,
 } from "./common/middlewares/security.middleware";
 import { auth } from "./common/utils/better-auth";
+import { getAllowedCorsOrigins } from "./common/utils/cors-origins";
 import { registerModules } from "./modules";
 
 export function createApp(): Express {
@@ -23,7 +24,7 @@ export function createApp(): Express {
 
 	app.use(
 		cors({
-			origin: env.CORS_ORIGIN,
+			origin: getAllowedCorsOrigins(),
 			methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
 			credentials: true,
 		}),

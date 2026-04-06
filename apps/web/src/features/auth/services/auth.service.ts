@@ -1,4 +1,3 @@
-import { env } from "@voltaze/env/web";
 import type {
 	AuthSession,
 	LoginInput,
@@ -7,19 +6,23 @@ import type {
 	ResetPasswordInput,
 } from "@voltaze/schema";
 import { createAuthClient } from "better-auth/react";
+import { getActiveBackendUrl } from "@/shared/lib/backend-url";
 
-const authClient = createAuthClient({
-	baseURL: env.NEXT_PUBLIC_SERVER_URL,
-	fetchOptions: {
-		credentials: "include",
-	},
-});
+function getAuthClient() {
+	return createAuthClient({
+		baseURL: getActiveBackendUrl(),
+		fetchOptions: {
+			credentials: "include",
+		},
+	});
+}
 
 export const authService = {
 	/**
 	 * Register a new user
 	 */
 	async register(data: RegisterInput) {
+		const authClient = getAuthClient();
 		const name = data.name?.trim() || data.email.split("@")[0] || data.email;
 		const { data: session, error } = await authClient.signUp.email({
 			email: data.email,
@@ -38,6 +41,7 @@ export const authService = {
 	 * Login with email and password
 	 */
 	async login(credentials: LoginInput) {
+		const authClient = getAuthClient();
 		const { data: session, error } = await authClient.signIn.email({
 			email: credentials.email,
 			password: credentials.password,
@@ -54,6 +58,7 @@ export const authService = {
 	 * Logout the current user
 	 */
 	async logout(): Promise<void> {
+		const authClient = getAuthClient();
 		await authClient.signOut();
 	},
 
@@ -61,6 +66,7 @@ export const authService = {
 	 * Get current user profile
 	 */
 	async getCurrentUser() {
+		const authClient = getAuthClient();
 		const { data: session } = await authClient.getSession();
 		return session?.user ?? null;
 	},
@@ -69,6 +75,7 @@ export const authService = {
 	 * Get active sessions for the current user
 	 */
 	async getSessions() {
+		const authClient = getAuthClient();
 		const { data } = await authClient.listSessions();
 		return data ?? [];
 	},
@@ -77,6 +84,7 @@ export const authService = {
 	 * Revoke a specific session
 	 */
 	async revokeSession(sessionToken: string): Promise<void> {
+		const authClient = getAuthClient();
 		await authClient.revokeSession({ token: sessionToken });
 	},
 
@@ -84,6 +92,7 @@ export const authService = {
 	 * Refresh access token
 	 */
 	async refreshToken(_refreshToken: string) {
+		const authClient = getAuthClient();
 		const response = await authClient.getSession({
 			fetchOptions: {
 				credentials: "include",
@@ -96,6 +105,7 @@ export const authService = {
 	 * Request password reset email
 	 */
 	async forgotPassword(email: string): Promise<void> {
+		const authClient = getAuthClient();
 		await authClient.requestPasswordReset({
 			email,
 			redirectTo: `${window.location.origin}/reset-password`,
@@ -106,6 +116,7 @@ export const authService = {
 	 * Reset password with token
 	 */
 	async resetPassword(data: ResetPasswordInput): Promise<void> {
+		const authClient = getAuthClient();
 		await authClient.resetPassword({
 			token: data.token,
 			newPassword: data.password,
@@ -119,6 +130,7 @@ export const authService = {
 		currentPassword: string,
 		newPassword: string,
 	): Promise<void> {
+		const authClient = getAuthClient();
 		await authClient.changePassword({
 			currentPassword,
 			newPassword,

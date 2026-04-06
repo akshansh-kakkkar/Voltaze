@@ -13,7 +13,25 @@ const DEV_RAZORPAY_WEBHOOK_SECRET =
 export const env = createEnv({
 	server: {
 		DATABASE_URL: z.string().min(1),
-		CORS_ORIGIN: z.url(),
+		CORS_ORIGIN: z
+			.string()
+			.min(1)
+			.refine(
+				(value) =>
+					value
+						.split(",")
+						.map((origin) => origin.trim())
+						.filter(Boolean)
+						.every((origin) => {
+							try {
+								new URL(origin);
+								return true;
+							} catch {
+								return false;
+							}
+						}),
+				"CORS_ORIGIN must be a valid URL or comma-separated list of valid URLs",
+			),
 		BETTER_AUTH_SECRET: z
 			.string()
 			.min(32)
