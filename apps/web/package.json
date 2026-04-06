@@ -8,6 +8,7 @@
 		"start": "next start"
 	},
 	"dependencies": {
+		"@mantine/notifications": "^9.0.1",
 		"@radix-ui/react-label": "^2.1.8",
 		"@radix-ui/react-slot": "^1.2.4",
 		"@tailwindcss/postcss": "^4.2.2",
@@ -15,10 +16,10 @@
 		"@tanstack/react-query": "^5.95.2",
 		"@tanstack/react-query-devtools": "^5.95.2",
 		"@tanstack/react-table": "^8.21.3",
-		"better-auth": "^1.4.0",
 		"@voltaze/env": "workspace:*",
 		"@voltaze/schema": "workspace:*",
 		"axios": "^1.14.0",
+		"better-auth": "^1.4.0",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
 		"dayjs": "^1.11.20",

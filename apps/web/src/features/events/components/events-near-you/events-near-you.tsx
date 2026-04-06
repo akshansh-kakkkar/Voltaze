@@ -2,6 +2,7 @@
 
 import type { EventFilterInput } from "@voltaze/schema";
 import { ArrowRight, Calendar, MapPin, Users } from "lucide-react";
+import type { Route } from "next";
 import Link from "next/link";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -163,7 +164,7 @@ export function EventsNearYou() {
 											variant="secondary"
 											className="group/btn rounded-full bg-slate-100 px-6 font-bold text-[#030370] transition-all hover:bg-[#030370] hover:text-white"
 										>
-											<Link href={`/events/${event.slug}`}>
+											<Link href={`/events/${event.slug}` as Route}>
 												Book Now{" "}
 												<ArrowRight
 													size={16}
