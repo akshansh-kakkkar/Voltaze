@@ -13,7 +13,11 @@ const googleProvider =
 			}
 		: undefined;
 
-const authSecret = env.BETTER_AUTH_API_KEY;
+const DEV_BETTER_AUTH_SECRET = "development-better-auth-secret-change-me-12345";
+
+const authSecret =
+	env.BETTER_AUTH_API_KEY ??
+	(env.NODE_ENV === "production" ? undefined : DEV_BETTER_AUTH_SECRET);
 
 if (!authSecret) {
 	throw new Error("Missing Better Auth secret. Set BETTER_AUTH_API_KEY.");
