@@ -118,9 +118,7 @@ type UseLiveLocationOptions = {
 export function useLiveLocation(options?: UseLiveLocationOptions) {
 	const fallback = normalizeLocation(options?.fallback || "");
 	const autoDetect = options?.autoDetect ?? true;
-	const [location, setLocation] = useState(
-		() => readStoredLocation() || fallback,
-	);
+	const [location, setLocation] = useState(fallback);
 	const [isLocating, setIsLocating] = useState(false);
 
 	const updateLocation = useCallback((value: string) => {

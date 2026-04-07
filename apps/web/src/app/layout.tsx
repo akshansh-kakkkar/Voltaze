@@ -11,8 +11,11 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-	title: "Voltaze - Event Ticketing Platform",
-	description: "Create, manage, and attend events with Voltaze",
+	title: "UniEvent",
+	description: "Create, manage, and attend events with UniEvent",
+	icons: {
+		icon: "/assets/logoo.svg",
+	},
 };
 
 export default function RootLayout({
@@ -22,7 +25,7 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="en" className={poppins.variable}>
-			<body className="font-poppins antialiased">
+			<body suppressHydrationWarning className="font-poppins antialiased">
 				<AppProviders>{children}</AppProviders>
 			</body>
 		</html>

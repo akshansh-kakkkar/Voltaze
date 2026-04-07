@@ -7,8 +7,6 @@ import {
 	Users,
 } from "lucide-react";
 import Link from "next/link";
-import { useRef } from "react";
-import { Button } from "@/components/ui/button";
 
 const CATEGORIES = [
 	{
@@ -68,16 +66,6 @@ const CATEGORIES = [
 ];
 
 export function EventCategories() {
-	const scrollRef = useRef<HTMLDivElement>(null);
-
-	const scroll = (direction: "left" | "right") => {
-		if (scrollRef.current) {
-			const offset = window.innerWidth < 640 ? 240 : 280; // card width + gap
-			const scrollAmount = direction === "left" ? -offset : offset;
-			scrollRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
-		}
-	};
-
 	return (
 		<section className="w-full bg-[#EBF3FF] py-20">
 			<div className="mx-auto max-w-[1280px] px-6">
@@ -103,7 +91,7 @@ export function EventCategories() {
 								{category.title}
 							</h3>
 							<span className="text-center font-semibold text-gray-400 text-xs sm:text-sm">
-								{category.count}
+								{category.defaultCount}
 							</span>
 						</Link>
 					))}
