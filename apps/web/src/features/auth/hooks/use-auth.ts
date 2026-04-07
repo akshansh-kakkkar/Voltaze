@@ -85,7 +85,9 @@ export function useGoogleSignIn() {
 	return useMutation({
 		mutationFn: authService.signInWithGoogle,
 		onSuccess: (data) => {
-			queryClient.setQueryData(AUTH_KEYS.currentUser, data?.user ?? null);
+			if (data && "user" in data) {
+				queryClient.setQueryData(AUTH_KEYS.currentUser, data.user ?? null);
+			}
 		},
 		onError: (error: unknown) => {
 			notifications.show({
