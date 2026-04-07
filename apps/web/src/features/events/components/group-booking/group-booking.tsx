@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 export function GroupBooking() {
 	return (
 		<section className="w-full bg-[#EBF3FF] py-12">
-			<div className="mx-auto max-w-[1280px] px-6">
+			<div className={"mx-auto max-w-7xl px-6"}>
 				<div className="group relative flex flex-col items-center justify-between gap-12 overflow-hidden rounded-[48px] bg-[#030370] p-12 md:p-20 lg:flex-row">
 					<div className="absolute top-0 right-0 -mt-20 -mr-20 h-96 w-96 rounded-full bg-white/5 blur-3xl transition-transform duration-500 group-hover:scale-110" />
 					<div className="absolute bottom-0 left-0 -mb-20 -ml-20 h-64 w-64 rounded-full bg-white/5 blur-2xl" />

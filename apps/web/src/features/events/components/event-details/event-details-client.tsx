@@ -79,7 +79,7 @@ export function EventDetailsClient({ slug }: { slug: string }) {
 				<div className="container mx-auto space-y-12 px-6 pt-24">
 					<div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
 						<div className="space-y-8 lg:col-span-2">
-							<Skeleton className="h-[400px] w-full rounded-[24px]" />
+							<Skeleton className="h-100 w-full rounded-3xl" />
 							<Skeleton className="h-16 w-3/4" />
 							<div className="grid grid-cols-2 gap-4">
 								<Skeleton className="h-20 w-full rounded-2xl" />
@@ -87,7 +87,7 @@ export function EventDetailsClient({ slug }: { slug: string }) {
 							</div>
 						</div>
 						<div className="space-y-6">
-							<Skeleton className="h-[500px] w-full rounded-[32px]" />
+							<Skeleton className="h-125 w-full rounded-4xl" />
 							<Skeleton className="h-24 w-full rounded-2xl" />
 						</div>
 					</div>
@@ -175,7 +175,7 @@ export function EventDetailsClient({ slug }: { slug: string }) {
 
 			{showStickyBookingBar && (
 				<div className="sticky top-16 z-40 border-slate-200 border-b bg-white/95 backdrop-blur">
-					<div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between px-6 lg:px-10">
+					<div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-10">
 						<div className="flex min-w-0 items-center gap-3">
 							<div
 								className="h-10 w-14 shrink-0 overflow-hidden rounded-lg bg-center bg-cover bg-slate-100"
@@ -209,12 +209,12 @@ export function EventDetailsClient({ slug }: { slug: string }) {
 				</div>
 			)}
 
-			<div className="container mx-auto max-w-[1280px] px-6 pt-22 lg:px-10">
+			<div className="container mx-auto max-w-7xl px-6 pt-22 lg:px-10">
 				<div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[minmax(0,1fr)_360px]">
 					{/* LEFT COLUMN: Overview */}
 					<div className="space-y-7">
 						{/* Main Event Image */}
-						<div className="relative overflow-hidden rounded-[24px] border border-slate-200 bg-slate-900/10 shadow-sm">
+						<div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-slate-900/10 shadow-sm">
 							<div
 								className="absolute inset-0 scale-110 bg-center bg-cover blur-md"
 								style={{
@@ -222,7 +222,7 @@ export function EventDetailsClient({ slug }: { slug: string }) {
 								}}
 							/>
 							<div
-								className="relative mx-auto aspect-[16/8] w-full max-w-5xl bg-center bg-cover"
+								className="relative mx-auto aspect-16/8 w-full max-w-5xl bg-center bg-cover"
 								role="img"
 								aria-label={event.name}
 								style={{
@@ -344,7 +344,7 @@ export function EventDetailsClient({ slug }: { slug: string }) {
 
 							<Button
 								asChild
-								className="h-13 w-full rounded-[16px] bg-[#070190] font-bold text-base text-white shadow-[0_8px_18px_rgba(7,1,144,0.25)] transition-all hover:bg-[#030370]"
+								className="h-13 w-full rounded-2xl bg-[#070190] font-bold text-base text-white shadow-[0_8px_18px_rgba(7,1,144,0.25)] transition-all hover:bg-[#030370]"
 							>
 								<a href="#ticket-options">Book Now</a>
 							</Button>
@@ -465,16 +465,16 @@ export function EventDetailsClient({ slug }: { slug: string }) {
 					<h2 className="mb-6 font-extrabold text-2xl text-black tracking-tight md:text-3xl">
 						How to reach this spot
 					</h2>
-					<div className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-md">
+					<div className="overflow-hidden rounded-4xl border border-slate-200 bg-white shadow-md">
 						<div
-							className="relative flex h-[400px] w-full items-center justify-center bg-center bg-cover bg-slate-100"
+							className="relative flex h-100 w-full items-center justify-center bg-center bg-cover bg-slate-100"
 							style={{
 								backgroundImage:
 									"url(https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?w=1200&q=80)",
 							}}
 						>
 							<div className="absolute inset-0 bg-black/5" />
-							<div className="relative flex max-w-[280px] flex-col gap-1 rounded-xl bg-white p-4 shadow-2xl">
+							<div className="relative flex max-w-70 flex-col gap-1 rounded-xl bg-white p-4 shadow-2xl">
 								<span className="font-bold text-slate-800 text-xs">
 									{event.venueName}
 								</span>

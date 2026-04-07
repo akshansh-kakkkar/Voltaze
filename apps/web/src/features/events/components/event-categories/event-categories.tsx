@@ -81,7 +81,7 @@ export function EventCategories() {
 
 	return (
 		<section className="w-full bg-[#EBF3FF] py-20">
-			<div className="mx-auto max-w-[1280px] px-6">
+			<div className={"mx-auto max-w-7xl px-6"}>
 				<h2 className="mb-10 text-center font-extrabold text-3xl text-black tracking-tight md:text-left md:text-5xl">
 					What are you into?
 				</h2>
