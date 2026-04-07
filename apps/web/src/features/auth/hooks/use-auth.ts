@@ -84,10 +84,9 @@ export function useGoogleSignIn() {
 
 	return useMutation({
 		mutationFn: authService.signInWithGoogle,
-		onSuccess: (data) => {
-			if (data && "user" in data) {
-				queryClient.setQueryData(AUTH_KEYS.currentUser, data.user ?? null);
-			}
+		onSuccess: () => {
+			// Google sign-in now redirects to the backend OAuth endpoint.
+			// No session payload is returned to this callback in the current page context.
 		},
 		onError: (error: unknown) => {
 			notifications.show({
