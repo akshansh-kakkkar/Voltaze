@@ -29,7 +29,11 @@ function getProfileInitial(
 	return base.charAt(0).toUpperCase();
 }
 
-export function Navbar() {
+interface NavbarProps {
+	dashboardMode?: boolean;
+}
+
+export function Navbar({ dashboardMode = false }: NavbarProps) {
 	const router = useRouter();
 	const pathname = usePathname();
 	const { data: user } = useCurrentUser();
@@ -220,12 +224,22 @@ export function Navbar() {
 	}, []);
 
 	const profileInitial = getProfileInitial(user?.name, user?.email);
-	const alwaysShowSearch = pathname !== "/";
-	const isSearchVisible = alwaysShowSearch || showScrolledSearch;
+	const isHostDashboard = dashboardMode || pathname.startsWith("/host");
+	const alwaysShowSearch = !isHostDashboard && pathname !== "/";
+	const isSearchVisible =
+		!isHostDashboard && (alwaysShowSearch || showScrolledSearch);
 
 	return (
-		<header className="fixed top-0 right-0 left-0 z-50 border-slate-100 border-b bg-white/80 backdrop-blur-md">
-			<div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-6 lg:gap-8">
+		<header
+			className={`fixed top-0 right-0 left-0 z-50 border-slate-100 border-b backdrop-blur-md ${
+				isHostDashboard ? "bg-[#f7fbff]/95" : "bg-white/80"
+			}`}
+		>
+			<div
+				className={`flex h-16 items-center justify-between gap-6 lg:gap-8 ${
+					isHostDashboard ? "w-full px-4 md:px-6" : "mx-auto max-w-7xl px-6"
+				}`}
+			>
 				<div className="flex items-center">
 					<Link
 						href="/"
@@ -360,7 +374,11 @@ export function Navbar() {
 					</div>
 				</div>
 
-				<nav className="hidden items-center gap-3 md:flex lg:gap-4">
+				<nav
+					className={`hidden items-center gap-3 md:flex lg:gap-4 ${
+						isHostDashboard ? "invisible" : ""
+					}`}
+				>
 					<Link
 						href="/events"
 						className="rounded-full border border-transparent px-4 py-2 font-semibold text-slate-700 text-sm transition-all hover:border-[#dfe3f6] hover:bg-[#f4f6ff] hover:text-[#030370]"
@@ -445,19 +463,13 @@ export function Navbar() {
 										</p>
 										<button
 											type="button"
-											onClick={() => handleNavigateFromProfileMenu("/events")}
+											onClick={() =>
+												handleNavigateFromProfileMenu("/host/dashboard")
+											}
 											className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-medium text-slate-700 text-sm transition-colors hover:bg-[#f4f6ff] hover:text-[#030370]"
 										>
 											<UserCircle2 className="h-4 w-4" />
-											Create Event
-										</button>
-										<button
-											type="button"
-											onClick={() => handleNavigateFromProfileMenu("/events")}
-											className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-medium text-slate-700 text-sm transition-colors hover:bg-[#f4f6ff] hover:text-[#030370]"
-										>
-											<UserCircle2 className="h-4 w-4" />
-											Manage Events
+											Host Dashboard
 										</button>
 
 										<button
@@ -571,19 +583,13 @@ export function Navbar() {
 									</p>
 									<button
 										type="button"
-										onClick={() => handleNavigateFromProfileMenu("/events")}
+										onClick={() =>
+											handleNavigateFromProfileMenu("/host/dashboard")
+										}
 										className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-medium text-slate-700 text-sm transition-colors hover:bg-[#f4f6ff] hover:text-[#030370]"
 									>
 										<UserCircle2 className="h-4 w-4" />
-										Create Event
-									</button>
-									<button
-										type="button"
-										onClick={() => handleNavigateFromProfileMenu("/events")}
-										className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-medium text-slate-700 text-sm transition-colors hover:bg-[#f4f6ff] hover:text-[#030370]"
-									>
-										<UserCircle2 className="h-4 w-4" />
-										Manage Events
+										Host Dashboard
 									</button>
 
 									<button
@@ -623,6 +629,13 @@ export function Navbar() {
 					</div>
 				)}
 			</div>
+
+			{isHostDashboard && (
+				<div
+					aria-hidden
+					className="pointer-events-none absolute inset-x-0 -bottom-4 h-8 bg-linear-to-b from-[#cfe1ff]/55 to-transparent blur-md"
+				/>
+			)}
 		</header>
 	);
 }
