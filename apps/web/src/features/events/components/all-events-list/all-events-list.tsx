@@ -70,7 +70,7 @@ export function AllEventsList({ searchParams }: AllEventsListProps) {
 
 	if (isLoading) {
 		return (
-			<div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+			<div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-4">
 				{[...Array(6)].map((_, i) => (
 					<EventCardSkeleton key={i} />
 				))}
@@ -80,8 +80,8 @@ export function AllEventsList({ searchParams }: AllEventsListProps) {
 
 	if (events.length === 0) {
 		return (
-			<div className="flex flex-col items-center gap-4 py-12">
-				<p className="text-muted-foreground italic">
+			<div className="flex flex-col items-center gap-4 py-8 sm:py-12">
+				<p className="text-center text-muted-foreground text-sm italic sm:text-base">
 					No events found matching your criteria.
 				</p>
 			</div>
@@ -89,7 +89,7 @@ export function AllEventsList({ searchParams }: AllEventsListProps) {
 	}
 
 	return (
-		<div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+		<div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-4">
 			{events.map((event) => (
 				<EventCard key={event.id} event={event} className="h-full" />
 			))}

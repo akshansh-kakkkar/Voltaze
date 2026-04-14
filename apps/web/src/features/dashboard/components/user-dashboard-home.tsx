@@ -44,11 +44,13 @@ function MetricCard({
 	};
 
 	return (
-		<div className={`rounded-xl border ${bgColors[accent]} p-5`}>
-			<div className="flex items-center justify-between">
-				<div>
-					<p className="text-slate-600 text-sm">{label}</p>
-					<p className="mt-2 font-bold text-2xl">
+		<div
+			className={`rounded-lg border sm:rounded-xl ${bgColors[accent]} p-3 sm:p-4 md:p-5 lg:p-6`}
+		>
+			<div className="flex items-center justify-between gap-2 sm:gap-3">
+				<div className="min-w-0">
+					<p className="text-slate-600 text-xs sm:text-sm">{label}</p>
+					<p className="mt-1 font-bold text-lg sm:mt-2 sm:text-xl md:text-2xl">
 						{isLoading ? (
 							<span className="text-slate-400">-</span>
 						) : value === null ? (
@@ -58,10 +60,12 @@ function MetricCard({
 						)}
 					</p>
 					{subLabel && (
-						<p className="mt-1 text-slate-500 text-xs">{subLabel}</p>
+						<p className="mt-0.5 text-slate-500 text-xs sm:mt-1">{subLabel}</p>
 					)}
 				</div>
-				<div className={`${iconColors[accent]} rounded-lg bg-white p-2`}>
+				<div
+					className={`${iconColors[accent]} shrink-0 rounded-lg bg-white p-2 sm:p-2.5 md:p-3`}
+				>
 					{icon}
 				</div>
 			</div>
@@ -77,15 +81,18 @@ interface LegendRowProps {
 
 function LegendRow({ label, value, color }: LegendRowProps) {
 	return (
-		<div className="flex items-center justify-between">
-			<div className="flex items-center gap-2">
-				<div
-					className="h-2.5 w-2.5 rounded-full"
+		<div className="flex items-center justify-between gap-2 sm:gap-3">
+			<div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+				<span
+					aria-hidden="true"
+					className="h-2 w-2 shrink-0 rounded-full sm:h-2.5 sm:w-2.5"
 					style={{ backgroundColor: color }}
 				/>
-				<span className="text-slate-600 text-sm">{label}</span>
+				<span className="truncate text-slate-700 text-xs sm:text-sm">
+					{label}
+				</span>
 			</div>
-			<span className="font-semibold text-slate-900 text-sm">
+			<span className="font-semibold text-slate-900 text-xs sm:text-sm">
 				{value.toLocaleString("en-IN")}
 			</span>
 		</div>
@@ -100,14 +107,17 @@ interface StatusCardProps {
 
 function StatusCard({ label, value, color }: StatusCardProps) {
 	return (
-		<div className="rounded-xl border border-[#dbe7ff] bg-white/80 p-4">
-			<div className="flex items-center justify-between">
-				<p className="text-slate-600 text-sm">{label}</p>
+		<div className="rounded-lg border border-[#dbe7ff] bg-white/80 p-3 sm:rounded-xl sm:p-4 md:p-5">
+			<div className="flex items-center justify-between gap-2 sm:gap-3">
+				<p className="font-medium text-slate-600 text-xs sm:text-sm">{label}</p>
 				<div
-					className="flex h-10 w-10 items-center justify-center rounded-lg"
+					className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:h-9 sm:w-9 md:h-10 md:w-10"
 					style={{ backgroundColor: `${color}20` }}
 				>
-					<span className="font-bold text-lg" style={{ color }}>
+					<span
+						className="font-bold text-sm sm:text-base md:text-lg"
+						style={{ color }}
+					>
 						{value}
 					</span>
 				</div>
@@ -258,32 +268,32 @@ export function UserDashboardHome() {
 		totalSpent === null;
 
 	return (
-		<div className="space-y-8">
+		<div className="space-y-6 sm:space-y-8">
 			{/* Welcome Card */}
-			<div className="relative overflow-hidden rounded-2xl border border-[#dbe7ff] bg-linear-to-br from-[#030370]/5 via-white to-[#245ed1]/5 p-6">
-				<div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+			<div className="relative overflow-hidden rounded-2xl border border-[#dbe7ff] bg-linear-to-br from-[#030370]/5 via-white to-[#245ed1]/5 p-4 sm:p-5 md:p-6 lg:p-8">
+				<div className="flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between">
 					<div className="min-w-0">
-						<h2 className="font-bold text-[#071a78] text-xl">
+						<h2 className="font-bold text-[#071a78] text-lg sm:text-xl md:text-2xl">
 							Welcome back, {user?.email?.split("@")[0]}!
 						</h2>
-						<p className="mt-1 text-slate-600">
+						<p className="mt-1 text-slate-600 text-sm">
 							Manage your tickets, orders, and payments all in one place.
 						</p>
 					</div>
 					<Link
 						href={"/user/tickets" as Route}
-						className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#030370] px-5 py-3 font-semibold text-white shadow-[0_14px_40px_rgba(3,3,112,0.25)] transition-colors hover:bg-[#030370]/90"
+						className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-[#030370] px-4 py-2.5 font-semibold text-sm text-white shadow-[0_14px_40px_rgba(3,3,112,0.25)] transition-colors hover:bg-[#030370]/90 sm:rounded-xl sm:px-5 sm:py-3 sm:text-base"
 					>
-						<Ticket className="h-5 w-5" />
+						<Ticket className="h-4 w-4 sm:h-5 sm:w-5" />
 						View tickets
 					</Link>
 				</div>
 
 				{totalTickets === 0 && (
-					<div className="mt-4 rounded-xl border border-[#dbe7ff] bg-white/70 p-4">
-						<div className="flex items-start gap-3">
-							<AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
-							<p className="text-slate-700 text-sm">
+					<div className="mt-3 rounded-lg border border-[#dbe7ff] bg-white/70 p-3 sm:mt-4 sm:rounded-xl sm:p-4">
+						<div className="flex items-start gap-2 sm:gap-3">
+							<AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 sm:h-5 sm:w-5" />
+							<p className="text-slate-700 text-xs sm:text-sm">
 								You don't have any tickets yet. Browse events and purchase
 								tickets to get started.
 							</p>
@@ -293,7 +303,7 @@ export function UserDashboardHome() {
 			</div>
 
 			{/* Key metrics */}
-			<div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+			<div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 md:gap-4 lg:grid-cols-4 lg:gap-6">
 				<MetricCard
 					icon={<Ticket className="h-5 w-5" />}
 					label="My Tickets"
@@ -334,13 +344,15 @@ export function UserDashboardHome() {
 
 			{/* Charts + overview */}
 			<div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-				<div className="rounded-2xl border border-[#dbe7ff] bg-white p-6 lg:col-span-1">
-					<h3 className="font-semibold text-[#071a78] text-lg">Order status</h3>
-					<p className="mt-1 text-slate-600 text-sm">
+				<div className="rounded-2xl border border-[#dbe7ff] bg-white p-4 sm:p-5 md:p-6 lg:col-span-1">
+					<h3 className="font-semibold text-[#071a78] text-base sm:text-lg">
+						Order status
+					</h3>
+					<p className="mt-1 text-slate-600 text-xs sm:text-sm">
 						Pending, completed, and cancelled orders.
 					</p>
 
-					<div className="mt-4 h-72">
+					<div className="mt-4 h-64 sm:h-72">
 						<ResponsiveContainer width="100%" height="100%">
 							<PieChart>
 								<Tooltip
@@ -367,7 +379,7 @@ export function UserDashboardHome() {
 						</ResponsiveContainer>
 					</div>
 
-					<div className="mt-4 space-y-2">
+					<div className="mt-3 space-y-2 sm:mt-4">
 						{orderStatusPieData.map((d) => (
 							<LegendRow
 								key={d.name}
@@ -379,8 +391,8 @@ export function UserDashboardHome() {
 					</div>
 				</div>
 
-				<div className="space-y-6 lg:col-span-2">
-					<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+				<div className="space-y-4 sm:space-y-5 md:space-y-6 lg:col-span-2">
+					<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
 						<StatusCard
 							label="Pending Orders"
 							value={pendingOrdersTotal}
@@ -403,35 +415,39 @@ export function UserDashboardHome() {
 						/>
 					</div>
 
-					<div className="rounded-2xl border border-[#dbe7ff] bg-white p-6">
-						<h3 className="font-semibold text-[#071a78] text-lg">
+					<div className="rounded-2xl border border-[#dbe7ff] bg-white p-4 sm:p-5 md:p-6">
+						<h3 className="font-semibold text-[#071a78] text-base sm:text-lg">
 							Quick actions
 						</h3>
-						<div className="mt-4 space-y-3">
+						<div className="mt-3 space-y-2 sm:mt-4 sm:space-y-3">
 							<Link
 								href={"/user/tickets" as Route}
-								className="block rounded-lg border border-slate-200 p-3 text-slate-700 transition-colors hover:bg-slate-50"
+								className="block rounded-lg border border-slate-200 p-2.5 text-slate-700 transition-colors hover:bg-slate-50 sm:p-3 md:p-4"
 							>
-								<p className="font-medium text-sm">Browse my tickets</p>
-								<p className="mt-1 text-slate-600 text-xs">
+								<p className="font-medium text-xs sm:text-sm">
+									Browse my tickets
+								</p>
+								<p className="mt-0.5 text-slate-600 text-xs sm:mt-1">
 									View and manage your tickets
 								</p>
 							</Link>
 							<Link
 								href={"/user/orders" as Route}
-								className="block rounded-lg border border-slate-200 p-3 text-slate-700 transition-colors hover:bg-slate-50"
+								className="block rounded-lg border border-slate-200 p-2.5 text-slate-700 transition-colors hover:bg-slate-50 sm:p-3 md:p-4"
 							>
-								<p className="font-medium text-sm">View orders</p>
-								<p className="mt-1 text-slate-600 text-xs">
+								<p className="font-medium text-xs sm:text-sm">View orders</p>
+								<p className="mt-0.5 text-slate-600 text-xs sm:mt-1">
 									Check your purchase history
 								</p>
 							</Link>
 							<Link
 								href={"/user/payments" as Route}
-								className="block rounded-lg border border-slate-200 p-3 text-slate-700 transition-colors hover:bg-slate-50"
+								className="block rounded-lg border border-slate-200 p-2.5 text-slate-700 transition-colors hover:bg-slate-50 sm:p-3 md:p-4"
 							>
-								<p className="font-medium text-sm">Payment history</p>
-								<p className="mt-1 text-slate-600 text-xs">
+								<p className="font-medium text-xs sm:text-sm">
+									Payment history
+								</p>
+								<p className="mt-0.5 text-slate-600 text-xs sm:mt-1">
 									View all your transactions
 								</p>
 							</Link>

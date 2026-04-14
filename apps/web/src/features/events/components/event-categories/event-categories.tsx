@@ -80,27 +80,27 @@ export function EventCategories() {
 	});
 
 	return (
-		<section className="w-full bg-[#EBF3FF] py-20">
-			<div className={"mx-auto max-w-7xl px-6"}>
-				<h2 className="mb-10 text-center font-extrabold text-3xl text-black tracking-tight md:text-left md:text-5xl">
+		<section className="w-full bg-[#EBF3FF] py-12 sm:py-16 lg:py-20">
+			<div className={"mx-auto max-w-7xl px-4 sm:px-6 lg:px-6"}>
+				<h2 className="mb-8 text-center font-extrabold text-2xl text-black tracking-tight sm:text-3xl md:text-left md:text-4xl lg:text-5xl">
 					What are you into?
 				</h2>
 
-				<div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+				<div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
 					{CATEGORIES.map((category, index) => (
 						<Link
 							key={category.id}
 							href={`/events?category=${category.id}`}
-							className="group flex aspect-square w-full flex-col items-center justify-center rounded-3xl border border-gray-100 bg-white p-4 text-center transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-xl"
+							className="group flex aspect-square w-full flex-col items-center justify-center rounded-2xl border border-gray-100 bg-white p-3 text-center transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-xl sm:rounded-3xl sm:p-4"
 						>
 							<div
-								className={`mb-4 rounded-2xl p-4 transition-transform duration-300 group-hover:scale-110 ${category.bg}`}
+								className={`mb-3 rounded-xl p-3 transition-transform duration-300 group-hover:scale-110 sm:mb-4 sm:rounded-2xl sm:p-4 ${category.bg}`}
 							>
 								<category.Icon
-									className={`h-8 w-8 stroke-[1.5] sm:h-10 sm:w-10 ${category.color}`}
+									className={`h-6 w-6 stroke-[1.5] sm:h-8 sm:w-8 ${category.color}`}
 								/>
 							</div>
-							<h3 className="mb-1 font-bold text-[15px] text-black sm:text-base">
+							<h3 className="mb-1 font-bold text-[13px] text-black sm:text-base">
 								{category.title}
 							</h3>
 							<span className="font-semibold text-gray-400 text-xs sm:text-sm">

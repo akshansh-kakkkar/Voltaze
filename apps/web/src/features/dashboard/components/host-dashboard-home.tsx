@@ -153,31 +153,31 @@ export function HostDashboardHome() {
 		revenue === null;
 
 	return (
-		<div className="space-y-8">
+		<div className="space-y-6 sm:space-y-8">
 			{/* Create Event (home first) */}
-			<div className="relative overflow-hidden rounded-2xl border border-[#dbe7ff] bg-linear-to-br from-[#030370]/5 via-white to-[#245ed1]/5 p-6">
-				<div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+			<div className="relative overflow-hidden rounded-2xl border border-[#dbe7ff] bg-linear-to-br from-[#030370]/5 via-white to-[#245ed1]/5 p-4 sm:p-5 md:p-6 lg:p-8">
+				<div className="flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between">
 					<div className="min-w-0">
-						<h2 className="font-bold text-[#071a78] text-xl">
+						<h2 className="font-bold text-[#071a78] text-lg sm:text-xl md:text-2xl">
 							Create your next event
 						</h2>
-						<p className="mt-1 text-slate-600">
+						<p className="mt-1 text-slate-600 text-sm">
 							Launch events, manage ticket tiers, and track attendees with live
 							analytics.
 						</p>
 					</div>
 					<Link
 						href={"/host/events/new" as Route}
-						className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#030370] px-5 py-3 font-semibold text-white shadow-[0_14px_40px_rgba(3,3,112,0.25)] transition-colors hover:bg-[#030370]/90"
+						className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-[#030370] px-4 py-2.5 font-semibold text-sm text-white shadow-[0_14px_40px_rgba(3,3,112,0.25)] transition-colors hover:bg-[#030370]/90 sm:rounded-xl sm:px-5 sm:py-3 sm:text-base"
 					>
-						<Plus className="h-5 w-5" />
+						<Plus className="h-4 w-4 sm:h-5 sm:w-5" />
 						Create event
 					</Link>
 				</div>
 
 				{allEventsTotal === 0 && (
-					<div className="mt-4 rounded-xl border border-[#dbe7ff] bg-white/70 p-4">
-						<p className="text-slate-700 text-sm">
+					<div className="mt-3 rounded-lg border border-[#dbe7ff] bg-white/70 p-3 sm:mt-4 sm:rounded-xl sm:p-4">
+						<p className="text-slate-700 text-xs sm:text-sm">
 							You haven’t created any events yet. Create your first event to
 							start receiving orders and check-ins.
 						</p>
@@ -186,7 +186,7 @@ export function HostDashboardHome() {
 			</div>
 
 			{/* Key metrics */}
-			<div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+			<div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 md:gap-4 lg:grid-cols-4 lg:gap-6">
 				<MetricCard
 					icon={<Zap className="h-5 w-5" />}
 					label="Total Events"
@@ -223,15 +223,15 @@ export function HostDashboardHome() {
 
 			{/* Charts + event overview */}
 			<div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-				<div className="rounded-2xl border border-[#dbe7ff] bg-white p-6 lg:col-span-1">
-					<h3 className="font-semibold text-[#071a78] text-lg">
+				<div className="rounded-2xl border border-[#dbe7ff] bg-white p-4 sm:p-5 md:p-6 lg:col-span-1">
+					<h3 className="font-semibold text-[#071a78] text-base sm:text-lg">
 						Orders status
 					</h3>
-					<p className="mt-1 text-slate-600 text-sm">
+					<p className="mt-1 text-slate-600 text-xs sm:text-sm">
 						Pending, completed, and cancelled orders across your events.
 					</p>
 
-					<div className="mt-4 h-72">
+					<div className="mt-4 h-64 sm:h-72">
 						<ResponsiveContainer width="100%" height="100%">
 							<PieChart>
 								<Tooltip
@@ -270,8 +270,8 @@ export function HostDashboardHome() {
 					</div>
 				</div>
 
-				<div className="space-y-6 lg:col-span-2">
-					<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+				<div className="space-y-4 sm:space-y-5 md:space-y-6 lg:col-span-2">
+					<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
 						<StatusCard
 							label="Draft"
 							value={draftEventsTotal}
@@ -294,11 +294,11 @@ export function HostDashboardHome() {
 						/>
 					</div>
 
-					<div className="rounded-2xl border border-[#dbe7ff] bg-white p-6">
-						<h3 className="font-semibold text-[#071a78] text-lg">
+					<div className="rounded-2xl border border-[#dbe7ff] bg-white p-4 sm:p-5 md:p-6">
+						<h3 className="font-semibold text-[#071a78] text-base sm:text-lg">
 							Dashboard focus
 						</h3>
-						<p className="mt-1 text-slate-600 text-sm">
+						<p className="mt-1 text-slate-600 text-xs sm:text-sm">
 							Use the Events page to manage event records. This dashboard stays
 							focused on analytics, orders, and operational health.
 						</p>
@@ -359,18 +359,22 @@ function MetricCard({
 
 	return (
 		<div
-			className={`rounded-2xl border ${styles.border} bg-white ${styles.bg} p-6`}
+			className={`rounded-2xl border ${styles.border} bg-white ${styles.bg} p-4 sm:p-5 md:p-6 lg:p-8`}
 		>
-			<div className="flex items-start justify-between gap-3">
+			<div className="flex items-start justify-between gap-2 sm:gap-3">
 				<div className="min-w-0">
-					<p className="truncate font-medium text-slate-600 text-sm">{label}</p>
-					<p className="mt-2 truncate font-bold text-3xl text-slate-900">
+					<p className="truncate font-medium text-slate-600 text-xs sm:text-sm">
+						{label}
+					</p>
+					<p className="mt-1 truncate font-bold text-2xl text-slate-900 sm:mt-2 sm:text-3xl md:text-4xl">
 						{displayValue}
 					</p>
-					<p className="mt-2 truncate text-slate-500 text-xs">{subLabel}</p>
+					<p className="mt-1 truncate text-slate-500 text-xs sm:mt-2">
+						{subLabel}
+					</p>
 				</div>
 				<div
-					className={`flex h-11 w-11 items-center justify-center rounded-xl ${styles.chip}`}
+					className={`flex h-10 w-10 items-center justify-center rounded-xl sm:h-11 sm:w-11 md:h-12 md:w-12 ${styles.chip} shrink-0`}
 				>
 					{icon}
 				</div>
@@ -389,16 +393,18 @@ function LegendRow({
 	color: string;
 }) {
 	return (
-		<div className="flex items-center justify-between gap-3">
-			<div className="flex min-w-0 items-center gap-2">
+		<div className="flex items-center justify-between gap-2 sm:gap-3">
+			<div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
 				<span
 					aria-hidden="true"
-					className="h-2.5 w-2.5 shrink-0 rounded-full"
+					className="h-2 w-2 shrink-0 rounded-full sm:h-2.5 sm:w-2.5"
 					style={{ backgroundColor: color }}
 				/>
-				<span className="truncate text-slate-700 text-sm">{label}</span>
+				<span className="truncate text-slate-700 text-xs sm:text-sm">
+					{label}
+				</span>
 			</div>
-			<span className="font-semibold text-slate-900 text-sm">
+			<span className="font-semibold text-slate-900 text-xs sm:text-sm">
 				{value.toLocaleString("en-IN")}
 			</span>
 		</div>
@@ -415,16 +421,18 @@ function StatusCard({
 	color: string;
 }) {
 	return (
-		<div className="rounded-2xl border border-[#dbe7ff] bg-slate-50 p-4">
-			<div className="flex items-center justify-between gap-3">
+		<div className="rounded-lg border border-[#dbe7ff] bg-slate-50 p-3 sm:rounded-xl sm:p-4 md:p-5">
+			<div className="flex items-center justify-between gap-2 sm:gap-3">
 				<div className="min-w-0">
-					<p className="font-medium text-slate-600 text-sm">{label}</p>
-					<p className="mt-1 font-bold text-2xl text-slate-900">
+					<p className="font-medium text-slate-600 text-xs sm:text-sm">
+						{label}
+					</p>
+					<p className="mt-1 font-bold text-lg text-slate-900 sm:text-xl md:text-2xl">
 						{value.toLocaleString("en-IN")}
 					</p>
 				</div>
 				<div
-					className="h-3.5 w-3.5 rounded-full"
+					className="h-3 w-3 shrink-0 rounded-full sm:h-3.5 sm:w-3.5"
 					style={{ backgroundColor: color }}
 				/>
 			</div>

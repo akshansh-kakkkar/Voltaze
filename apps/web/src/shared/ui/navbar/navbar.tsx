@@ -336,32 +336,36 @@ export function Navbar({ minimal = false }: NavbarProps) {
 	const alwaysShowSearch = pathname !== "/";
 	const isSearchVisible =
 		!minimal && !isHostRoute && (alwaysShowSearch || showScrolledSearch);
+	const shouldShrinkLogo = showScrolledSearch || alwaysShowSearch;
 
 	return (
 		<header className="fixed top-0 right-0 left-0 z-50 border-slate-100 border-b bg-white/80 backdrop-blur-md">
 			<div
 				className={
 					minimal
-						? "flex h-16 w-full items-center justify-between px-6 lg:px-8"
+						? "flex h-14 w-full items-center justify-between px-4 sm:h-16 sm:px-6 lg:px-8"
 						: isUserRoute
-							? "flex h-16 w-full items-center justify-between gap-6 px-6 lg:gap-8"
-							: "mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-6 lg:gap-8"
+							? "flex h-14 w-full items-center justify-between gap-4 px-4 sm:h-16 sm:gap-6 sm:px-6 lg:gap-8"
+							: "mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 sm:h-16 sm:gap-6 sm:px-6 lg:gap-8"
 				}
 			>
-				<div className="flex items-center">
+				<div className="flex items-center gap-1 sm:gap-2">
 					<Link
 						href="/"
-						className="flex shrink-0 items-center gap-2"
+						className="flex shrink-0 items-center gap-1 sm:gap-2"
 						onClick={closeMobileMenu}
 					>
 						<Image
 							src="/assets/logo.webp"
 							alt="UniEvent logo"
-							width={50}
-							height={40}
+							width={40}
+							height={32}
 							priority
+							className={`transition-all duration-300 ${shouldShrinkLogo ? "h-5 w-6" : "h-8 w-10"} sm:h-10 sm:w-12`}
 						/>
-						<span className="font-black text-2xl text-[#070190] leading-none tracking-tight md:text-[29px]">
+						<span
+							className={`font-black text-[#070190] leading-none tracking-tight transition-all duration-300 ${shouldShrinkLogo ? "text-[15px] sm:text-xs" : "text-lg sm:text-2xl"} md:text-[29px]`}
+						>
 							UniEvent
 						</span>
 					</Link>
@@ -369,24 +373,24 @@ export function Navbar({ minimal = false }: NavbarProps) {
 
 				{!minimal && !isHostRoute && (
 					<div
-						className={`hidden flex-1 items-center justify-center transition-all duration-300 lg:flex ${
+						className={`hidden flex-1 items-center justify-center px-2 transition-all duration-300 sm:flex md:px-0 lg:flex ${
 							isSearchVisible
 								? "pointer-events-auto translate-y-0 opacity-100"
 								: "pointer-events-none -translate-y-2 opacity-0"
 						}`}
 					>
-						<div className="w-full max-w-2xl rounded-full border border-slate-200 bg-white p-1.5 shadow-[0_8px_30px_rgba(7,1,144,0.08)]">
-							<div className="flex items-center gap-2">
-								<div className="flex min-w-0 flex-1 items-center gap-2 px-3">
-									<Search className="h-4 w-4 shrink-0 text-slate-500" />
+						<div className="w-full max-w-2xl rounded-full border border-slate-200 bg-white p-1 shadow-[0_8px_30px_rgba(7,1,144,0.08)] sm:p-1.5">
+							<div className="flex items-center gap-1 sm:gap-2">
+								<div className="flex min-w-0 flex-1 items-center gap-1 px-2 sm:gap-2 sm:px-3">
+									<Search className="h-3.5 w-3.5 shrink-0 text-slate-500 sm:h-4 sm:w-4" />
 									<div ref={searchMenuRef} className="relative w-full">
 										<Input
 											value={searchQuery}
 											onChange={(e) => setSearchQuery(e.target.value)}
 											onFocus={() => setShowSearchSuggestions(true)}
 											onKeyDown={handleSearchKeyDown}
-											placeholder="Search events..."
-											className="h-auto border-none bg-transparent p-0 font-medium text-[15px] text-slate-700 shadow-none placeholder:text-slate-400 focus-visible:ring-0"
+											placeholder="Search..."
+											className="h-auto border-none bg-transparent p-0 font-medium text-slate-700 text-xs shadow-none placeholder:text-slate-400 focus-visible:ring-0 sm:text-[15px]"
 										/>
 										<SearchSuggestions
 											suggestions={suggestions}
@@ -400,7 +404,7 @@ export function Navbar({ minimal = false }: NavbarProps) {
 									</div>
 								</div>
 
-								<div className="h-8 w-px bg-slate-200" />
+								<div className="hidden h-6 w-px bg-slate-200 sm:block md:h-8" />
 
 								<div
 									ref={locationMenuRef}
@@ -409,23 +413,23 @@ export function Navbar({ minimal = false }: NavbarProps) {
 									<button
 										type="button"
 										onClick={() => setIsLocationMenuOpen((prev) => !prev)}
-										className="flex items-center gap-2 rounded-lg px-1 py-1.5 transition-colors hover:bg-slate-50"
+										className="flex items-center gap-1 rounded-lg px-0.5 py-1 transition-colors hover:bg-slate-50 sm:gap-2 sm:px-1 md:py-1.5"
 										aria-expanded={isLocationMenuOpen}
 										aria-label="Open location menu"
 									>
-										<MapPin className="h-4 w-4 shrink-0 text-slate-500" />
-										<span className="w-24 truncate text-left font-semibold text-[#070190] text-sm">
-											{location || "Select location"}
+										<MapPin className="h-3 w-3 shrink-0 text-slate-500 sm:h-4 sm:w-4" />
+										<span className="w-20 truncate text-left font-semibold text-[#070190] text-xs sm:w-24 sm:text-sm">
+											{location || "Location"}
 										</span>
 										<ChevronDown
-											className={`h-3.5 w-3.5 text-slate-500 transition-transform ${
+											className={`h-3 w-3 text-slate-500 transition-transform sm:h-3.5 sm:w-3.5 md:h-3.5 md:w-3.5 ${
 												isLocationMenuOpen ? "rotate-180" : "rotate-0"
 											}`}
 										/>
 									</button>
 
 									<div
-										className={`absolute top-full right-0 z-50 mt-2 w-60 rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_18px_40px_rgba(7,1,144,0.16)] transition-all ${
+										className={`absolute top-full right-0 z-50 mt-1.5 w-48 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-[0_18px_40px_rgba(7,1,144,0.16)] transition-all sm:p-2 md:mt-2 md:w-60 ${
 											isLocationMenuOpen
 												? "pointer-events-auto translate-y-0 opacity-100"
 												: "pointer-events-none -translate-y-1 opacity-0"
@@ -474,10 +478,10 @@ export function Navbar({ minimal = false }: NavbarProps) {
 								<Button
 									type="button"
 									onClick={handleSearch}
-									className="h-10 w-10 rounded-full bg-[#030370] p-0 text-white shadow-none hover:bg-[#030370]/90"
+									className="h-8 w-8 shrink-0 rounded-full bg-[#030370] p-0 text-white shadow-none hover:bg-[#030370]/90 sm:h-9 sm:w-9"
 									aria-label="Search events"
 								>
-									<Search className="h-4 w-4" />
+									<Search className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
 								</Button>
 							</div>
 						</div>
@@ -485,16 +489,16 @@ export function Navbar({ minimal = false }: NavbarProps) {
 				)}
 
 				{!minimal && !isHostRoute && (
-					<nav className="hidden items-center gap-3 md:flex lg:gap-4">
+					<nav className="hidden items-center gap-0.5 lg:flex lg:gap-1 xl:gap-3">
 						<Link
 							href="/events"
-							className="rounded-full border border-transparent px-4 py-2 font-semibold text-slate-700 text-sm transition-all hover:border-[#dfe3f6] hover:bg-[#f4f6ff] hover:text-[#030370]"
+							className="whitespace-nowrap rounded-full border border-transparent px-2 py-0.5 font-semibold text-[11px] text-slate-700 transition-all hover:border-[#dfe3f6] hover:bg-[#f4f6ff] hover:text-[#030370] xl:px-4 xl:py-2 xl:text-sm"
 						>
 							Discover
 						</Link>
 						<Link
 							href="/events"
-							className="rounded-full border border-[#e6e9f8] bg-[#f9faff] px-4 py-2 font-semibold text-[#030370] text-sm transition-all hover:border-[#cad2f4] hover:bg-[#eef1ff]"
+							className="whitespace-nowrap rounded-full border border-[#e6e9f8] bg-[#f9faff] px-2 py-0.5 font-semibold text-[#030370] text-[11px] transition-all hover:border-[#cad2f4] hover:bg-[#eef1ff] xl:px-4 xl:py-2 xl:text-sm"
 						>
 							Create Event +
 						</Link>

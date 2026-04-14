@@ -148,32 +148,32 @@ export function EventsPageFilters({
 	};
 
 	return (
-		<div className="rounded-3xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
-			<div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+		<div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4 md:p-5 lg:p-6">
+			<div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
 				<div
 					ref={locationMenuRef}
-					className="relative flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 shadow-sm"
+					className="relative flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 shadow-sm sm:rounded-xl sm:px-3 sm:py-2 lg:rounded-2xl lg:px-4 lg:py-2.5"
 				>
 					<button
 						type="button"
 						onClick={() => setIsLocationMenuOpen((prev) => !prev)}
-						className="flex items-center gap-2 rounded-xl px-1.5 py-1 text-left transition-colors hover:bg-white"
+						className="flex items-center gap-1.5 rounded-lg px-1 py-0.5 text-left transition-colors hover:bg-white sm:gap-2 sm:px-1.5 sm:py-1 lg:px-2"
 						aria-expanded={isLocationMenuOpen}
 						aria-label="Open location menu"
 					>
-						<MapPin className="h-4 w-4 shrink-0 text-slate-500" />
-						<span className="w-28 truncate font-semibold text-[#070190] text-sm sm:w-32">
+						<MapPin className="h-3.5 w-3.5 shrink-0 text-slate-500 sm:h-4 sm:w-4" />
+						<span className="max-w-[100px] truncate font-semibold text-[#070190] text-xs sm:max-w-[140px] sm:text-sm lg:max-w-[160px]">
 							{selectedLocation || "Select location"}
 						</span>
 						<ChevronDown
-							className={`h-3.5 w-3.5 text-slate-500 transition-transform ${
+							className={`h-3 w-3 shrink-0 text-slate-500 transition-transform sm:h-3.5 sm:w-3.5 ${
 								isLocationMenuOpen ? "rotate-180" : "rotate-0"
 							}`}
 						/>
 					</button>
 
 					<div
-						className={`absolute top-full left-0 z-50 mt-2 w-72 rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_18px_40px_rgba(7,1,144,0.16)] transition-all ${
+						className={`absolute top-full left-0 z-50 mt-2 w-screen max-w-[calc(100vw-24px)] rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_18px_40px_rgba(7,1,144,0.16)] transition-all sm:w-80 sm:max-w-none md:w-96 lg:w-64 ${
 							isLocationMenuOpen
 								? "pointer-events-auto translate-y-0 opacity-100"
 								: "pointer-events-none -translate-y-1 opacity-0"
@@ -183,18 +183,18 @@ export function EventsPageFilters({
 							type="button"
 							onClick={handleUseLiveLocation}
 							disabled={isLocating}
-							className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-medium text-[#070190] text-sm transition-colors hover:bg-[#f4f6ff] disabled:cursor-not-allowed disabled:opacity-70"
+							className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left font-medium text-[#070190] text-xs transition-colors hover:bg-[#f4f6ff] disabled:cursor-not-allowed disabled:opacity-70 sm:rounded-xl sm:px-3 sm:text-sm"
 						>
-							<LocateFixed className="h-4 w-4" />
+							<LocateFixed className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
 							{isLocating ? "Fetching live location..." : "Fetch live location"}
 						</button>
 
 						<button
 							type="button"
 							onClick={handleBrowseOnlineEvents}
-							className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-medium text-[#070190] text-sm transition-colors hover:bg-[#f4f6ff]"
+							className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left font-medium text-[#070190] text-xs transition-colors hover:bg-[#f4f6ff] sm:rounded-xl sm:px-3 sm:text-sm"
 						>
-							<Globe className="h-4 w-4" />
+							<Globe className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
 							Browse online events
 						</button>
 
@@ -205,22 +205,22 @@ export function EventsPageFilters({
 								key={option.toLowerCase()}
 								type="button"
 								onClick={() => handleLocationSelect(option)}
-								className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-medium text-slate-700 text-sm transition-colors hover:bg-[#f4f6ff] hover:text-[#030370]"
+								className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left font-medium text-slate-700 text-xs transition-colors hover:bg-[#f4f6ff] hover:text-[#030370] sm:rounded-xl sm:px-3 sm:text-sm"
 							>
-								<MapPin className="h-3.5 w-3.5" />
+								<MapPin className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />
 								{option}
 							</button>
 						))}
 					</div>
 				</div>
 
-				<div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-3 lg:max-w-4xl">
+				<div className="grid flex-1 grid-cols-1 gap-2 sm:gap-3 md:grid-cols-3 lg:max-w-4xl lg:gap-4">
 					<select
 						value={category || ""}
 						onChange={(event) =>
 							handleSelectChange("category", event.target.value)
 						}
-						className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 font-semibold text-slate-900 text-sm shadow-sm outline-none transition-colors focus:border-[#030370]"
+						className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 font-semibold text-slate-900 text-xs shadow-sm outline-none transition-colors focus:border-[#030370] sm:h-10 sm:rounded-xl sm:px-3 sm:text-sm md:h-11 lg:h-12 lg:rounded-2xl lg:px-4"
 					>
 						{CATEGORY_OPTIONS.map((option) => (
 							<option key={option.id} value={option.id}>
@@ -232,7 +232,7 @@ export function EventsPageFilters({
 					<select
 						value={mode || ""}
 						onChange={(event) => handleSelectChange("mode", event.target.value)}
-						className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 font-semibold text-slate-900 text-sm shadow-sm outline-none transition-colors focus:border-[#030370]"
+						className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 font-semibold text-slate-900 text-xs shadow-sm outline-none transition-colors focus:border-[#030370] sm:h-10 sm:rounded-xl sm:px-3 sm:text-sm md:h-11 lg:h-12 lg:rounded-2xl lg:px-4"
 					>
 						{MODE_OPTIONS.map((option) => (
 							<option key={option.id} value={option.id}>
@@ -244,7 +244,7 @@ export function EventsPageFilters({
 					<select
 						value={type || ""}
 						onChange={(event) => handleSelectChange("type", event.target.value)}
-						className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 font-semibold text-slate-900 text-sm shadow-sm outline-none transition-colors focus:border-[#030370]"
+						className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 font-semibold text-slate-900 text-xs shadow-sm outline-none transition-colors focus:border-[#030370] sm:h-10 sm:rounded-xl sm:px-3 sm:text-sm md:h-11 lg:h-12 lg:rounded-2xl lg:px-4"
 					>
 						{TYPE_OPTIONS.map((option) => (
 							<option key={option.id} value={option.id}>
@@ -258,7 +258,7 @@ export function EventsPageFilters({
 					<Button
 						type="button"
 						variant="ghost"
-						className="h-12 rounded-2xl border border-slate-200 bg-white px-5 text-slate-600 shadow-sm hover:border-[#030370] hover:bg-[#030370]/5 hover:text-[#030370]"
+						className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-slate-600 text-xs shadow-sm hover:border-[#030370] hover:bg-[#030370]/5 hover:text-[#030370] sm:h-10 sm:rounded-xl sm:px-4 sm:text-sm md:h-11 lg:h-12 lg:rounded-2xl lg:px-5"
 						onClick={clearAll}
 					>
 						Reset

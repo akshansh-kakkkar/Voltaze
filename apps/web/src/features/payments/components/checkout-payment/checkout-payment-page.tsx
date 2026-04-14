@@ -235,15 +235,15 @@ export function CheckoutPaymentPage({ slug }: { slug: string }) {
 	return (
 		<div className="min-h-screen bg-[#f7f8fb]">
 			<Navbar />
-			<div className="mx-auto mt-24 w-full max-w-2xl px-6 pb-12">
-				<section className="rounded-2xl bg-[#e8eefc] p-8 text-center shadow-sm">
-					<h1 className="font-bold text-3xl text-[#0f172a]">
+			<div className="mx-auto mt-12 w-full max-w-2xl px-3 pb-8 sm:mt-16 sm:px-4 sm:pb-10 md:mt-20 md:px-6 md:pb-12 lg:mt-24">
+				<section className="rounded-xl bg-[#e8eefc] p-5 text-center shadow-sm sm:rounded-2xl sm:p-6 md:p-8">
+					<h1 className="font-bold text-2xl text-[#0f172a] sm:text-2.5xl md:text-3xl lg:text-3xl">
 						Opening secure checkout
 					</h1>
-					<p className="mt-2 text-[#64748b] text-sm">
+					<p className="mt-2 text-[#64748b] text-xs sm:text-sm">
 						Please wait while we launch Razorpay for your booking.
 					</p>
-					<p className="mt-6 font-semibold text-[#070190] text-sm">
+					<p className="mt-4 font-semibold text-[#070190] text-xs sm:mt-5 sm:text-sm md:mt-6 md:text-base">
 						{isPaying
 							? "Starting payment..."
 							: `Amount: ${selectedTier ? formatMoney(selectedTier.price) : "-"}`}
