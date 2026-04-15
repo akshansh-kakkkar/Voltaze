@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
 	CreateEventTicketTierInput,
 	EventFilterInput,
+	ModerateEventInput,
 	UpdateEventInput,
 	UpdateEventTicketTierInput,
 } from "@voltaze/schema";
@@ -87,6 +88,35 @@ export function useUpdateEvent(id: string) {
 			showNotification({
 				title: "Error",
 				message: getApiErrorMessage(error, "Failed to update event"),
+				color: "red",
+			});
+		},
+	});
+}
+
+/**
+ * Hook to approve/reject an event (admin only)
+ */
+export function useModerateEvent(id: string) {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: (data: ModerateEventInput) =>
+			eventsService.moderateEvent(id, data),
+		onSuccess: (event, variables) => {
+			queryClient.invalidateQueries({ queryKey: EVENTS_KEYS.detail(id) });
+			queryClient.invalidateQueries({ queryKey: EVENTS_KEYS.lists() });
+			showNotification({
+				title:
+					variables.action === "APPROVE" ? "Event approved" : "Event rejected",
+				message: `Event "${event.name}" was ${variables.action === "APPROVE" ? "approved" : "rejected"}.`,
+				color: variables.action === "APPROVE" ? "green" : "blue",
+			});
+		},
+		onError: (error: unknown) => {
+			showNotification({
+				title: "Error",
+				message: getApiErrorMessage(error, "Failed to moderate event"),
 				color: "red",
 			});
 		},

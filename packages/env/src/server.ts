@@ -61,6 +61,13 @@ export const env = createEnv({
 			.string()
 			.min(1)
 			.default(DEV_RAZORPAY_WEBHOOK_SECRET),
+		ZOHO_TICKET_EMAIL_ENABLED: z.enum(["true", "false"]).default("false"),
+		ZOHO_SMTP_HOST: z.string().default("smtp.zoho.in"),
+		ZOHO_SMTP_PORT: z.coerce.number().int().positive().default(465),
+		ZOHO_SMTP_SECURE: z.enum(["true", "false"]).default("true"),
+		ZOHO_SMTP_USER: z.string().optional(),
+		ZOHO_SMTP_PASS: z.string().optional(),
+		ZOHO_MAIL_FROM: z.string().email().optional(),
 		ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().int().positive().default(900),
 		REFRESH_TOKEN_TTL_SECONDS: z.coerce
 			.number()

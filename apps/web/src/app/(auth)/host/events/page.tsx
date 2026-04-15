@@ -43,6 +43,9 @@ export default function HostEventsPage() {
 		const draft = events.filter((e) => e.status === "DRAFT").length;
 		const published = events.filter((e) => e.status === "PUBLISHED").length;
 		const completed = events.filter((e) => e.status === "COMPLETED").length;
+		const moderationPending = events.filter(
+			(e) => e.moderationStatus === "PENDING",
+		).length;
 		const live = events.filter((e) => {
 			const now = Date.now();
 			return (
@@ -50,7 +53,7 @@ export default function HostEventsPage() {
 				new Date(e.endDate).getTime() >= now
 			);
 		}).length;
-		return { total, draft, published, completed, live };
+		return { total, draft, published, completed, moderationPending, live };
 	}, [events]);
 
 	const handleDelete = async (eventId: string, eventName: string) => {
@@ -99,7 +102,7 @@ export default function HostEventsPage() {
 				<StatCard label="Total" value={stats.total} />
 				<StatCard label="Published" value={stats.published} />
 				<StatCard label="Draft" value={stats.draft} />
-				<StatCard label="Live now" value={stats.live} />
+				<StatCard label="Pending approval" value={stats.moderationPending} />
 				<StatCard label="Completed" value={stats.completed} />
 			</div>
 
@@ -167,6 +170,7 @@ export default function HostEventsPage() {
 								<Tag>{event.mode}</Tag>
 								<Tag>{event.type}</Tag>
 								<Tag>{event.visibility}</Tag>
+								<ModerationBadge status={event.moderationStatus} />
 							</div>
 
 							<div className="mt-4 flex items-center justify-end gap-2 border-slate-100 border-t pt-3">
@@ -237,6 +241,27 @@ function StatusBadge({
 			className={`rounded-full border px-2 py-1 font-semibold text-xs ${klass}`}
 		>
 			{status}
+		</span>
+	);
+}
+
+function ModerationBadge({
+	status,
+}: {
+	status: "PENDING" | "APPROVED" | "REJECTED";
+}) {
+	const klass =
+		status === "APPROVED"
+			? "bg-emerald-100 text-emerald-700 border-emerald-200"
+			: status === "PENDING"
+				? "bg-amber-100 text-amber-700 border-amber-200"
+				: "bg-rose-100 text-rose-700 border-rose-200";
+
+	return (
+		<span
+			className={`rounded-full border px-2 py-1 font-semibold text-xs ${klass}`}
+		>
+			Review: {status}
 		</span>
 	);
 }

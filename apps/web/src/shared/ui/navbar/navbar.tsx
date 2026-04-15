@@ -327,10 +327,18 @@ export function Navbar({ minimal = false }: NavbarProps) {
 							items: [{ label: "Browse Events", href: "/events" }],
 						},
 					]),
+			...(user?.role === "ADMIN"
+				? [
+						{
+							section: "Admin",
+							items: [{ label: "Admin Dashboard", href: "/admin/events" }],
+						},
+					]
+				: []),
 		];
 
 		return sections;
-	}, [minimal, isHostRoute]);
+	}, [minimal, isHostRoute, user?.role]);
 
 	const profileInitial = getProfileInitial(user?.name, user?.email);
 	const alwaysShowSearch = pathname !== "/";

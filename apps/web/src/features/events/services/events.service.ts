@@ -3,6 +3,7 @@ import type {
 	CreateEventTicketTierInput,
 	Event,
 	EventFilterInput,
+	ModerateEventInput,
 	TicketTier,
 	UpdateEventInput,
 	UpdateEventTicketTierInput,
@@ -47,6 +48,17 @@ export const eventsService = {
 	 */
 	async updateEvent(id: string, data: UpdateEventInput) {
 		const response = await apiClient.patch<Event>(`/events/${id}`, data);
+		return response.data;
+	},
+
+	/**
+	 * Approve or reject an event (admin only)
+	 */
+	async moderateEvent(id: string, data: ModerateEventInput) {
+		const response = await apiClient.patch<Event>(
+			`/events/${id}/moderate`,
+			data,
+		);
 		return response.data;
 	},
 

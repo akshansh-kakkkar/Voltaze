@@ -41,6 +41,12 @@ enum EventStatus {
   COMPLETED
 }
 
+enum EventModerationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum OrderStatus {
   PENDING
   COMPLETED
@@ -180,6 +186,7 @@ model Event {
   mode        EventMode
   visibility  EventVisibility
   status      EventStatus     @default(DRAFT)
+  moderationStatus EventModerationStatus @default(APPROVED)
 
   description String
 

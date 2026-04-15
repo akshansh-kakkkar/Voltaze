@@ -44,6 +44,7 @@ export const eventSchema = z.object({
 	mode: z.enum(["ONLINE", "OFFLINE"]),
 	visibility: z.enum(["PUBLIC", "PRIVATE"]),
 	status: z.enum(["DRAFT", "PUBLISHED", "CANCELLED", "COMPLETED"]),
+	moderationStatus: z.enum(["PENDING", "APPROVED", "REJECTED"]),
 	description: z.string(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
@@ -57,6 +58,7 @@ const createEventSchemaBase = eventSchema
 		slug: true,
 		userId: true,
 		status: true,
+		moderationStatus: true,
 	})
 	.extend({
 		name: z.string().min(1).max(200),
@@ -108,6 +110,7 @@ export const eventFilterSchema = z
 	.object({
 		userId: ulidSchema.optional(),
 		status: z.enum(["DRAFT", "PUBLISHED", "CANCELLED", "COMPLETED"]).optional(),
+		moderationStatus: z.enum(["PENDING", "APPROVED", "REJECTED"]).optional(),
 		type: z.enum(["FREE", "PAID"]).optional(),
 		mode: z.enum(["ONLINE", "OFFLINE"]).optional(),
 		visibility: z.enum(["PUBLIC", "PRIVATE"]).optional(),
@@ -130,6 +133,10 @@ export const eventFilterSchema = z
 
 export const eventTicketTierParamsSchema = z.object({
 	eventId: z.string().cuid(),
+});
+
+export const moderateEventSchema = z.object({
+	action: z.enum(["APPROVE", "REJECT"]),
 });
 
 export const eventSlugParamSchema = z.object({
@@ -219,6 +226,7 @@ export const updateEventTicketTierSchema = updateTicketTierSchemaBase
 export type CreateEventInput = z.infer<typeof createEventSchema>;
 export type UpdateEventInput = z.infer<typeof updateEventSchema>;
 export type EventFilterInput = z.infer<typeof eventFilterSchema>;
+export type ModerateEventInput = z.infer<typeof moderateEventSchema>;
 export type TicketTierFilterInput = z.infer<typeof ticketTierFilterSchema>;
 export type CreateTicketTierInput = z.infer<typeof createTicketTierSchema>;
 export type UpdateTicketTierInput = z.infer<typeof updateTicketTierSchema>;

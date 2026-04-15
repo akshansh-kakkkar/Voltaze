@@ -22,11 +22,13 @@ type EventActor = {
 };
 
 type EventStatus = "DRAFT" | "PUBLISHED" | "CANCELLED" | "COMPLETED";
+type EventModerationStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 export class EventsService {
 	private buildReadAccessWhere(actor?: EventActor): Prisma.EventWhereInput {
 		const publicPublishedWhere: Prisma.EventWhereInput = {
 			visibility: "PUBLIC",
+			moderationStatus: "APPROVED",
 			status: {
 				in: ["PUBLISHED", "COMPLETED"],
 			},
@@ -49,6 +51,9 @@ export class EventsService {
 		return {
 			OR: [
 				publicPublishedWhere,
+				{
+					userId: actor.userId,
+				},
 				{
 					attendees: {
 						some: {
@@ -243,15 +248,19 @@ export class EventsService {
 		return event;
 	}
 
-	async create(input: CreateEventInput, hostUserId: string) {
+	async create(input: CreateEventInput, actor: EventActor) {
 		this.validateEventWindow(input.startDate, input.endDate);
 		const slug = input.name.toLowerCase().trim().replaceAll(/\s+/g, "-");
+		const moderationStatus: EventModerationStatus =
+			actor.role === "USER" ? "PENDING" : "APPROVED";
 
 		try {
 			return await prisma.event.create({
 				data: {
 					...input,
-					userId: hostUserId,
+					userId: actor.userId,
+					moderationStatus,
+					status: actor.role === "USER" ? "PUBLISHED" : "DRAFT",
 					slug: `${slug}-${Date.now()}`,
 				},
 			});
@@ -517,6 +526,34 @@ export class EventsService {
 		}
 
 		await prisma.event.delete({ where: { id: event.id } });
+	}
+
+	async moderate(id: string, action: "APPROVE" | "REJECT", actor: EventActor) {
+		if (actor.role !== "ADMIN") {
+			throw new ForbiddenError("Only admins can moderate events");
+		}
+
+		const event = await prisma.event.findUnique({ where: { id } });
+		if (!event) {
+			throw new NotFoundError("Event not found");
+		}
+
+		const moderationStatus: EventModerationStatus =
+			action === "APPROVE" ? "APPROVED" : "REJECTED";
+		const nextStatus: EventStatus =
+			action === "APPROVE"
+				? event.status === "DRAFT"
+					? "PUBLISHED"
+					: event.status
+				: event.status;
+
+		return prisma.event.update({
+			where: { id },
+			data: {
+				moderationStatus,
+				status: nextStatus,
+			},
+		});
 	}
 }
 

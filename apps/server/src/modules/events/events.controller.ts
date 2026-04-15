@@ -6,6 +6,7 @@ import {
 	eventTicketTierIdParamsSchema,
 	eventTicketTierParamsSchema,
 	idParamSchema,
+	moderateEventSchema,
 	ticketTierFilterSchema,
 	updateEventSchema,
 	updateEventTicketTierSchema,
@@ -67,8 +68,19 @@ export class EventsController {
 
 	async create(req: Request, res: Response) {
 		const body = createEventSchema.parse(req.body);
-		const event = await eventsService.create(body, this.getActor(req).userId);
+		const event = await eventsService.create(body, this.getActor(req));
 		res.status(201).json(event);
+	}
+
+	async moderate(req: Request, res: Response) {
+		const params = idParamSchema.parse(req.params);
+		const body = moderateEventSchema.parse(req.body);
+		const event = await eventsService.moderate(
+			params.id,
+			body.action,
+			this.getActor(req),
+		);
+		res.status(200).json(event);
 	}
 
 	async update(req: Request, res: Response) {

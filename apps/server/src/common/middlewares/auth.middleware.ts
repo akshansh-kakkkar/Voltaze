@@ -19,6 +19,14 @@ function getBearerToken(authorizationHeader?: string) {
 	return token;
 }
 
+function normalizeUserRole(role: unknown): UserRole {
+	if (role === "ADMIN" || role === "HOST" || role === "USER") {
+		return role;
+	}
+
+	return "USER";
+}
+
 async function attachAuthContext(authReq: RequestWithAuth, token: string) {
 	const payload = await verifyAccessToken(token);
 	const session = await prisma.session.findUnique({
@@ -39,7 +47,7 @@ async function attachAuthContext(authReq: RequestWithAuth, token: string) {
 		userId: session.user.id,
 		sessionId: session.id,
 		email: session.user.email,
-		role: session.user.role,
+		role: normalizeUserRole(session.user.role),
 	};
 	authReq.user = session.user;
 }
@@ -57,7 +65,7 @@ async function attachBetterAuthContext(authReq: RequestWithAuth) {
 		userId: session.user.id,
 		sessionId: session.session.id,
 		email: session.user.email,
-		role: session.user.role,
+		role: normalizeUserRole(session.user.role),
 	};
 	authReq.user = session.user as typeof authReq.user;
 	return true;

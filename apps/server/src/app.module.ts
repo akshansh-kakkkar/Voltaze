@@ -1,4 +1,3 @@
-import { env } from "@voltaze/env/server";
 import { toNodeHandler } from "better-auth/node";
 import cors from "cors";
 import express, { type Express } from "express";
