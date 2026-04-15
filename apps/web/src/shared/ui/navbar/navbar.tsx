@@ -340,7 +340,7 @@ export function Navbar({ minimal = false }: NavbarProps) {
 	const profileInitial = getProfileInitial(user?.name, user?.email);
 	const alwaysShowSearch = pathname !== "/";
 	const isSearchVisible =
-		!minimal && !isHostRoute && (alwaysShowSearch || showScrolledSearch);
+		!minimal && !isManagementRoute && (alwaysShowSearch || showScrolledSearch);
 	const shouldShrinkLogo = showScrolledSearch || alwaysShowSearch;
 
 	return (
@@ -493,7 +493,7 @@ export function Navbar({ minimal = false }: NavbarProps) {
 					</div>
 				)}
 
-				{!minimal && !isHostRoute && (
+				{!minimal && !isManagementRoute && (
 					<nav className="hidden items-center gap-0.5 lg:flex lg:gap-1 xl:gap-3">
 						<Link
 							href="/events"
