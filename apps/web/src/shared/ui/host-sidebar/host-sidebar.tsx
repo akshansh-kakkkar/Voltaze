@@ -95,19 +95,17 @@ export function HostSidebar() {
 
 	return (
 		<>
-			{/* Mobile Menu Button */}
-			<button
-				type="button"
-				onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-				className="fixed top-14 left-4 z-40 rounded-lg p-2 text-slate-700 transition-colors hover:bg-slate-100 sm:top-16 lg:hidden"
-				aria-label="Toggle menu"
-			>
-				{isMobileMenuOpen ? (
-					<X className="h-6 w-6" />
-				) : (
+			{/* Mobile Menu Open Button - Only visible when menu is closed */}
+			{!isMobileMenuOpen && (
+				<button
+					type="button"
+					onClick={() => setIsMobileMenuOpen(true)}
+					className="fixed top-14 left-4 z-50 rounded-lg p-2 text-slate-700 transition-colors hover:bg-slate-100 sm:top-16 lg:hidden"
+					aria-label="Open menu"
+				>
 					<Menu className="h-6 w-6" />
-				)}
-			</button>
+				</button>
+			)}
 
 			{/* Mobile Menu Overlay */}
 			{isMobileMenuOpen && (
@@ -132,7 +130,7 @@ export function HostSidebar() {
 			{/* Mobile Drawer */}
 			<aside
 				className={cn(
-					"fixed top-0 bottom-0 left-0 z-40 flex w-64 flex-col border-slate-200 border-r bg-white/90 backdrop-blur-md transition-transform duration-300 lg:hidden",
+					"fixed top-14 bottom-0 left-0 z-40 flex w-64 flex-col border-slate-200 border-r bg-white/90 backdrop-blur-md transition-transform duration-300 sm:top-16 lg:hidden",
 					isMobileMenuOpen ? "translate-x-0" : "-translate-x-full",
 				)}
 			>
