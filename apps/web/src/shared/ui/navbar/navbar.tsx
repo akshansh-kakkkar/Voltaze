@@ -369,7 +369,7 @@ export function Navbar({ minimal = false }: NavbarProps) {
 							className={`transition-all duration-300 ${shouldShrinkLogo ? "h-5 w-6" : "h-8 w-10"} sm:h-10 sm:w-12`}
 						/>
 						<span
-							className={`font-black text-[#070190] leading-none tracking-tight transition-all duration-300 ${shouldShrinkLogo ? "text-[15px] sm:text-xs" : "text-lg sm:text-2xl"} md:text-[29px]`}
+							className={`font-black text-[#070190] leading-none tracking-tight transition-all duration-300 ${shouldShrinkLogo ? "text-xs sm:text-xs" : "text-sm sm:text-2xl"} md:text-[29px]`}
 						>
 							UniEvent
 						</span>

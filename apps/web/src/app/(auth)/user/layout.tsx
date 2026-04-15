@@ -23,13 +23,13 @@ export default function UserLayout({
 			{/* Main Content Area - scrollable on the right */}
 			<main
 				ref={mainRef}
-				className="w-full pt-16 lg:fixed lg:top-16 lg:right-0 lg:bottom-0 lg:left-64 lg:w-auto lg:overflow-y-auto lg:overflow-x-hidden lg:pt-0"
+				className="w-full pt-25 lg:fixed lg:top-16 lg:right-0 lg:bottom-0 lg:left-64 lg:w-auto lg:overflow-y-auto lg:overflow-x-hidden lg:pt-0"
 			>
 				<div
 					aria-hidden
 					className="pointer-events-none absolute inset-x-0 top-0 z-10 h-8 bg-linear-to-b from-[#d7e8ff]/70 via-[#e9f2ff]/35 to-transparent"
 				/>
-				<div className="relative px-4 pt-14 pb-6 sm:px-6 sm:pt-6 md:px-8 md:pt-3 md:pb-8">
+				<div className="relative px-4 pt-6 pb-6 sm:px-6 sm:pt-8 md:px-8 md:pt-3 md:pb-8">
 					{children}
 				</div>
 			</main>

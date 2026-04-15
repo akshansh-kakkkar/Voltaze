@@ -343,7 +343,7 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
 									alt="Welcome illustration"
 									fill
 									priority
-									sizes="(max-width: 768px) 0px, 352px"
+									sizes="(max-width: 640px) 256px, (max-width: 768px) 288px, 352px"
 									className="object-contain"
 								/>
 							</div>
@@ -367,7 +367,7 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
 									</span>
 								</div>
 
-								<div className="mr-8 ml-auto inline-flex rounded-full border border-[#d8e1fb] bg-[#f5f8ff] p-0.5 shadow-sm sm:mr-0 sm:p-1">
+								<div className="mr-2 inline-flex rounded-full border border-[#d8e1fb] bg-[#f5f8ff] p-0.5 pr-10 shadow-sm sm:mr-0 sm:p-1 sm:pr-0">
 									<Link
 										href={signupHref}
 										className={`rounded-full px-2.5 py-1 font-semibold text-xs transition-colors sm:px-4 sm:py-2 md:px-5 ${
