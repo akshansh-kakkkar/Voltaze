@@ -64,15 +64,25 @@ export const authService = {
 				? `?redirect=${encodeURIComponent(normalizedRedirect)}`
 				: ""
 		}`;
-		const redirectUrl = new URL(
-			`${getActiveBackendUrl()}/api/auth/sign-in/social`,
-		);
-		redirectUrl.searchParams.set("provider", "google");
-		redirectUrl.searchParams.set("callbackURL", callbackURL);
-		redirectUrl.searchParams.set("errorCallbackURL", errorCallbackURL);
+		const authClient = getAuthClient();
+		const { data, error } = await authClient.signIn.social({
+			provider: "google",
+			callbackURL,
+			errorCallbackURL,
+		});
 
-		window.location.assign(redirectUrl.toString());
-		return null;
+		if (error) {
+			throw error;
+		}
+
+		if (data && typeof data === "object") {
+			const redirectUrl = (data as { url?: string }).url;
+			if (redirectUrl) {
+				window.location.assign(redirectUrl);
+			}
+		}
+
+		return data;
 	},
 
 	/**
