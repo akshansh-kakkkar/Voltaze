@@ -99,7 +99,7 @@ function ProfileCard({
 	return (
 		<div className="relative overflow-hidden rounded-2xl border border-[#dbe7ff] bg-white shadow-sm">
 			{/* Gradient banner */}
-			<div className="h-32 bg-gradient-to-r from-[#071a78] via-[#1e3faa] to-[#4f6fdb]" />
+			<div className="h-32 bg-linear-to-r from-[#071a78] via-[#1e3faa] to-[#4f6fdb]" />
 
 			<div className="relative px-6 pb-6">
 				{/* Avatar — centered overlap */}
@@ -113,7 +113,7 @@ function ProfileCard({
 							className="h-24 w-24 rounded-full border-4 border-white object-cover shadow-lg"
 						/>
 					) : (
-						<div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-[#071a78] to-[#4f6fdb] shadow-lg">
+						<div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-white bg-linear-to-br from-[#071a78] to-[#4f6fdb] shadow-lg">
 							<span className="font-bold text-3xl text-white">
 								{user.name?.charAt(0)?.toUpperCase() ||
 									user.email.charAt(0).toUpperCase()}

@@ -15,7 +15,16 @@ import { useEvent } from "@/features/events";
 import { useOrders } from "@/features/orders";
 
 export default function UserOrdersPage() {
-	const { data: response, isLoading, isError } = useOrders({ limit: 50 });
+	const {
+		data: response,
+		isLoading,
+		isError,
+	} = useOrders({
+		page: 1,
+		limit: 50,
+		sortBy: "createdAt",
+		sortOrder: "desc",
+	});
 
 	return (
 		<div className="space-y-6">
@@ -105,9 +114,7 @@ function OrderCard({ order }: { order: Order }) {
 							</div>
 							<div className="flex items-center gap-1">
 								<MapPin className="h-3.5 w-3.5" />
-								<span className="max-w-[200px] truncate">
-									{event.venueName}
-								</span>
+								<span className="max-w-50 truncate">{event.venueName}</span>
 							</div>
 						</div>
 					) : null}
