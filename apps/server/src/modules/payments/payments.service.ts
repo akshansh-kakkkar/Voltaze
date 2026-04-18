@@ -2,11 +2,13 @@ import crypto from "node:crypto";
 import { Prisma, prisma, type UserRole } from "@voltaze/db";
 import { env } from "@voltaze/env/server";
 import {
+	type ConfirmFreeOrderInput,
 	createPaginationMeta,
 	type InitiatePaymentInput,
 	type PaymentFilterInput,
 	type RazorpayWebhookInput,
 	type RefundPaymentInput,
+	type TicketHolderInput,
 	type UpdatePaymentInput,
 	type VerifyPaymentInput,
 } from "@voltaze/schema";
@@ -37,10 +39,13 @@ type CheckoutItem = {
 	quantity: number;
 };
 
+type TicketHolder = TicketHolderInput;
+
 type TicketEmailTicket = {
 	id: string;
 	createdAt: Date;
 	tier: {
+		id: string;
 		name: string;
 	};
 	pass: {
@@ -263,6 +268,49 @@ export class PaymentsService {
 		}));
 	}
 
+	private normalizeTicketHolders(holders?: unknown[]): TicketHolder[] {
+		if (!holders || holders.length === 0) {
+			return [];
+		}
+
+		const normalized: TicketHolder[] = [];
+
+		for (const holder of holders) {
+			if (!holder || typeof holder !== "object" || Array.isArray(holder)) {
+				continue;
+			}
+
+			const {
+				tierId,
+				name,
+				email,
+				phone,
+			}: {
+				tierId?: unknown;
+				name?: unknown;
+				email?: unknown;
+				phone?: unknown;
+			} = holder;
+
+			if (
+				typeof tierId !== "string" ||
+				typeof name !== "string" ||
+				typeof email !== "string"
+			) {
+				continue;
+			}
+
+			normalized.push({
+				tierId,
+				name: name.trim(),
+				email: email.trim().toLowerCase(),
+				phone: typeof phone === "string" ? phone.trim() : null,
+			});
+		}
+
+		return normalized;
+	}
+
 	private buildCheckoutFromExistingTickets(
 		tickets: Array<{ tierId: string; pricePaid: number }>,
 	) {
@@ -274,7 +322,7 @@ export class PaymentsService {
 				ticket.tierId,
 				(quantityByTier.get(ticket.tierId) ?? 0) + 1,
 			);
-			totalAmount += ticket.pricePaid;
+			totalAmount += ticket.pricePaid * 100;
 		}
 
 		return {
@@ -328,7 +376,7 @@ export class PaymentsService {
 				);
 			}
 
-			totalAmount += tier.price * item.quantity;
+			totalAmount += tier.price * item.quantity * 100;
 		}
 
 		return { checkoutItems, totalAmount };
@@ -444,6 +492,7 @@ export class PaymentsService {
 		amount: number;
 		currency: string;
 		tickets: TicketEmailTicket[];
+		ticketHolders: TicketHolder[];
 	}) {
 		const {
 			attendeeName,
@@ -454,6 +503,7 @@ export class PaymentsService {
 			amount,
 			currency,
 			tickets,
+			ticketHolders,
 		} = args;
 
 		const safeAttendeeName = escapeHtml(attendeeName);
@@ -465,6 +515,19 @@ export class PaymentsService {
 			timeZone: eventTimezone,
 		}).format(eventStartDate);
 
+		const buildHolderQueueByTier = () => {
+			const queueMap = new Map<string, TicketHolder[]>();
+			for (const holder of ticketHolders) {
+				const queue = queueMap.get(holder.tierId) ?? [];
+				queue.push(holder);
+				queueMap.set(holder.tierId, queue);
+			}
+
+			return queueMap;
+		};
+
+		const htmlHolderQueueByTier = buildHolderQueueByTier();
+
 		const ticketsListHtml = tickets
 			.map((ticket, index) => {
 				const createdAt = new Intl.DateTimeFormat("en-IN", {
@@ -472,8 +535,14 @@ export class PaymentsService {
 					timeStyle: "short",
 					timeZone: eventTimezone,
 				}).format(ticket.createdAt);
+				const assignedHolder = htmlHolderQueueByTier
+					.get(ticket.tier.id)
+					?.shift();
+				const assignedTo = assignedHolder
+					? `<br/>Assigned To: ${escapeHtml(assignedHolder.name)} (${escapeHtml(assignedHolder.email)})`
+					: "";
 
-				return `<li><strong>Ticket ${index + 1}</strong><br/>Tier: ${escapeHtml(ticket.tier.name)}<br/>Pass Code: <code>${escapeHtml(ticket.pass.code)}</code><br/>Issued: ${escapeHtml(createdAt)}</li>`;
+				return `<li><strong>Ticket ${index + 1}</strong><br/>Tier: ${escapeHtml(ticket.tier.name)}${assignedTo}<br/>Pass Code: <code>${escapeHtml(ticket.pass.code)}</code><br/>Issued: ${escapeHtml(createdAt)}</li>`;
 			})
 			.join("");
 
@@ -489,11 +558,19 @@ export class PaymentsService {
 			<p>Please keep this email handy at venue check-in.</p>
 		`;
 
+		const textHolderQueueByTier = buildHolderQueueByTier();
+
 		const ticketsText = tickets
-			.map(
-				(ticket, index) =>
-					`${index + 1}. Tier: ${ticket.tier.name}, Pass Code: ${ticket.pass.code}`,
-			)
+			.map((ticket, index) => {
+				const assignedHolder = textHolderQueueByTier
+					.get(ticket.tier.id)
+					?.shift();
+				const assignedLabel = assignedHolder
+					? `, Assigned To: ${assignedHolder.name} <${assignedHolder.email}>`
+					: "";
+
+				return `${index + 1}. Tier: ${ticket.tier.name}${assignedLabel}, Pass Code: ${ticket.pass.code}`;
+			})
 			.join("\n");
 
 		const textContent = [
@@ -550,6 +627,7 @@ export class PaymentsService {
 								createdAt: true,
 								tier: {
 									select: {
+										id: true,
 										name: true,
 									},
 								},
@@ -574,6 +652,12 @@ export class PaymentsService {
 			return;
 		}
 
+		const ticketHolders = this.normalizeTicketHolders(
+			Array.isArray(gatewayMeta.ticketHolders)
+				? gatewayMeta.ticketHolders
+				: undefined,
+		);
+
 		const tickets = payment.order.tickets.filter(
 			(ticket): ticket is TicketEmailTicket =>
 				Boolean(ticket.pass?.code) && Boolean(ticket.tier?.name),
@@ -592,6 +676,7 @@ export class PaymentsService {
 			amount: payment.amount,
 			currency: payment.currency,
 			tickets,
+			ticketHolders,
 		});
 
 		try {
@@ -713,6 +798,9 @@ export class PaymentsService {
 		}
 
 		const requestedCheckoutItems = this.normalizeCheckoutItems(input.items);
+		const requestedTicketHolders = this.normalizeTicketHolders(
+			input.ticketHolders,
+		);
 		if (requestedCheckoutItems.length > 0 && order.tickets.length > 0) {
 			throw new BadRequestError(
 				"Order already contains issued tickets. Initiate payment without checkout items.",
@@ -764,6 +852,7 @@ export class PaymentsService {
 					razorpayOrderId: razorpayOrder.id,
 					razorpayOrderStatus: razorpayOrder.status,
 					checkoutItems,
+					ticketHolders: requestedTicketHolders,
 					issueTicketsOnVerify,
 				} as Prisma.InputJsonValue,
 			},
@@ -786,6 +875,110 @@ export class PaymentsService {
 				eventName: order.event.name,
 			},
 		};
+	}
+
+	async confirmFreeOrder(input: ConfirmFreeOrderInput, actor: PaymentActor) {
+		const orderWhere: Prisma.OrderWhereInput = {
+			id: input.orderId,
+			deletedAt: null,
+		};
+
+		if (actor.role === "HOST") {
+			orderWhere.event = {
+				userId: actor.userId,
+			};
+		} else if (actor.role === "USER") {
+			orderWhere.attendee = {
+				userId: actor.userId,
+			};
+		}
+
+		const order = await prisma.order.findFirst({
+			where: orderWhere,
+			include: {
+				event: true,
+				attendee: true,
+			},
+		});
+
+		if (!order) {
+			throw new NotFoundError("Order not found");
+		}
+
+		if (order.status !== "PENDING") {
+			throw new BadRequestError(
+				"Can only confirm free checkout for pending orders",
+			);
+		}
+
+		const existingPayment = await prisma.payment.findFirst({
+			where: {
+				orderId: order.id,
+				deletedAt: null,
+				status: { in: ["PENDING", "SUCCESS"] },
+			},
+		});
+
+		if (existingPayment) {
+			if (existingPayment.status === "SUCCESS") {
+				await this.sendTicketConfirmationEmailIfNeeded(existingPayment.id);
+				return { payment: existingPayment, alreadyVerified: true };
+			}
+
+			throw new ConflictError("A payment already exists for this order");
+		}
+
+		const checkoutItems = this.normalizeCheckoutItems(input.items);
+		const ticketHolders = this.normalizeTicketHolders(input.ticketHolders);
+		const checkoutPlan = await this.buildCheckoutFromRequestedItems(
+			order.eventId,
+			checkoutItems,
+		);
+
+		if (checkoutPlan.totalAmount > 0) {
+			throw new BadRequestError(
+				"Selected tiers are paid. Use payment initiation for this order.",
+			);
+		}
+
+		const payment = await prisma.$transaction(async (tx) => {
+			await this.issueTicketsAndPassesForCheckout(
+				tx,
+				{
+					id: order.id,
+					eventId: order.eventId,
+					attendeeId: order.attendeeId,
+				},
+				checkoutItems,
+			);
+
+			const created = await tx.payment.create({
+				data: {
+					orderId: order.id,
+					amount: 0,
+					currency: input.currency,
+					gateway: "RAZORPAY",
+					status: "SUCCESS",
+					gatewayMeta: {
+						freeCheckout: true,
+						checkoutItems,
+						ticketHolders,
+						verifiedAt: new Date().toISOString(),
+					} as Prisma.InputJsonValue,
+				},
+			});
+
+			await tx.order.update({
+				where: { id: order.id },
+				data: { status: "COMPLETED" },
+			});
+
+			return created;
+		});
+
+		await this.sendTicketConfirmationEmailIfNeeded(payment.id);
+
+		return { payment, alreadyVerified: false };
 	}
 
 	async verify(input: VerifyPaymentInput, actor: PaymentActor) {
