@@ -7,13 +7,15 @@ type CheckoutSummaryEvent = {
 };
 
 type CheckoutSummaryTier = {
+	id: string;
 	name: string;
 	price: number;
+	quantity: number;
 };
 
 export interface CheckoutSummaryProps {
 	event: CheckoutSummaryEvent;
-	selectedTier: CheckoutSummaryTier | null;
+	selectedTiers: CheckoutSummaryTier[];
 	className?: string;
 	currency?: string;
 }
@@ -23,15 +25,25 @@ function formatMoney(amount: number, currency: string) {
 		style: "currency",
 		currency,
 		maximumFractionDigits: 0,
-	}).format(amount / 100);
+	}).format(amount);
 }
 
 export function CheckoutSummary({
 	event,
-	selectedTier,
+	selectedTiers,
 	className,
 	currency = "INR",
 }: CheckoutSummaryProps) {
+	const totalAmount = selectedTiers.reduce(
+		(total, tier) => total + tier.price * tier.quantity,
+		0,
+	);
+
+	const totalTickets = selectedTiers.reduce(
+		(total, tier) => total + tier.quantity,
+		0,
+	);
+
 	return (
 		<aside className={cn("rounded-2xl bg-[#e8eefc] p-6 shadow-sm", className)}>
 			<div className="space-y-3 text-[#0f172a] text-xs">
@@ -56,17 +68,32 @@ export function CheckoutSummary({
 			</div>
 
 			<div className="mt-6 border-slate-300 border-t pt-4 text-sm">
-				<p className="text-slate-600">Selected Ticket</p>
-				<p className="mt-1 font-semibold text-slate-900">
-					{selectedTier?.name ?? "-"}
-				</p>
-				<p className="mt-1 text-slate-700">
-					{selectedTier ? formatMoney(selectedTier.price, currency) : "-"}
-				</p>
+				<p className="text-slate-600">Selected Tickets</p>
+				{selectedTiers.length === 0 ? (
+					<p className="mt-1 text-slate-700">-</p>
+				) : (
+					<ul className="mt-2 space-y-2">
+						{selectedTiers.map((tier) => (
+							<li key={tier.id} className="flex items-center justify-between">
+								<div>
+									<p className="font-semibold text-slate-900">{tier.name}</p>
+									<p className="text-slate-600 text-xs">Qty: {tier.quantity}</p>
+								</div>
+								<p className="text-slate-700 text-xs">
+									{formatMoney(tier.price * tier.quantity, currency)}
+								</p>
+							</li>
+						))}
+					</ul>
+				)}
 				<div className="mt-4 flex items-center justify-between border-slate-300 border-t pt-3">
-					<span className="font-semibold text-slate-700">Total Amount</span>
+					<span className="font-semibold text-slate-700">
+						Total Amount ({totalTickets} tickets)
+					</span>
 					<span className="font-bold text-[#070190] text-lg">
-						{selectedTier ? formatMoney(selectedTier.price, currency) : "-"}
+						{selectedTiers.length > 0
+							? formatMoney(totalAmount, currency)
+							: "-"}
 					</span>
 				</div>
 				<p className="mt-2 text-[11px] text-slate-500">Taxes included</p>
