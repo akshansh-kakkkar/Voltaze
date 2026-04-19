@@ -38,6 +38,14 @@ CORS_ORIGIN=http://localhost:3001,https://unieventsss.vercel.app,https://unieven
 BETTER_AUTH_API_KEY=your_better_auth_dashboard_api_key_if_you_use_the_hosted_dashboard
 ```
 
+## Production Deployment
+
+For the VPS deployment, use Dokploy with the guide in
+[docs/dokploy-deployment.md](docs/dokploy-deployment.md).
+
+Production uses the root [.env.example](.env.example) as the env template. Local
+development still uses `apps/server/.env` and `apps/web/.env`.
+
 ## Database Setup
 
 This project uses PostgreSQL with Prisma.
