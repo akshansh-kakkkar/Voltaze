@@ -6,6 +6,19 @@ function normalizeUrl(value: string) {
 	return value.trim().replace(/\/+$/, "");
 }
 
+function isLocalHostname(hostname: string) {
+	return hostname === "localhost" || hostname === "127.0.0.1";
+}
+
+function isLocalUrl(url: string) {
+	try {
+		const parsed = new URL(url);
+		return isLocalHostname(parsed.hostname);
+	} catch {
+		return false;
+	}
+}
+
 function getConfiguredBackendUrls() {
 	const list = [
 		env.NEXT_PUBLIC_SERVER_URL,
@@ -20,14 +33,23 @@ function getConfiguredBackendUrls() {
 }
 
 function getLocalBackendUrl(configured: string[]) {
-	return configured.find((url) => {
+	return configured.find((url) => isLocalUrl(url));
+}
+
+function getDeployedBackendUrl(configured: string[]) {
+	const preferred = configured.find((url) => {
 		try {
-			const parsed = new URL(url);
-			return parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1";
+			return new URL(url).hostname === "api.unievent.in";
 		} catch {
 			return false;
 		}
 	});
+
+	if (preferred) {
+		return preferred;
+	}
+
+	return configured.find((url) => !isLocalUrl(url));
 }
 
 export function getAvailableBackendUrls() {
@@ -40,14 +62,28 @@ export function getActiveBackendUrl() {
 	}
 
 	const configured = getConfiguredBackendUrls();
-	const isLocalFrontend =
-		window.location.hostname === "localhost" ||
-		window.location.hostname === "127.0.0.1";
+	const isLocalFrontend = isLocalHostname(window.location.hostname);
 
 	if (isLocalFrontend) {
 		const localBackend = getLocalBackendUrl(configured);
 		if (localBackend) {
 			return localBackend;
+		}
+	} else {
+		const deployedBackend = getDeployedBackendUrl(configured);
+		if (deployedBackend) {
+			const stored = localStorage.getItem(ACTIVE_BACKEND_KEY);
+			if (stored) {
+				const normalizedStored = normalizeUrl(stored);
+				if (
+					configured.includes(normalizedStored) &&
+					!isLocalUrl(normalizedStored)
+				) {
+					return normalizedStored;
+				}
+			}
+
+			return deployedBackend;
 		}
 	}
 
@@ -71,6 +107,10 @@ export function setActiveBackendUrl(url: string) {
 	}
 
 	if (typeof window !== "undefined") {
+		if (!isLocalHostname(window.location.hostname) && isLocalUrl(normalized)) {
+			throw new Error("Local backend URLs are blocked on production domains");
+		}
+
 		localStorage.setItem(ACTIVE_BACKEND_KEY, normalized);
 	}
 }
