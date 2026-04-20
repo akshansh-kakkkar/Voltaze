@@ -3,6 +3,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import { AppProviders } from "@/shared/providers";
+import { MobileNavigation } from "@/shared/ui/mobile-navigation/mobile-navigation";
 
 const poppins = Poppins({
 	subsets: ["latin"],
@@ -26,7 +27,10 @@ export default function RootLayout({
 	return (
 		<html lang="en" className={poppins.variable}>
 			<body suppressHydrationWarning className="font-poppins antialiased">
-				<AppProviders>{children}</AppProviders>
+				<AppProviders>
+					{children}
+					<MobileNavigation />
+				</AppProviders>
 			</body>
 		</html>
 	);

@@ -43,7 +43,7 @@ export function AppSidebar({ sections }: AppSidebarProps) {
 	};
 
 	return (
-		<aside className="fixed top-16 bottom-0 left-0 z-40 flex w-64 flex-col border-slate-200 border-r bg-white/90 backdrop-blur-md">
+		<aside className="fixed top-16 bottom-0 left-0 z-40 hidden w-64 flex-col border-slate-200 border-r bg-white/90 backdrop-blur-md md:flex">
 			<nav className="flex-1 overflow-y-auto px-4 py-5">
 				<div className="space-y-6">
 					{sections.map((section) => (
