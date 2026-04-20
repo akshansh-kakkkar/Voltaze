@@ -272,21 +272,21 @@ export function CheckoutAttendeePage({ slug }: { slug: string }) {
 	return (
 		<div className="min-h-screen bg-[#f7f8fb]">
 			<Navbar />
-			<div className="mx-auto mt-12 grid w-full max-w-6xl grid-cols-1 gap-8 px-6 pb-12 lg:grid-cols-[minmax(0,1fr)_320px]">
-				<section className="rounded-2xl bg-[#e8eefc] p-8 shadow-sm">
-					<h1 className="font-bold text-4xl text-[#0f172a]">
+			<div className="mx-auto mt-8 grid w-full max-w-6xl grid-cols-1 gap-6 px-3 pb-8 sm:mt-10 sm:gap-7 sm:px-4 sm:pb-10 md:mt-12 md:gap-8 md:px-6 md:pb-12 lg:mt-8 lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-8 xl:gap-10">
+				<section className="rounded-xl bg-[#e8eefc] p-4 shadow-sm sm:rounded-2xl sm:p-6 md:p-8">
+					<h1 className="font-bold text-2xl text-[#0f172a] sm:text-3xl md:text-4xl lg:text-4xl">
 						Attendee Information
 					</h1>
-					<p className="mt-2 text-[#64748b] text-sm">
-						Select ticket tiers, quantity, and fill details for each ticket
-						holder.
+					<p className="mt-1 text-[#64748b] text-xs sm:mt-2 sm:text-sm">
+						Tell us who is joining the experience. This information will appear
+						on your digital tickets.
 					</p>
 
-					<div className="mt-7 space-y-4">
+					<div className="mt-5 space-y-3 sm:mt-6 sm:space-y-4 md:mt-7">
 						<div>
 							<label
-								htmlFor="purchaser-name"
-								className="mb-2 block font-semibold text-[#1d4ed8] text-xs uppercase tracking-wide"
+								htmlFor="attendee-name"
+								className="mb-1.5 block font-semibold text-[#1d4ed8] text-xs uppercase tracking-wide sm:mb-2"
 							>
 								Purchaser Full Name
 							</label>
@@ -295,13 +295,13 @@ export function CheckoutAttendeePage({ slug }: { slug: string }) {
 								value={purchaserName}
 								onChange={(e) => setPurchaserName(e.target.value)}
 								placeholder="John Doe"
-								className="h-11 border-0 bg-white"
+								className="h-9 border-0 bg-white text-sm sm:h-10 md:h-11"
 							/>
 						</div>
 						<div>
 							<label
-								htmlFor="purchaser-email"
-								className="mb-2 block font-semibold text-[#1d4ed8] text-xs uppercase tracking-wide"
+								htmlFor="attendee-email"
+								className="mb-1.5 block font-semibold text-[#1d4ed8] text-xs uppercase tracking-wide sm:mb-2"
 							>
 								Purchaser Email Address
 							</label>
@@ -310,13 +310,13 @@ export function CheckoutAttendeePage({ slug }: { slug: string }) {
 								value={purchaserEmail}
 								onChange={(e) => setPurchaserEmail(e.target.value)}
 								placeholder="john@email.com"
-								className="h-11 border-0 bg-white"
+								className="h-9 border-0 bg-white text-sm sm:h-10 md:h-11"
 							/>
 						</div>
 						<div>
 							<label
-								htmlFor="purchaser-phone"
-								className="mb-2 block font-semibold text-[#1d4ed8] text-xs uppercase tracking-wide"
+								htmlFor="attendee-phone"
+								className="mb-1.5 block font-semibold text-[#1d4ed8] text-xs uppercase tracking-wide sm:mb-2"
 							>
 								Purchaser Whatsapp Number
 							</label>
@@ -325,29 +325,38 @@ export function CheckoutAttendeePage({ slug }: { slug: string }) {
 								value={purchaserPhone}
 								onChange={(e) => setPurchaserPhone(e.target.value)}
 								placeholder="0000 0000 000"
-								className="h-11 border-0 bg-white"
+								className="h-9 border-0 bg-white text-sm sm:h-10 md:h-11"
 							/>
 						</div>
 					</div>
 
-					<p className="mt-6 text-[#64748b] text-xs">
+					<p className="mt-4 text-[#64748b] text-xs sm:mt-5 md:mt-6">
 						Your digital ticket and QR code will be sent on your email and
 						Whatsapp.
 					</p>
 
-					<div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-						{paidTiers.map((tier) => {
-							const quantity = tierQuantities[tier.id] ?? 0;
-							const remaining = tier.maxQuantity - tier.soldCount;
+					<div className="mt-3 grid grid-cols-1 gap-2 sm:mt-4 sm:grid-cols-2 sm:gap-2.5 md:mt-4 md:gap-3">
+						{paidTiers.map((tier, index) => {
+							const isSelected = selectedTier?.id === tier.id;
 							return (
 								<div
 									key={tier.id}
-									className="rounded-xl border border-transparent bg-white/70 p-4 text-left"
+									onClick={() => setSelectedTierId(tier.id)}
+									className={`rounded-lg border p-3 text-left transition sm:rounded-xl sm:p-3.5 md:p-4 ${
+										isSelected
+											? "border-[#1d4ed8] bg-white"
+											: "border-transparent bg-white/70"
+									}`}
 								>
-									<p className="font-semibold text-slate-900 text-sm">
+									{index === 0 && (
+										<span className="mb-1 inline-flex rounded-full bg-[#dbeafe] px-2 py-0.5 font-semibold text-[#1d4ed8] text-[10px] uppercase">
+											Best Value
+										</span>
+									)}
+									<p className="font-semibold text-slate-900 text-xs sm:text-sm">
 										{tier.name}
 									</p>
-									<p className="font-bold text-[#2563eb] text-sm">
+									<p className="font-bold text-[#2563eb] text-xs sm:text-sm">
 										{formatMoney(tier.price)}
 									</p>
 									<p className="mt-1 text-slate-500 text-xs">
@@ -448,7 +457,7 @@ export function CheckoutAttendeePage({ slug }: { slug: string }) {
 
 					<Button
 						onClick={handleContinue}
-						className="mt-7 h-12 w-full rounded-full bg-[#070190] font-semibold text-base text-white hover:bg-[#030370]"
+						className="mt-5 h-10 w-full rounded-full bg-[#070190] font-semibold text-sm text-white hover:bg-[#030370] sm:mt-6 sm:h-11 sm:text-base md:mt-7 md:h-12"
 					>
 						Continue To Pay
 					</Button>

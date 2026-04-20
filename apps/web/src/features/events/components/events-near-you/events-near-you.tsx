@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useLiveLocation } from "@/shared/hooks/use-live-location";
 import { cn } from "@/shared/lib/utils";
 import { useEvents } from "../../hooks/use-events";
-import { EventCard } from "../event-card/event-card";
-import { EventCardSkeleton } from "../event-card/event-card-skeleton";
+import { EventCarousel } from "../event-carousel/event-carousel";
 
 const FILTERS = [
 	{ id: "all", label: "All Events" },
@@ -50,24 +49,24 @@ export function EventsNearYou() {
 	const nearLabel = location ? `Near ${location}` : "Near Me";
 
 	return (
-		<section className="w-full bg-[#EBF3FF] py-20">
-			<div className="mx-auto max-w-7xl px-6">
-				<div className="mb-10 text-center md:text-left">
-					<h2 className="mb-3 font-extrabold text-3xl text-black tracking-tight md:text-5xl">
+		<section className="w-full bg-[#EBF3FF] py-12 sm:py-16 lg:py-20">
+			<div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-6">
+				<div className="mb-8 text-center md:text-left lg:mb-10">
+					<h2 className="mb-3 font-extrabold text-2xl text-black tracking-tight sm:text-3xl md:text-4xl lg:text-5xl">
 						Events Happening <span className="text-[#030370]">Near You</span>
 					</h2>
-					<p className="font-semibold text-base text-slate-500 md:text-lg">
+					<p className="font-semibold text-slate-500 text-sm sm:text-base md:text-lg">
 						Smart picks for your vibe, location, and budget.
 					</p>
 				</div>
 
-				<div className="mb-10 flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-white/80 p-2">
+				<div className="mb-8 flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-white/80 p-2 lg:mb-10">
 					{FILTERS.map((filter) => (
 						<Button
 							key={filter.id}
 							variant={activeFilter === filter.id ? "default" : "outline"}
 							className={cn(
-								"h-9 rounded-full px-4 font-semibold text-sm transition-all",
+								"h-8 rounded-full px-3 font-semibold text-xs transition-all sm:h-9 sm:px-4 sm:text-sm",
 								activeFilter === filter.id
 									? "border-[#030370] bg-[#030370] text-white hover:bg-[#030370]/90"
 									: "border-slate-200 bg-white text-slate-600 hover:border-[#030370] hover:text-[#030370]",
@@ -81,22 +80,14 @@ export function EventsNearYou() {
 
 				<div>
 					{isLoading ? (
-						<div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
-							{[...Array(8)].map((_, i) => (
-								<EventCardSkeleton key={i} />
-							))}
-						</div>
+						<EventCarousel events={[]} isLoading={true} />
 					) : events.length > 0 ? (
 						<>
-							<div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
-								{events.map((event) => (
-									<EventCard key={event.id} event={event} />
-								))}
-							</div>
-							<div className="mt-10 flex justify-center">
+							<EventCarousel events={events} isLoading={false} />
+							<div className="mt-8 flex justify-center sm:mt-10">
 								<Button
 									asChild
-									className="rounded-full bg-[#030370] px-8 font-bold text-white hover:bg-[#030370]/90"
+									className="h-12 rounded-full bg-[#030370] px-6 font-bold text-white hover:bg-[#030370]/90 sm:h-14 sm:px-8"
 								>
 									<Link href="/events">
 										Explore More Events
@@ -106,8 +97,8 @@ export function EventsNearYou() {
 							</div>
 						</>
 					) : (
-						<div className="rounded-4xl bg-white py-20 text-center shadow-sm">
-							<p className="font-bold text-lg text-slate-400">
+						<div className="rounded-4xl bg-white py-16 text-center shadow-sm sm:py-20">
+							<p className="font-bold text-base text-slate-400 sm:text-lg">
 								No events found for this filter.
 							</p>
 						</div>
