@@ -27,6 +27,7 @@ export function createApp(): Express {
 			origin: getAllowedCorsOrigins(),
 			methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
 			credentials: true,
+			allowedHeaders: ["Content-Type", "Authorization"],
 		}),
 	);
 	app.use(requestIdMiddleware);
@@ -49,7 +50,7 @@ export function createApp(): Express {
 		res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
 	});
 
-	app.all("/api/auth/*", toNodeHandler(auth));
+	app.use("/api/auth", toNodeHandler(auth));
 	registerModules(app);
 	app.use(notFoundMiddleware);
 	app.use(errorHandlerMiddleware);
