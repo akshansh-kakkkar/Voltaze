@@ -2,7 +2,8 @@
 
 import type { EventFilterInput } from "@voltaze/schema";
 import { useEvents } from "../../hooks/use-events";
-import { EventCarousel } from "../event-carousel/event-carousel";
+import { EventCard } from "../event-card/event-card";
+import { EventCardSkeleton } from "../event-card/event-card-skeleton";
 
 interface AllEventsListProps {
 	searchParams: {
@@ -68,12 +69,30 @@ export function AllEventsList({ searchParams }: AllEventsListProps) {
 	const events = data?.data || [];
 
 	if (isLoading) {
-		return <EventCarousel events={[]} isLoading={true} />;
+		return (
+			<div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+				{[...Array(6)].map((_, i) => (
+					<EventCardSkeleton key={i} />
+				))}
+			</div>
+		);
 	}
 
 	if (events.length === 0) {
-		return <EventCarousel events={[]} isLoading={false} />;
+		return (
+			<div className="flex flex-col items-center gap-4 py-12">
+				<p className="text-muted-foreground italic">
+					No events found matching your criteria.
+				</p>
+			</div>
+		);
 	}
 
-	return <EventCarousel events={events} isLoading={false} />;
+	return (
+		<div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+			{events.map((event) => (
+				<EventCard key={event.id} event={event} className="h-full" />
+			))}
+		</div>
+	);
 }

@@ -65,15 +65,15 @@ export function HowItWorks() {
 										type="button"
 										key={step.id}
 										onClick={() => setActiveStep(step.id)}
-										className="group flex w-full items-start gap-4 text-left sm:items-center sm:gap-6 lg:gap-8"
+										className="group flex w-full items-center gap-8 text-left lg:gap-10"
 									>
-										<div className="relative flex-shrink-0">
+										<div className="relative">
 											{isActive && (
-												<div className="absolute top-1/2 -left-3 h-12 w-1 -translate-y-1/2 rounded-full bg-[#2563EB] sm:-left-4 sm:h-14 sm:w-1.5 lg:-left-6 lg:h-15" />
+												<div className="absolute top-1/2 -left-6 h-15 w-1.5 -translate-y-1/2 rounded-full bg-[#2563EB] lg:-left-8" />
 											)}
 											<div
 												className={cn(
-													"flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl font-black text-3xl transition-all duration-300 sm:h-20 sm:w-20 sm:rounded-[24px] sm:text-4xl lg:h-24 lg:w-24 lg:rounded-[28px] lg:text-5xl",
+													"flex h-24 w-24 shrink-0 items-center justify-center rounded-[28px] font-black text-5xl transition-all duration-300",
 													isActive
 														? "bg-[#2563EB] text-white shadow-[0_16px_40px_rgba(41,98,255,0.4)]"
 														: "bg-[#e5ecf6] text-[#9ca3af] shadow-[0_12px_40px_rgba(20,40,70,0.06)] group-hover:bg-[#dfe7f3] group-hover:shadow-[0_16px_40px_rgba(41,98,255,0.1)]",
@@ -82,11 +82,11 @@ export function HowItWorks() {
 												{step.id}
 											</div>
 										</div>
-										<div className="min-w-0 flex-1 pt-0 sm:pt-1">
-											<h3 className="mb-1 font-bold text-[#1e293b] text-sm leading-tight sm:mb-2 sm:text-base lg:text-xl">
+										<div className="flex-1 pt-2">
+											<h3 className="mb-2 font-bold text-[#1e293b] text-[20px]">
 												{step.title}
 											</h3>
-											<p className="font-medium text-[#64748b] text-xs leading-relaxed sm:text-sm lg:text-base">
+											<p className="max-w-110 font-medium text-[#64748b] text-[16px] leading-relaxed">
 												{step.description}
 											</p>
 										</div>
@@ -96,14 +96,14 @@ export function HowItWorks() {
 						</div>
 					</div>
 
-					<div className="sticky top-20 hidden items-center justify-center pt-8 sm:top-24 sm:pt-12 lg:flex lg:w-[45%] xl:w-[50%]">
-						<div className="relative w-full max-w-xs rounded-3xl bg-white shadow-[0_20px_40px_rgba(0,0,0,0.2)] sm:rounded-[40px] sm:shadow-[0_30px_60px_rgba(0,0,0,0.3)] lg:max-w-sm lg:rounded-[50px] xl:max-w-md">
+					<div className="sticky top-24 hidden items-center justify-center pt-12 lg:flex lg:w-[45%] xl:w-[50%]">
+						<div className="relative w-85 rounded-[50px] bg-white shadow-[0_30px_60px_rgba(0,0,0,0.3)]">
 							<Image
 								src="/assets/iphone.webp"
 								alt="iPhone Ticket Mockup"
 								width={680}
 								height={1380}
-								className="h-auto w-full rounded-3xl sm:rounded-[40px] lg:rounded-[50px]"
+								className="h-auto w-full rounded-[50px]"
 							/>
 						</div>
 					</div>

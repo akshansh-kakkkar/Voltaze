@@ -301,76 +301,73 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
 	}
 
 	return (
-		<main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_right,rgba(75,114,236,0.14),transparent_40%),linear-gradient(180deg,#eef3ff_0%,#e9efff_100%)] px-3 py-3 sm:px-6 sm:py-6 lg:px-8">
-			<section className="relative mx-auto flex min-h-[calc(100vh-1.5rem)] w-full max-w-4xl items-center justify-center sm:min-h-[calc(100vh-3rem)]">
-				<div className="relative w-full overflow-hidden rounded-3xl border border-[#d6def5] bg-white shadow-[0_24px_60px_rgba(10,28,88,0.12)] sm:rounded-3xl">
+		<main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_right,rgba(75,114,236,0.14),transparent_40%),linear-gradient(180deg,#eef3ff_0%,#e9efff_100%)] px-5 py-5 sm:px-8 sm:py-8">
+			<section className="relative mx-auto flex min-h-[calc(100vh-2.5rem)] w-full max-w-4xl items-center justify-center">
+				<div className="relative w-full overflow-hidden rounded-3xl border border-[#d6def5] bg-white shadow-[0_24px_60px_rgba(10,28,88,0.12)]">
 					<Link
 						href="/"
 						aria-label="Close auth screen"
-						className="absolute top-3 right-3 z-20 inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:text-[#1a39a8] sm:top-4 sm:right-4 sm:h-10 sm:w-10"
+						className="absolute top-4 right-4 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:text-[#1a39a8]"
 					>
-						<span
-							aria-hidden="true"
-							className="text-lg leading-none sm:text-2xl"
-						>
+						<span aria-hidden="true" className="text-2xl leading-none">
 							×
 						</span>
 					</Link>
 
-					<div className="grid min-h-[min(26rem,calc(100vh-3rem))] grid-cols-1 sm:min-h-[min(32rem,calc(100vh-5rem))] md:grid-cols-[46%_54%]">
-						<div className="relative hidden border-slate-200 border-r bg-white p-6 sm:p-8 md:flex md:flex-col md:justify-between">
+					<div className="grid min-h-[min(36rem,calc(100vh-5rem))] grid-cols-1 md:grid-cols-[46%_54%]">
+						<div className="relative hidden border-slate-200 border-r bg-white p-8 md:flex md:flex-col md:justify-between">
 							<div className="flex items-center gap-3">
-								<div className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#d8e1fb] bg-white sm:h-12 sm:w-12">
+								<div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#d8e1fb] bg-white">
 									<Image
 										src="/assets/logo.webp"
 										alt="UniEvent logo"
-										width={24}
-										height={24}
-										className="h-6 w-6 object-contain sm:h-7.5 sm:w-7.5"
+										width={30}
+										height={30}
+										className="h-7.5 w-7.5 object-contain"
 										priority
 									/>
 								</div>
 								<div>
-									<p className="font-bold text-[#112c8f] text-base tracking-tight sm:text-lg">
+									<p className="font-bold text-[#112c8f] text-lg tracking-tight">
 										UniEvent
 									</p>
 								</div>
 							</div>
 
-							<div className="relative mx-auto h-72 w-full max-w-64 sm:h-80 sm:max-w-72 md:h-96 md:max-w-88">
+							<div className="relative mx-auto h-96 w-full max-w-88">
 								<Image
 									src="/assets/welcome.png"
 									alt="Welcome illustration"
 									fill
 									priority
-									sizes="(max-width: 640px) 256px, (max-width: 768px) 288px, 352px"
+									sizes="(max-width: 768px) 0px, 352px"
 									className="object-contain"
 								/>
 							</div>
 
-							<div className="h-4 sm:h-5" />
+							<div className="h-5" />
 						</div>
 
-						<div className="relative flex flex-col justify-center px-5 py-5 pt-16 pb-8 sm:px-6 sm:py-6 sm:pt-20 sm:pb-8 md:px-8 md:pt-24">
-							<div className="absolute top-4 right-5 left-5 flex items-center justify-between sm:top-6 sm:right-6 sm:left-6 md:right-8 md:left-8">
+						<div className="relative flex flex-col justify-center px-5 py-6 pt-32 pb-7 sm:px-8 sm:pt-32 md:px-10 md:pt-16">
+							<div className="absolute top-14 right-5 left-5 flex items-center justify-between sm:right-8 sm:left-8 md:right-10 md:left-10">
 								<div className="flex items-center gap-2 md:hidden">
 									<Image
 										src="/assets/logo.webp"
 										alt="UniEvent logo"
-										width={20}
-										height={20}
-										className="h-5 w-5 object-contain sm:h-6 sm:w-6"
+										width={28}
+										height={28}
+										className="h-7 w-7 object-contain"
 										priority
 									/>
-									<span className="font-bold text-[#112c8f] text-sm sm:text-base">
+									<span className="font-bold text-[#112c8f] text-lg">
 										UniEvent
 									</span>
 								</div>
 
-								<div className="mr-2 inline-flex rounded-full border border-[#d8e1fb] bg-[#f5f8ff] p-0.5 pr-10 shadow-sm sm:mr-0 sm:p-1 sm:pr-0">
+								<div className="ml-auto inline-flex rounded-full border border-[#d8e1fb] bg-[#f5f8ff] p-1 shadow-sm">
 									<Link
 										href={signupHref}
-										className={`rounded-full px-2.5 py-1 font-semibold text-xs transition-colors sm:px-4 sm:py-2 md:px-5 ${
+										className={`rounded-full px-5 py-2 font-semibold text-sm transition-colors ${
 											mode === "signup" || mode === "register"
 												? "bg-[#1e43bf] text-white"
 												: "text-[#1e43bf] hover:bg-white"
@@ -380,7 +377,7 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
 									</Link>
 									<Link
 										href={loginHref}
-										className={`rounded-full px-2.5 py-1 font-semibold text-xs transition-colors sm:px-4 sm:py-2 md:px-5 ${
+										className={`rounded-full px-5 py-2 font-semibold text-sm transition-colors ${
 											mode === "login"
 												? "bg-[#1e43bf] text-white"
 												: "text-[#1e43bf] hover:bg-white"
@@ -391,18 +388,15 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
 								</div>
 							</div>
 
-							<h1 className="mb-2 font-bold text-slate-950 text-xl sm:mb-4 sm:text-3xl">
+							<h1 className="mb-4 font-bold text-3xl text-slate-950">
 								{copy.heading}
 							</h1>
 
-							<form
-								className="space-y-2.5 sm:space-y-3"
-								onSubmit={handleSubmit}
-							>
-								<div className="space-y-1.5 sm:space-y-2">
+							<form className="space-y-3" onSubmit={handleSubmit}>
+								<div className="space-y-2">
 									<label
 										htmlFor={`${mode}-email`}
-										className="font-medium text-slate-700 text-xs sm:text-sm"
+										className="font-medium text-slate-700 text-sm"
 									>
 										Email address
 									</label>
@@ -421,7 +415,7 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
 											}
 										}}
 										placeholder="you@example.com"
-										className={`h-10 w-full rounded-xl border bg-white px-3 text-slate-950 text-sm outline-none transition-shadow placeholder:text-slate-400 focus:ring-4 focus:ring-[#2f57db]/10 sm:h-11 sm:px-3.5 ${
+										className={`h-11 w-full rounded-xl border bg-white px-3.5 text-slate-950 outline-none transition-shadow placeholder:text-slate-400 focus:ring-4 focus:ring-[#2f57db]/10 ${
 											fieldErrors.email
 												? "border-red-400 focus:border-red-500"
 												: "border-slate-200 focus:border-[#2f57db]"
@@ -432,10 +426,10 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
 									) : null}
 								</div>
 
-								<div className="space-y-1.5 sm:space-y-2">
+								<div className="space-y-2">
 									<label
 										htmlFor={`${mode}-password`}
-										className="font-medium text-slate-700 text-xs sm:text-sm"
+										className="font-medium text-slate-700 text-sm"
 									>
 										Password
 									</label>
@@ -456,7 +450,7 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
 											}
 										}}
 										placeholder="Enter your password"
-										className={`h-10 w-full rounded-xl border bg-white px-3 text-slate-950 text-sm outline-none transition-shadow placeholder:text-slate-400 focus:ring-4 focus:ring-[#2f57db]/10 sm:h-11 sm:px-3.5 ${
+										className={`h-11 w-full rounded-xl border bg-white px-3.5 text-slate-950 outline-none transition-shadow placeholder:text-slate-400 focus:ring-4 focus:ring-[#2f57db]/10 ${
 											fieldErrors.password
 												? "border-red-400 focus:border-red-500"
 												: "border-slate-200 focus:border-[#2f57db]"
@@ -470,16 +464,16 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
 
 									{isSignup ? (
 										<div
-											className={`overflow-hidden rounded-xl border border-[#dfe7fb] bg-[#f8faff] px-2.5 py-2 transition-all duration-300 sm:px-3 sm:py-2.5 ${
+											className={`overflow-hidden rounded-xl border border-[#dfe7fb] bg-[#f8faff] px-3 py-2.5 transition-all duration-300 ${
 												password.length > 0
 													? "max-h-40 opacity-100"
 													: "max-h-0 border-transparent px-0 py-0 opacity-0"
 											}`}
 										>
-											<p className="mb-2 font-medium text-[9px] text-slate-500 uppercase tracking-[0.12em] sm:text-[11px]">
+											<p className="mb-2 font-medium text-[11px] text-slate-500 uppercase tracking-[0.12em]">
 												Password strength rules
 											</p>
-											<ul className="grid gap-1">
+											<ul className="grid gap-1.5">
 												{passwordRuleStates.map((rule) => (
 													<PasswordRuleItem
 														key={rule.label}
@@ -494,10 +488,10 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
 								</div>
 
 								{isSignup ? (
-									<div className="space-y-1.5 sm:space-y-2">
+									<div className="space-y-2">
 										<label
 											htmlFor={`${mode}-confirm-password`}
-											className="font-medium text-slate-700 text-xs sm:text-sm"
+											className="font-medium text-slate-700 text-sm"
 										>
 											Re-enter password
 										</label>
@@ -513,13 +507,13 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
 												clearFieldError("confirmPassword");
 											}}
 											placeholder="Re-enter your password"
-											className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-slate-950 text-sm outline-none transition-shadow placeholder:text-slate-400 focus:border-[#2f57db] focus:ring-4 focus:ring-[#2f57db]/10 sm:h-11 sm:px-3.5"
+											className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-slate-950 outline-none transition-shadow placeholder:text-slate-400 focus:border-[#2f57db] focus:ring-4 focus:ring-[#2f57db]/10"
 										/>
 									</div>
 								) : null}
 
 								{oauthError ? (
-									<p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-amber-800 text-xs sm:px-3 sm:py-2 sm:text-sm">
+									<p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-amber-800 text-sm">
 										{oauthError}
 									</p>
 								) : null}
@@ -527,22 +521,22 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
 								<button
 									type="submit"
 									disabled={mutation.isPending}
-									className="inline-flex h-10 w-full items-center justify-center rounded-xl bg-[#1e43bf] px-4 font-semibold text-sm text-white transition-colors hover:bg-[#1a39a8] disabled:cursor-not-allowed disabled:opacity-60 sm:h-11 sm:px-5"
+									className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-[#1e43bf] px-5 font-semibold text-white transition-colors hover:bg-[#1a39a8] disabled:cursor-not-allowed disabled:opacity-60"
 								>
 									{mutation.isPending ? "Please wait..." : copy.submitLabel}
 								</button>
 
 								{formError ? (
-									<p className="text-red-600 text-xs sm:text-sm">{formError}</p>
+									<p className="text-red-600 text-sm">{formError}</p>
 								) : null}
 
 								{submitError ? (
-									<p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-red-700 text-xs sm:px-3 sm:py-2 sm:text-sm">
+									<p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-red-700 text-sm">
 										{submitError}
 									</p>
 								) : null}
 
-								<div className="flex items-center gap-3 py-1 text-[11px] text-slate-400 sm:text-xs">
+								<div className="flex items-center gap-3 text-slate-400 text-xs">
 									<span className="h-px flex-1 bg-slate-200" />
 									<span className="font-medium uppercase tracking-[0.22em]">
 										or
@@ -554,14 +548,12 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
 									type="button"
 									disabled={googleMutation.isPending}
 									onClick={handleGoogleSignIn}
-									className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 font-semibold text-slate-800 text-sm transition-colors hover:border-slate-300 hover:bg-slate-50 sm:h-11 sm:gap-3 sm:px-5"
+									className="inline-flex h-11 w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-5 font-semibold text-slate-800 transition-colors hover:border-slate-300 hover:bg-slate-50"
 								>
 									<GoogleMark />
-									<span className="text-xs sm:text-sm">
-										{googleMutation.isPending
-											? "Please wait..."
-											: "Continue with Google"}
-									</span>
+									{googleMutation.isPending
+										? "Please wait..."
+										: "Continue with Google"}
 								</button>
 							</form>
 						</div>

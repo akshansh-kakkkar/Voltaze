@@ -23,7 +23,7 @@ export default async function EventsPage({
 	return (
 		<div className="min-h-screen bg-[#f8fbff]">
 			<Navbar />
-			<div className="mx-auto w-full max-w-7xl px-4 pt-14 pb-12 sm:px-6 sm:pt-16 lg:px-8 lg:pt-20">
+			<div className="mx-auto w-full max-w-7xl px-4 pt-16 pb-12 sm:px-6 lg:px-8 lg:pt-20">
 				<div className="space-y-5">
 					<EventsPageFilters
 						category={params.category}
