@@ -1,5 +1,5 @@
 {
-	"name": "@voltaze/env",
+	"name": "@unievent/env",
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
@@ -14,7 +14,7 @@
 		"zod": "catalog:"
 	},
 	"devDependencies": {
-		"@voltaze/config": "workspace:*",
+		"@unievent/config": "workspace:*",
 		"@types/bun": "catalog:",
 		"typescript": "^6"
 	}

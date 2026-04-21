@@ -1,10 +1,10 @@
-import { Prisma, prisma, type UserRole } from "@voltaze/db";
+import { Prisma, prisma, type UserRole } from "@unievent/db";
 import {
 	type AttendeeFilterInput,
 	type CreateAttendeeInput,
 	createPaginationMeta,
 	type UpdateAttendeeInput,
-} from "@voltaze/schema";
+} from "@unievent/schema";
 
 import {
 	BadRequestError,
@@ -79,13 +79,23 @@ export class AttendeesService {
 		const { page, limit, sortBy, sortOrder, search, ...filters } = input;
 		const skip = (page - 1) * limit;
 
-		const where = {
+		const where: Prisma.AttendeeWhereInput = {
 			...filters,
 			...this.buildAccessWhere(actor),
 			OR: search
 				? [
-						{ name: { contains: search, mode: "insensitive" } },
-						{ email: { contains: search, mode: "insensitive" } },
+						{
+							name: {
+								contains: search,
+								mode: Prisma.QueryMode.insensitive,
+							},
+						},
+						{
+							email: {
+								contains: search,
+								mode: Prisma.QueryMode.insensitive,
+							},
+						},
 					]
 				: undefined,
 		};

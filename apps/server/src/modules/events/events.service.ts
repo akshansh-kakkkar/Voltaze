@@ -1,4 +1,4 @@
-import { Prisma, prisma, type UserRole } from "@voltaze/db";
+import { Prisma, prisma, type UserRole } from "@unievent/db";
 import {
 	type CreateEventInput,
 	type CreateEventTicketTierInput,
@@ -7,7 +7,7 @@ import {
 	type TicketTierFilterInput,
 	type UpdateEventInput,
 	type UpdateEventTicketTierInput,
-} from "@voltaze/schema";
+} from "@unievent/schema";
 
 import {
 	BadRequestError,

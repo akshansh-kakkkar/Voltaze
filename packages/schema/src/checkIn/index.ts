@@ -1,4 +1,4 @@
-import type { CheckIn } from "@voltaze/db";
+import type { CheckIn } from "@unievent/db";
 import { z } from "zod";
 
 export type { CheckIn };

@@ -3,7 +3,7 @@ import {
 	idParamSchema,
 	orderFilterSchema,
 	updateOrderSchema,
-} from "@voltaze/schema";
+} from "@unievent/schema";
 import { Router } from "express";
 
 import { requireAuth } from "@/common/middlewares/auth.middleware";

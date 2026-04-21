@@ -53,7 +53,7 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"const email = `user.${Date.now()}@voltaze.local`;",
+									"const email = `user.${Date.now()}@unievent.local`;",
 									"pm.collectionVariables.set('registerEmail', email);",
 									"pm.collectionVariables.set('registerPassword', 'Passw0rd!123');"
 								]
@@ -560,7 +560,7 @@
 								"type": "text/javascript",
 								"exec": [
 									"const runStamp = Date.now();",
-									"pm.collectionVariables.set('attendeeEmail', `attendee.${runStamp}@voltaze.local`);"
+									"pm.collectionVariables.set('attendeeEmail', `attendee.${runStamp}@unievent.local`);"
 								]
 							}
 						},
@@ -1113,6 +1113,91 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Get My Profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/users/me"
+					},
+					"response": []
+				},
+				{
+					"name": "Update My Profile",
+					"request": {
+						"method": "PATCH",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Name\",\n  \"skills\": [\"Photography\", \"Event Planning\"]\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": "{{baseUrl}}/users/me"
+					},
+					"response": []
+				},
+				{
+					"name": "List Users (Hosts)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status is 200', () => pm.response.to.have.status(200));",
+									"const body = pm.response.json();",
+									"if (body.data && body.data.length > 0) {",
+									"  pm.collectionVariables.set('userId', body.data[0].id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/users?role=HOST&page=1&limit=20"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User By Id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/users/{{userId}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Host Profile (Public)",
+					"request": {
+						"auth": { "type": "noauth" },
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/users/{{userId}}/host-profile"
+					},
+					"response": []
+				},
+				{
+					"name": "Admin Update User (ADMIN)",
+					"request": {
+						"method": "PATCH",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"role\": \"HOST\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": "{{baseUrl}}/users/{{userId}}"
+					},
+					"response": []
+				}
+			]
 		}
 	],
 	"variable": [
@@ -1146,7 +1231,7 @@
 		},
 		{
 			"key": "seedAdminEmail",
-			"value": "ananya.admin@voltaze.app"
+			"value": "ananya.admin@unievent.app"
 		},
 		{
 			"key": "seedAdminPassword",
@@ -1218,6 +1303,10 @@
 		},
 		{
 			"key": "razorpaySignature",
+			"value": ""
+		},
+		{
+			"key": "userId",
 			"value": ""
 		}
 	]

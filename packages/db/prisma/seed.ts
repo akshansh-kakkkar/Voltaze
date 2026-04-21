@@ -279,7 +279,7 @@ async function seedDetailed(): Promise<DetailedSeedResult> {
 		where: { id: seedIds.users.admin },
 		update: {
 			name: "Ananya Rao",
-			email: "ananya.admin@voltaze.app",
+			email: "ananya.admin@unievent.app",
 			emailVerified: true,
 			image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330",
 			role: UserRole.ADMIN,
@@ -287,7 +287,7 @@ async function seedDetailed(): Promise<DetailedSeedResult> {
 		create: {
 			id: seedIds.users.admin,
 			name: "Ananya Rao",
-			email: "ananya.admin@voltaze.app",
+			email: "ananya.admin@unievent.app",
 			emailVerified: true,
 			image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330",
 			role: UserRole.ADMIN,
@@ -298,7 +298,7 @@ async function seedDetailed(): Promise<DetailedSeedResult> {
 		where: { id: seedIds.users.hostMaya },
 		update: {
 			name: "Maya Kapoor",
-			email: "maya.kapoor@voltaze.app",
+			email: "maya.kapoor@unievent.app",
 			emailVerified: true,
 			image: "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df",
 			role: UserRole.HOST,
@@ -306,7 +306,7 @@ async function seedDetailed(): Promise<DetailedSeedResult> {
 		create: {
 			id: seedIds.users.hostMaya,
 			name: "Maya Kapoor",
-			email: "maya.kapoor@voltaze.app",
+			email: "maya.kapoor@unievent.app",
 			emailVerified: true,
 			image: "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df",
 			role: UserRole.HOST,
@@ -317,7 +317,7 @@ async function seedDetailed(): Promise<DetailedSeedResult> {
 		where: { id: seedIds.users.hostRohan },
 		update: {
 			name: "Rohan Sen",
-			email: "rohan.sen@voltaze.app",
+			email: "rohan.sen@unievent.app",
 			emailVerified: true,
 			image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e",
 			role: UserRole.HOST,
@@ -325,7 +325,7 @@ async function seedDetailed(): Promise<DetailedSeedResult> {
 		create: {
 			id: seedIds.users.hostRohan,
 			name: "Rohan Sen",
-			email: "rohan.sen@voltaze.app",
+			email: "rohan.sen@unievent.app",
 			emailVerified: true,
 			image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e",
 			role: UserRole.HOST,

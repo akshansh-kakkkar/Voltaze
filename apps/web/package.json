@@ -15,8 +15,8 @@
 		"@tanstack/react-query": "^5.95.2",
 		"@tanstack/react-query-devtools": "^5.95.2",
 		"@tanstack/react-table": "^8.21.3",
-		"@voltaze/env": "workspace:*",
-		"@voltaze/schema": "workspace:*",
+		"@unievent/env": "workspace:*",
+		"@unievent/schema": "workspace:*",
 		"axios": "^1.14.0",
 		"better-auth": "^1.4.0",
 		"class-variance-authority": "^0.7.1",
@@ -43,7 +43,7 @@
 		"@types/node": "^20",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
-		"@voltaze/config": "workspace:*",
+		"@unievent/config": "workspace:*",
 		"typescript": "^6"
 	}
 }

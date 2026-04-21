@@ -12,9 +12,9 @@
 	"dependencies": {
 		"@better-auth/infra": "^0.1.14",
 		"@better-auth/prisma-adapter": "^1.4.0",
-		"@voltaze/db": "workspace:*",
-		"@voltaze/env": "workspace:*",
-		"@voltaze/schema": "workspace:*",
+		"@unievent/db": "workspace:*",
+		"@unievent/env": "workspace:*",
+		"@unievent/schema": "workspace:*",
 		"better-auth": "^1.4.0",
 		"cors": "^2.8.5",
 		"dotenv": "catalog:",
@@ -28,7 +28,7 @@
 		"@types/bun": "catalog:",
 		"@types/cors": "^2.8.17",
 		"@types/express": "^5.0.1",
-		"@voltaze/config": "workspace:*",
+		"@unievent/config": "workspace:*",
 		"nodemon": "^3.1.14",
 		"tsdown": "^0.16.5",
 		"typescript": "^6"

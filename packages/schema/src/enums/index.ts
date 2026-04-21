@@ -10,7 +10,7 @@ import type {
 	PaymentGateway,
 	PaymentStatus,
 	UserRole,
-} from "@voltaze/db";
+} from "@unievent/db";
 
 export type {
 	CheckInMethod,

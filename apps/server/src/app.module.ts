@@ -1,4 +1,3 @@
-import { env } from "@voltaze/env/server";
 import { toNodeHandler } from "better-auth/node";
 import cors from "cors";
 import express, { type Express } from "express";
@@ -34,13 +33,14 @@ export function createApp(): Express {
 	app.use(loggerMiddleware);
 	app.get("/", (_req, res) => {
 		res.status(200).json({
-			message: "Voltaze server is running",
+			message: "UniEvent server is running",
 			timestamp: new Date().toISOString(),
 		});
 	});
 	app.use(
 		express.json({
 			verify: (req, _res, buf) => {
+				// rawBody (string) is used for webhook HMAC verification (e.g. Razorpay)
 				(req as { rawBody?: string }).rawBody = buf.toString("utf8");
 			},
 		}),

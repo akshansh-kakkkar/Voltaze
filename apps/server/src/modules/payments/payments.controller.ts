@@ -7,7 +7,7 @@ import {
 	refundPaymentSchema,
 	updatePaymentSchema,
 	verifyPaymentSchema,
-} from "@voltaze/schema";
+} from "@unievent/schema";
 import type { Request, Response } from "express";
 
 import type { AuthenticatedRequest } from "@/common/types/auth-request";

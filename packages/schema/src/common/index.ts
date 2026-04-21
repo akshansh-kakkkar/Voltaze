@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const ulidSchema = z
 	.string()
-	.regex(/^[0-9A-HJKMNP-TV-Z]{26}$/i, "Invalid ULID");
+	.min(10);
 
 export const idParamSchema = z.object({
 	id: z.string().cuid(),
@@ -45,7 +45,15 @@ export const paginationMetaSchema = z.object({
 	hasPreviousPage: z.boolean(),
 });
 
+export const paginationParamsSchema = z.object({
+	page: z.coerce.number().int().positive().optional(),
+	limit: z.coerce.number().int().positive().optional(),
+	sortBy: z.string().min(1).optional(),
+	sortOrder: z.enum(["asc", "desc"]).optional(),
+});
+
 export type PaginationMeta = z.infer<typeof paginationMetaSchema>;
+export type PaginationParams = z.infer<typeof paginationParamsSchema>;
 
 export function createPaginationMeta(
 	page: number,

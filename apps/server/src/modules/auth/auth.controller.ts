@@ -5,7 +5,8 @@ import {
 	requestEmailVerificationSchema,
 	resetPasswordSchema,
 	verifyEmailSchema,
-} from "@voltaze/schema";
+} from "@unievent/schema";
+import { fromNodeHeaders } from "better-auth/node";
 import type { Request, Response } from "express";
 
 import type { AuthenticatedRequest } from "@/common/types/auth-request";
@@ -13,42 +14,56 @@ import type { AuthenticatedRequest } from "@/common/types/auth-request";
 import { authService } from "./auth.service";
 
 export class AuthController {
-	private getRequestContext(req: Request) {
-		return {
-			ipAddress: req.ip,
-			userAgent: req.get("user-agent") ?? null,
-		};
+	private toAuthHeaders(req: Request) {
+		return fromNodeHeaders(req.headers);
+	}
+
+	private applySetCookieHeaders(res: Response, headers?: Headers) {
+		if (!headers) {
+			return;
+		}
+
+		const getSetCookie = (headers as Headers & { getSetCookie?: () => string[] })
+			.getSetCookie;
+		const setCookies =
+			typeof getSetCookie === "function"
+				? getSetCookie.call(headers)
+				: headers.get("set-cookie")
+					? [headers.get("set-cookie") as string]
+					: [];
+
+		if (setCookies.length > 0) {
+			res.setHeader("set-cookie", setCookies);
+		}
 	}
 
 	async register(req: Request, res: Response) {
-		const result = await authService.register(
-			req.body,
-			this.getRequestContext(req),
-		);
-		res.status(201).json(result);
+		const result = await authService.register(req.body, this.toAuthHeaders(req));
+		this.applySetCookieHeaders(res, result.headers);
+		res.status(201).json(result.data);
 	}
 
 	async login(req: Request, res: Response) {
-		const result = await authService.login(
-			req.body,
-			this.getRequestContext(req),
-		);
-		res.status(200).json(result);
+		const result = await authService.login(req.body, this.toAuthHeaders(req));
+		this.applySetCookieHeaders(res, result.headers);
+		res.status(200).json(result.data);
 	}
 
 	async refresh(req: Request, res: Response) {
-		const result = await authService.refresh(req.body);
-		res.status(200).json(result);
+		const result = await authService.refresh(req.body, this.toAuthHeaders(req));
+		this.applySetCookieHeaders(res, result.headers);
+		res.status(200).json(result.data);
 	}
 
 	async logout(req: Request, res: Response) {
-		await authService.logout(req.body);
+		const result = await authService.logout(req.body, this.toAuthHeaders(req));
+		this.applySetCookieHeaders(res, result.headers);
 		res.status(204).send();
 	}
 
 	async logoutAll(req: Request, res: Response) {
-		const authReq = req as AuthenticatedRequest;
-		await authService.logoutAll(authReq.auth.userId);
+		const result = await authService.logoutAll(this.toAuthHeaders(req));
+		this.applySetCookieHeaders(res, result.headers);
 		res.status(204).send();
 	}
 
@@ -64,7 +79,11 @@ export class AuthController {
 	async revokeSession(req: Request, res: Response) {
 		const authReq = req as AuthenticatedRequest;
 		const params = authSessionIdParamSchema.parse(req.params);
-		await authService.revokeSession(authReq.auth.userId, params.sessionId);
+		await authService.revokeSession(
+			authReq.auth.userId,
+			params.sessionId,
+			this.toAuthHeaders(req),
+		);
 		res.status(204).send();
 	}
 
@@ -87,14 +106,13 @@ export class AuthController {
 	}
 
 	async changePassword(req: Request, res: Response) {
-		const authReq = req as AuthenticatedRequest;
 		const body = changePasswordSchema.parse(req.body);
 		const result = await authService.changePassword(
-			authReq.auth.userId,
 			body,
-			this.getRequestContext(req),
+			this.toAuthHeaders(req),
 		);
-		res.status(200).json(result);
+		this.applySetCookieHeaders(res, result.headers);
+		res.status(200).json(result.data);
 	}
 
 	async requestEmailVerification(req: Request, res: Response) {
@@ -102,6 +120,7 @@ export class AuthController {
 		const body = requestEmailVerificationSchema.parse(req.body);
 		const result = await authService.requestEmailVerification(
 			authReq.auth.userId,
+			this.toAuthHeaders(req),
 			body.email,
 		);
 		res.status(200).json(result);
@@ -109,7 +128,10 @@ export class AuthController {
 
 	async verifyEmail(req: Request, res: Response) {
 		const body = verifyEmailSchema.parse(req.body);
-		const result = await authService.verifyEmail(body);
+		const result = await authService.verifyEmail(
+			body,
+			this.toAuthHeaders(req),
+		);
 		res.status(200).json(result);
 	}
 }

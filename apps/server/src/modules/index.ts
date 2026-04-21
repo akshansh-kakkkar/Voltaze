@@ -1,16 +1,20 @@
 import type { Express } from "express";
 
 import { registerAttendeesModule } from "./attendees";
+import { registerAnalyticsModule } from "./analytics";
 import { registerAuthModule } from "./auth";
 import { registerCheckInsModule } from "./check-ins";
 import { registerEventsModule } from "./events";
+import { registerNotificationsModule } from "./notifications";
 import { registerOrdersModule } from "./orders";
 import { registerPassesModule } from "./passes";
 import { registerPaymentsModule } from "./payments";
 import { registerTicketsModule } from "./tickets";
+import { registerUsersModule } from "./users";
 
 export function registerModules(app: Express) {
 	registerAuthModule(app);
+	registerUsersModule(app);
 	registerEventsModule(app);
 	registerAttendeesModule(app);
 	registerOrdersModule(app);
@@ -18,4 +22,6 @@ export function registerModules(app: Express) {
 	registerPassesModule(app);
 	registerCheckInsModule(app);
 	registerPaymentsModule(app);
+	registerAnalyticsModule(app);
+	registerNotificationsModule(app);
 }

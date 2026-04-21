@@ -1,54 +1,23 @@
-import { env } from "@voltaze/env/server";
+import { env } from "@unievent/env/server";
+import type {
+	RazorpayOrder,
+	RazorpayOrderOptions,
+	RazorpayPayment,
+	RazorpayRefund,
+} from "@unievent/schema";
 import Razorpay from "razorpay";
+
+export type {
+	RazorpayOrder,
+	RazorpayOrderOptions,
+	RazorpayPayment,
+	RazorpayRefund,
+};
 
 export const razorpay = new Razorpay({
 	key_id: env.RAZORPAY_KEY_ID,
 	key_secret: env.RAZORPAY_KEY_SECRET,
 });
-
-export type RazorpayOrderOptions = {
-	amount: number;
-	currency: string;
-	receipt: string;
-	notes?: Record<string, string>;
-};
-
-export type RazorpayOrder = {
-	id: string;
-	entity: string;
-	amount: number;
-	amount_paid: number;
-	amount_due: number;
-	currency: string;
-	receipt: string;
-	status: "created" | "attempted" | "paid";
-	attempts: number;
-	notes: Record<string, string>;
-	created_at: number;
-};
-
-export type RazorpayPayment = {
-	id: string;
-	entity: string;
-	amount: number;
-	currency: string;
-	status: string;
-	order_id: string;
-	method: string;
-	captured: boolean;
-	refund_status: string | null;
-	amount_refunded: number;
-};
-
-export type RazorpayRefund = {
-	id: string;
-	entity: string;
-	amount: number;
-	currency: string;
-	payment_id: string;
-	status: "pending" | "processed" | "failed";
-	created_at: number;
-};
 
 export async function createRazorpayOrder(
 	options: RazorpayOrderOptions,

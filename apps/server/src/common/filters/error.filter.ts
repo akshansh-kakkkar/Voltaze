@@ -1,8 +1,9 @@
-import { Prisma } from "@voltaze/db";
+import { Prisma } from "@unievent/db";
 import type { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
 
 import { AppError } from "../exceptions/app-error";
+import { logger } from "../utils/logger";
 
 export function errorHandlerMiddleware(
 	error: unknown,
@@ -50,6 +51,6 @@ export function errorHandlerMiddleware(
 		return res.status(503).json({ message: "Database unavailable" });
 	}
 
-	console.error(error);
+	logger.error("Unhandled error", error);
 	return res.status(500).json({ message: "Internal server error" });
 }

@@ -1,4 +1,4 @@
-import type { User, UserRole } from "@voltaze/db";
+import type { User, UserRole } from "@unievent/db";
 
 declare module "express-serve-static-core" {
 	interface Request {

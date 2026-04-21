@@ -1,14 +1,18 @@
-import { Prisma, prisma, type User } from "@voltaze/db";
+import { prisma } from "@unievent/db";
+import { env } from "@unievent/env/server";
 import type {
+	AuthTokens,
 	AuthSession,
 	ChangePasswordInput,
 	ForgotPasswordInput,
 	LoginInput,
+	PublicUser,
 	RefreshSessionInput,
 	RegisterInput,
 	ResetPasswordInput,
 	VerifyEmailInput,
-} from "@voltaze/schema";
+} from "@unievent/schema";
+import { publicUserSchema } from "@unievent/schema";
 
 import {
 	BadRequestError,
@@ -16,55 +20,169 @@ import {
 	NotFoundError,
 	UnauthorizedError,
 } from "@/common/exceptions/app-error";
+import { auth } from "@/common/utils/better-auth";
 
-import {
-	createAccessToken,
-	createPasswordResetExpiryDate,
-	createRefreshExpiryDate,
-	createRefreshToken,
-	createVerificationExpiryDate,
-	createVerificationToken,
-	hashPassword,
-	hashRefreshToken,
-	hashVerificationToken,
-	verifyPassword,
-} from "./auth.utils";
-
-const CREDENTIALS_PROVIDER_ID = "credentials";
-
-type AuthContext = {
-	ipAddress?: string | null;
-	userAgent?: string | null;
+type BetterAuthUser = {
+	id: string;
+	name: string | null;
+	email: string;
+	emailVerified: boolean;
+	image?: string | null;
+	role?: unknown;
+	skills?: unknown;
+	createdAt: Date;
+	updatedAt: Date;
 };
 
-export type PublicUser = Pick<
-	User,
-	| "id"
-	| "name"
-	| "email"
-	| "emailVerified"
-	| "image"
-	| "role"
-	| "createdAt"
-	| "updatedAt"
->;
+type BetterAuthSession = {
+	id: string;
+	token: string;
+	expiresAt: Date;
+	createdAt: Date;
+	updatedAt: Date;
+	ipAddress: string | null;
+	userAgent: string | null;
+	userId: string;
+};
 
-function toPublicUser(user: User): PublicUser {
-	return {
-		id: user.id,
-		name: user.name,
-		email: user.email,
-		emailVerified: user.emailVerified,
-		image: user.image,
-		role: user.role,
-		createdAt: user.createdAt,
-		updatedAt: user.updatedAt,
-	};
-}
+type BetterAuthSessionContext = {
+	user: BetterAuthUser;
+	session: BetterAuthSession;
+};
+
+type AuthApiResult<T> = {
+	headers: Headers;
+	response: T;
+};
+
+type AuthResponsePayload = {
+	user: PublicUser;
+	tokens: AuthTokens;
+};
+
+export type AuthServiceResult<T> = {
+	data: T;
+	headers?: Headers;
+};
 
 export class AuthService {
 	private normalizeEmail(email: string) {
 		return email.trim().toLowerCase();
+	}
+
+	private getWebUrl(pathname: string) {
+		const baseUrl = env.WEB_APP_URL;
+		if (!baseUrl) {
+			return undefined;
+		}
+
+		return `${baseUrl.replace(/\/$/, "")}${pathname}`;
+	}
+
+	private toPublicUser(user: BetterAuthUser): PublicUser {
+		return publicUserSchema.parse({
+			id: user.id,
+			name: user.name,
+			email: user.email,
+			emailVerified: user.emailVerified,
+			image: user.image ?? null,
+			role: typeof user.role === "string" ? user.role : "USER",
+			skills: Array.isArray(user.skills)
+				? user.skills.filter((skill): skill is string => typeof skill === "string")
+				: [],
+			createdAt: user.createdAt,
+			updatedAt: user.updatedAt,
+		});
+	}
+
+	private toAuthTokens(session: Pick<BetterAuthSession, "token" | "expiresAt">): AuthTokens {
+		const expiresAt = session.expiresAt.toISOString();
+		return {
+			accessToken: session.token,
+			refreshToken: session.token,
+			accessTokenExpiresAt: expiresAt,
+			refreshTokenExpiresAt: expiresAt,
+		};
+	}
+
+	private mapAuthError(error: unknown): never {
+		if (!error || typeof error !== "object") {
+			throw error;
+		}
+
+		const typedError = error as {
+			message?: unknown;
+			status?: unknown;
+			statusCode?: unknown;
+			body?: { message?: unknown };
+		};
+
+		const message =
+			typeof typedError.body?.message === "string"
+				? typedError.body.message
+				: typeof typedError.message === "string"
+					? typedError.message
+					: "Authentication request failed";
+
+		const status =
+			typeof typedError.statusCode === "number"
+				? typedError.statusCode
+				: typeof typedError.status === "number"
+					? typedError.status
+					: undefined;
+
+		if (status === 401) {
+			throw new UnauthorizedError(message);
+		}
+
+		if (status === 404) {
+			throw new NotFoundError(message);
+		}
+
+		if (status === 409) {
+			throw new ConflictError(message);
+		}
+
+		if (status === 400 || status === 422 || status === 403) {
+			throw new BadRequestError(message);
+		}
+
+		throw error;
+	}
+
+	private async runAuthCall<T>(callback: () => Promise<T>) {
+		try {
+			return await callback();
+		} catch (error) {
+			this.mapAuthError(error);
+		}
+	}
+
+	private async resolveSessionByToken(token: string) {
+		const session = await prisma.session.findUnique({
+			where: { token },
+			include: { user: true },
+		});
+
+		if (!session) {
+			throw new UnauthorizedError("Session not found");
+		}
+
+		if (session.expiresAt <= new Date()) {
+			await prisma.session.delete({ where: { id: session.id } });
+			throw new UnauthorizedError("Session expired");
+		}
+
+		return session;
+	}
+
+	private async buildAuthPayloadFromToken(token: string): Promise<AuthResponsePayload> {
+		const session = await this.resolveSessionByToken(token);
+
+		return {
+			user: this.toPublicUser(session.user as BetterAuthUser),
+			tokens: this.toAuthTokens(session),
+		};
 	}
 
 	private toAuthSession(
@@ -89,174 +207,153 @@ export class AuthService {
 		};
 	}
 
-	private async createSession(user: User, context: AuthContext) {
-		const refreshToken = createRefreshToken();
-		const hashedRefreshToken = await hashRefreshToken(refreshToken);
-		const expiresAt = createRefreshExpiryDate();
+	async register(
+		input: RegisterInput,
+		headers: Headers,
+	): Promise<AuthServiceResult<AuthResponsePayload>> {
+		const email = this.normalizeEmail(input.email);
+		const name = input.name?.trim() || email.split("@")[0] || email;
 
-		const session = await prisma.session.create({
-			data: {
-				userId: user.id,
-				token: hashedRefreshToken,
-				expiresAt,
-				ipAddress: context.ipAddress ?? null,
-				userAgent: context.userAgent ?? null,
-			},
-		});
+		const result = await this.runAuthCall(
+			() =>
+				auth.api.signUpEmail({
+					body: {
+						email,
+						password: input.password,
+						name,
+					},
+					headers,
+					returnHeaders: true,
+				}) as Promise<
+					AuthApiResult<{
+						token: string | null;
+						user: BetterAuthUser;
+					}>
+				>,
+		);
 
-		const accessToken = await createAccessToken({
-			userId: user.id,
-			sessionId: session.id,
-			email: user.email,
-			role: user.role,
-		});
+		if (!result.response.token) {
+			throw new BadRequestError(
+				"Account created, but no active session was issued. Please sign in.",
+			);
+		}
 
 		return {
-			user: toPublicUser(user),
-			tokens: {
-				accessToken: accessToken.token,
-				refreshToken,
-				accessTokenExpiresAt: accessToken.expiresAt.toISOString(),
-				refreshTokenExpiresAt: expiresAt.toISOString(),
-			},
+			data: await this.buildAuthPayloadFromToken(result.response.token),
+			headers: result.headers,
 		};
 	}
 
-	async register(input: RegisterInput, context: AuthContext) {
+	async login(
+		input: LoginInput,
+		headers: Headers,
+	): Promise<AuthServiceResult<AuthResponsePayload>> {
 		const email = this.normalizeEmail(input.email);
-		const existingUser = await prisma.user.findUnique({ where: { email } });
 
-		if (existingUser) {
-			throw new ConflictError("An account with this email already exists");
+		const result = await this.runAuthCall(
+			() =>
+				auth.api.signInEmail({
+					body: {
+						email,
+						password: input.password,
+					},
+					headers,
+					returnHeaders: true,
+				}) as Promise<
+					AuthApiResult<{
+						token: string;
+						user: BetterAuthUser;
+					}>
+				>,
+		);
+
+		return {
+			data: await this.buildAuthPayloadFromToken(result.response.token),
+			headers: result.headers,
+		};
+	}
+
+	async refresh(
+		input: RefreshSessionInput,
+		headers: Headers,
+	): Promise<AuthServiceResult<AuthResponsePayload>> {
+		if (input.refreshToken) {
+			return {
+				data: await this.buildAuthPayloadFromToken(input.refreshToken),
+			};
 		}
 
-		const passwordHash = await hashPassword(input.password);
-		let user: User;
-		try {
-			user = await prisma.$transaction(async (tx) => {
-				const createdUser = await tx.user.create({
-					data: {
-						email,
-						name: input.name?.trim() || null,
-					},
-				});
+		const sessionResult = await this.runAuthCall(
+			() =>
+				auth.api.getSession({
+					headers,
+					returnHeaders: true,
+				}) as Promise<AuthApiResult<BetterAuthSessionContext | null>>,
+		);
 
-				await tx.account.create({
-					data: {
-						userId: createdUser.id,
-						accountId: email,
-						providerId: CREDENTIALS_PROVIDER_ID,
-						password: passwordHash,
-					},
-				});
+		if (!sessionResult.response) {
+			throw new UnauthorizedError("No active session found");
+		}
 
-				return createdUser;
+		return {
+			data: {
+				user: this.toPublicUser(sessionResult.response.user),
+				tokens: this.toAuthTokens(sessionResult.response.session),
+			},
+			headers: sessionResult.headers,
+		};
+	}
+
+	async logout(
+		input: RefreshSessionInput,
+		headers: Headers,
+	): Promise<AuthServiceResult<void>> {
+		if (input.refreshToken) {
+			const result = await prisma.session.deleteMany({
+				where: { token: input.refreshToken },
 			});
-		} catch (error) {
-			if (error instanceof Prisma.PrismaClientKnownRequestError) {
-				if (error.code === "P2002") {
-					throw new ConflictError("An account with this email already exists");
-				}
+
+			if (result.count === 0) {
+				throw new UnauthorizedError("Invalid refresh token");
 			}
 
-			throw error;
+			return { data: undefined };
 		}
 
-		return this.createSession(user, context);
-	}
-
-	async login(input: LoginInput, context: AuthContext) {
-		const email = this.normalizeEmail(input.email);
-		const user = await prisma.user.findUnique({
-			where: { email },
-			include: {
-				accounts: {
-					where: {
-						providerId: CREDENTIALS_PROVIDER_ID,
-						accountId: email,
-					},
-					take: 1,
-				},
-			},
-		});
-
-		const account = user?.accounts[0];
-		if (!user || !account?.password) {
-			throw new UnauthorizedError("Invalid email or password");
-		}
-
-		const isPasswordValid = await verifyPassword(
-			input.password,
-			account.password,
+		const result = await this.runAuthCall(
+			() =>
+				auth.api.signOut({
+					headers,
+					returnHeaders: true,
+				}) as Promise<AuthApiResult<{ success: boolean }>>,
 		);
-		if (!isPasswordValid) {
-			throw new UnauthorizedError("Invalid email or password");
-		}
-
-		const { accounts: _accounts, ...userRow } = user;
-		return this.createSession(userRow, context);
-	}
-
-	async refresh(input: RefreshSessionInput) {
-		const hashedRefreshToken = await hashRefreshToken(input.refreshToken);
-		const existingSession = await prisma.session.findUnique({
-			where: { token: hashedRefreshToken },
-			include: { user: true },
-		});
-
-		if (!existingSession) {
-			throw new UnauthorizedError("Invalid refresh token");
-		}
-
-		if (existingSession.expiresAt <= new Date()) {
-			await prisma.session.delete({ where: { id: existingSession.id } });
-			throw new UnauthorizedError("Refresh token expired");
-		}
-
-		const refreshToken = createRefreshToken();
-		const nextExpiresAt = createRefreshExpiryDate();
-		const nextHashedRefreshToken = await hashRefreshToken(refreshToken);
-
-		const rotatedSession = await prisma.session.update({
-			where: { id: existingSession.id },
-			data: {
-				token: nextHashedRefreshToken,
-				expiresAt: nextExpiresAt,
-			},
-			include: { user: true },
-		});
-
-		const accessToken = await createAccessToken({
-			userId: rotatedSession.user.id,
-			sessionId: rotatedSession.id,
-			email: rotatedSession.user.email,
-			role: rotatedSession.user.role,
-		});
 
 		return {
-			user: toPublicUser(rotatedSession.user),
-			tokens: {
-				accessToken: accessToken.token,
-				refreshToken,
-				accessTokenExpiresAt: accessToken.expiresAt.toISOString(),
-				refreshTokenExpiresAt: nextExpiresAt.toISOString(),
-			},
+			data: undefined,
+			headers: result.headers,
 		};
 	}
 
-	async logout(input: RefreshSessionInput) {
-		const hashedRefreshToken = await hashRefreshToken(input.refreshToken);
-		const result = await prisma.session.deleteMany({
-			where: { token: hashedRefreshToken },
-		});
+	async logoutAll(headers: Headers): Promise<AuthServiceResult<void>> {
+		await this.runAuthCall(
+			() =>
+				auth.api.revokeSessions({ headers }) as Promise<{
+					status: boolean;
+				}>,
+		);
 
-		if (result.count === 0) {
-			throw new UnauthorizedError("Invalid refresh token");
-		}
-	}
+		const result = await this.runAuthCall(
+			() =>
+				auth.api.signOut({
+					headers,
+					returnHeaders: true,
+				}) as Promise<AuthApiResult<{ success: boolean }>>,
+		);
 
-	async logoutAll(userId: string) {
-		await prisma.session.deleteMany({ where: { userId } });
+		return {
+			data: undefined,
+			headers: result.headers,
+		};
 	}
 
 	async listSessions(
@@ -288,7 +385,7 @@ export class AuthService {
 		);
 	}
 
-	async revokeSession(userId: string, sessionId: string) {
+	async revokeSession(userId: string, sessionId: string, headers: Headers) {
 		const session = await prisma.session.findFirst({
 			where: {
 				id: sessionId,
@@ -296,6 +393,7 @@ export class AuthService {
 			},
 			select: {
 				id: true,
+				token: true,
 			},
 		});
 
@@ -303,7 +401,15 @@ export class AuthService {
 			throw new NotFoundError("Session not found");
 		}
 
-		await prisma.session.delete({ where: { id: session.id } });
+		await this.runAuthCall(
+			() =>
+				auth.api.revokeSession({
+					body: {
+						token: session.token,
+					},
+					headers,
+				}) as Promise<{ status: boolean }>,
+		);
 	}
 
 	async getCurrentUser(userId: string): Promise<PublicUser> {
@@ -313,137 +419,79 @@ export class AuthService {
 			throw new UnauthorizedError("Authenticated user no longer exists");
 		}
 
-		return toPublicUser(user);
+		return this.toPublicUser(user as BetterAuthUser);
 	}
 
 	async forgotPassword(input: ForgotPasswordInput) {
-		const email = this.normalizeEmail(input.email);
-		const user = await prisma.user.findUnique({ where: { email } });
+		const redirectTo = this.getWebUrl("/reset-password");
 
-		// Always return success to prevent email enumeration
-		if (!user) {
-			return { message: "If the email exists, a reset link will be sent" };
-		}
+		await this.runAuthCall(
+			() =>
+				auth.api.requestPasswordReset({
+					body: {
+						email: this.normalizeEmail(input.email),
+						redirectTo,
+					},
+				}) as Promise<{
+					status: boolean;
+					message: string;
+				}>,
+		);
 
-		const token = createVerificationToken();
-		const hashedToken = await hashVerificationToken(token);
-		const expiresAt = createPasswordResetExpiryDate();
-
-		await prisma.verification.upsert({
-			where: { id: `password-reset:${user.id}` },
-			update: {
-				value: hashedToken,
-				expiresAt,
-			},
-			create: {
-				id: `password-reset:${user.id}`,
-				identifier: email,
-				value: hashedToken,
-				expiresAt,
-			},
-		});
-
-		// In production, send email with reset link containing the token
-		// For now, return the token for testing purposes in development
-		return {
-			message: "If the email exists, a reset link will be sent",
-			// Only include token in development for testing
-			...(process.env.NODE_ENV !== "production" && { token }),
-		};
+		return { message: "If the email exists, a reset link will be sent" };
 	}
 
 	async resetPassword(input: ResetPasswordInput) {
-		const hashedToken = await hashVerificationToken(input.token);
-
-		const verification = await prisma.verification.findFirst({
-			where: {
-				id: { startsWith: "password-reset:" },
-				value: hashedToken,
-				expiresAt: { gt: new Date() },
-			},
-		});
-
-		if (!verification) {
-			throw new BadRequestError("Invalid or expired reset token");
-		}
-
-		const userId = verification.id.replace("password-reset:", "");
-		const user = await prisma.user.findUnique({
-			where: { id: userId },
-			include: {
-				accounts: {
-					where: { providerId: CREDENTIALS_PROVIDER_ID },
-					take: 1,
-				},
-			},
-		});
-
-		if (!user || !user.accounts[0]) {
-			throw new BadRequestError("Invalid or expired reset token");
-		}
-
-		const passwordHash = await hashPassword(input.password);
-
-		await prisma.$transaction([
-			prisma.account.update({
-				where: { id: user.accounts[0].id },
-				data: { password: passwordHash },
-			}),
-			prisma.verification.delete({ where: { id: verification.id } }),
-			// Invalidate all sessions for security
-			prisma.session.deleteMany({ where: { userId: user.id } }),
-		]);
+		await this.runAuthCall(
+			() =>
+				auth.api.resetPassword({
+					body: {
+						token: input.token,
+						newPassword: input.password,
+					},
+				}) as Promise<{ status: boolean }>,
+		);
 
 		return { message: "Password reset successful. Please login again." };
 	}
 
 	async changePassword(
-		userId: string,
 		input: ChangePasswordInput,
-		context: AuthContext,
-	) {
-		const user = await prisma.user.findUnique({
-			where: { id: userId },
-			include: {
-				accounts: {
-					where: { providerId: CREDENTIALS_PROVIDER_ID },
-					take: 1,
-				},
-			},
-		});
-
-		if (!user || !user.accounts[0]?.password) {
-			throw new BadRequestError(
-				"Password change not supported for this account",
-			);
-		}
-
-		const isCurrentPasswordValid = await verifyPassword(
-			input.currentPassword,
-			user.accounts[0].password,
+		headers: Headers,
+	): Promise<AuthServiceResult<AuthResponsePayload>> {
+		const result = await this.runAuthCall(
+			() =>
+				auth.api.changePassword({
+					body: {
+						currentPassword: input.currentPassword,
+						newPassword: input.newPassword,
+						revokeOtherSessions: true,
+					},
+					headers,
+					returnHeaders: true,
+				}) as Promise<
+					AuthApiResult<{
+						token: string | null;
+						user: BetterAuthUser;
+					}>
+				>,
 		);
 
-		if (!isCurrentPasswordValid) {
-			throw new UnauthorizedError("Current password is incorrect");
+		if (!result.response.token) {
+			throw new UnauthorizedError("Session token missing after password change");
 		}
 
-		const passwordHash = await hashPassword(input.newPassword);
-
-		await prisma.$transaction([
-			prisma.account.update({
-				where: { id: user.accounts[0].id },
-				data: { password: passwordHash },
-			}),
-			// Invalidate all other sessions for security
-			prisma.session.deleteMany({ where: { userId: user.id } }),
-		]);
-
-		// Create a new session for the current user
-		const { accounts: _accounts, ...userRow } = user;
-		return this.createSession(userRow, context);
+		return {
+			data: await this.buildAuthPayloadFromToken(result.response.token),
+			headers: result.headers,
+		};
 	}
 
-	async requestEmailVerification(userId: string, email?: string) {
+	async requestEmailVerification(
+		userId: string,
+		headers: Headers,
+		email?: string,
+	) {
 		const user = await prisma.user.findUnique({ where: { id: userId } });
 
 		if (!user) {
@@ -454,70 +502,39 @@ export class AuthService {
 			throw new BadRequestError("Email is already verified");
 		}
 
-		const targetEmail = email ?? user.email;
+		const targetEmail = this.normalizeEmail(email ?? user.email);
+
 		if (targetEmail !== user.email) {
-			// If changing email, check it's not already in use
-			const existingUser = await prisma.user.findUnique({
-				where: { email: targetEmail },
-			});
+			const existingUser = await prisma.user.findUnique({ where: { email: targetEmail } });
 			if (existingUser) {
 				throw new ConflictError("Email is already in use");
 			}
 		}
 
-		const token = createVerificationToken();
-		const hashedToken = await hashVerificationToken(token);
-		const expiresAt = createVerificationExpiryDate();
+		await this.runAuthCall(
+			() =>
+				auth.api.sendVerificationEmail({
+					body: {
+						email: targetEmail,
+						callbackURL: this.getWebUrl("/verify-email"),
+					},
+					headers,
+				}) as Promise<{ status: boolean }>,
+		);
 
-		await prisma.verification.upsert({
-			where: { id: `email-verify:${user.id}` },
-			update: {
-				identifier: targetEmail,
-				value: hashedToken,
-				expiresAt,
-			},
-			create: {
-				id: `email-verify:${user.id}`,
-				identifier: targetEmail,
-				value: hashedToken,
-				expiresAt,
-			},
-		});
-
-		// In production, send email with verification link
-		return {
-			message: "Verification email sent",
-			...(process.env.NODE_ENV !== "production" && { token }),
-		};
+		return { message: "Verification email sent" };
 	}
 
-	async verifyEmail(input: VerifyEmailInput) {
-		const hashedToken = await hashVerificationToken(input.token);
-
-		const verification = await prisma.verification.findFirst({
-			where: {
-				id: { startsWith: "email-verify:" },
-				value: hashedToken,
-				expiresAt: { gt: new Date() },
-			},
-		});
-
-		if (!verification) {
-			throw new BadRequestError("Invalid or expired verification token");
-		}
-
-		const userId = verification.id.replace("email-verify:", "");
-
-		await prisma.$transaction([
-			prisma.user.update({
-				where: { id: userId },
-				data: {
-					email: verification.identifier,
-					emailVerified: true,
-				},
-			}),
-			prisma.verification.delete({ where: { id: verification.id } }),
-		]);
+	async verifyEmail(input: VerifyEmailInput, headers?: Headers) {
+		await this.runAuthCall(
+			() =>
+				auth.api.verifyEmail({
+					query: {
+						token: input.token,
+					},
+					headers,
+				}) as Promise<void | { status: boolean }>,
+		);
 
 		return { message: "Email verified successfully" };
 	}

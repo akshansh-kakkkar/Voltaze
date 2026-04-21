@@ -1,12 +1,8 @@
-import type { User, UserRole } from "@voltaze/db";
+import type { User } from "@unievent/db";
+import type { AuthRequestContext } from "@unievent/schema";
 import type { Request } from "express";
 
-export type RequestAuthContext = {
-	userId: string;
-	sessionId: string;
-	email: string;
-	role: UserRole;
-};
+export type RequestAuthContext = AuthRequestContext;
 
 export type RequestWithAuth = Request & {
 	auth?: RequestAuthContext;

@@ -1,10 +1,18 @@
 import { dash } from "@better-auth/infra";
-import { prisma } from "@voltaze/db";
-import { env } from "@voltaze/env/server";
+import { prisma } from "@unievent/db";
+import { env } from "@unievent/env/server";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { sendEmailViaBrevo } from "./brevo";
 import { getAllowedCorsOrigins } from "./cors-origins";
+
+type BetterAuthEmailHookPayload = {
+	user: {
+		email: string;
+	};
+	token: string;
+	url: string;
+};
 
 const googleProvider =
 	env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
@@ -46,11 +54,11 @@ export const auth = betterAuth({
 		: undefined,
 	emailAndPassword: {
 		enabled: true,
-		sendResetPasswordEmail: async (data) => {
-			const resetLink = `${env.BETTER_AUTH_URL}/reset-password?token=${data.token}`;
+		sendResetPassword: async (data: BetterAuthEmailHookPayload) => {
+			const resetLink = data.url;
 			await sendEmailViaBrevo({
 				to: data.user.email,
-				subject: "Reset your Voltaze password",
+				subject: "Reset your UniEvent password",
 				htmlContent: `
 					<h1>Reset Your Password</h1>
 					<p>Click the link below to reset your password:</p>
@@ -60,11 +68,13 @@ export const auth = betterAuth({
 				textContent: `Reset your password: ${resetLink}`,
 			});
 		},
-		sendVerificationEmail: async (data) => {
-			const verificationLink = `${env.BETTER_AUTH_URL}/verify-email?token=${data.token}`;
+	},
+	emailVerification: {
+		sendVerificationEmail: async (data: BetterAuthEmailHookPayload) => {
+			const verificationLink = data.url;
 			await sendEmailViaBrevo({
 				to: data.user.email,
-				subject: "Verify your Voltaze email",
+				subject: "Verify your UniEvent email",
 				htmlContent: `
 					<h1>Verify Your Email</h1>
 					<p>Click the link below to verify your email address:</p>

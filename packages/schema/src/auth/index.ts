@@ -1,11 +1,11 @@
-import type { Account, Session, User, Verification } from "@voltaze/db";
+import type { Account, Session, User, Verification } from "@unievent/db";
 import { z } from "zod";
 
 export type { Account, Session, User, Verification };
 
 const ulidSchema = z
 	.string()
-	.regex(/^[0-9A-HJKMNP-TV-Z]{26}$/i, "Invalid ULID");
+	.min(10);
 
 export const userRoleSchema = z.enum(["ADMIN", "HOST", "USER"]);
 
@@ -54,24 +54,6 @@ export const authSessionIdParamSchema = z.object({
 	sessionId: ulidSchema,
 });
 
-export const accessTokenPayloadSchema = z.object({
-	sub: ulidSchema,
-	sessionId: ulidSchema,
-	email: z.string().email(),
-	role: userRoleSchema,
-	type: z.literal("access"),
-	iat: z.number().int().nonnegative(),
-	exp: z.number().int().positive(),
-	iss: z.string().min(1),
-});
-
-export const createAccessTokenInputSchema = z.object({
-	userId: ulidSchema,
-	sessionId: ulidSchema,
-	email: z.string().email(),
-	role: userRoleSchema,
-});
-
 export const createUserSchema = userSchema
 	.omit({
 		id: true,
@@ -98,6 +80,28 @@ export const updateUserSchema = userSchema
 		role: userRoleSchema.optional(),
 		skills: z.array(z.string()).max(5).optional(),
 	});
+
+// Profile update — only the fields a user can change about themselves
+export const updateProfileSchema = z.object({
+	name: z.string().trim().min(1).max(100).nullable().optional(),
+	image: z.string().url().nullable().optional(),
+	skills: z.array(z.string().trim().min(1).max(60)).max(10).optional(),
+});
+
+// Admin update — can update profile fields plus the user's role
+export const adminUpdateUserSchema = updateProfileSchema.extend({
+	role: userRoleSchema.optional(),
+});
+
+
+export const userFilterSchema = z.object({
+	role: userRoleSchema.optional(),
+	search: z.string().optional(),
+	page: z.coerce.number().int().positive().default(1),
+	limit: z.coerce.number().int().positive().max(100).default(20),
+	sortBy: z.enum(["createdAt", "name"]).default("createdAt"),
+	sortOrder: z.enum(["asc", "desc"]).default("desc"),
+});
 
 export const sessionSchema = z.object({
 	id: ulidSchema,
@@ -216,11 +220,9 @@ export const authResponseSchema = z.object({
 	tokens: authTokensSchema,
 });
 
+export type AuthUserRole = z.infer<typeof userRoleSchema>;
 export type PublicUser = z.infer<typeof publicUserSchema>;
-export type AccessTokenPayload = z.infer<typeof accessTokenPayloadSchema>;
-export type CreateAccessTokenInput = z.infer<
-	typeof createAccessTokenInputSchema
->;
+export type AuthRequestContext = z.infer<typeof authRequestContextSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RefreshSessionInput = z.infer<typeof refreshSessionSchema>;
@@ -235,3 +237,6 @@ export type RequestEmailVerificationInput = z.infer<
 	typeof requestEmailVerificationSchema
 >;
 export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+export type AdminUpdateUserInput = z.infer<typeof adminUpdateUserSchema>;
+export type UserFilterInput = z.infer<typeof userFilterSchema>;

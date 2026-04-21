@@ -2,8 +2,6 @@ import "dotenv/config";
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
-const DEV_ACCESS_SECRET = "development-access-secret-change-me-12345";
-const DEV_REFRESH_SECRET = "development-refresh-secret-change-me-12345";
 const DEV_RAZORPAY_KEY_ID = "rzp_test_development_key_id";
 const DEV_RAZORPAY_KEY_SECRET = "development-razorpay-key-secret-12345";
 const DEV_RAZORPAY_WEBHOOK_SECRET =
@@ -36,8 +34,6 @@ export const env = createEnv({
 						}),
 				"CORS_ORIGIN must be a valid URL or comma-separated list of valid URLs",
 			),
-		JWT_ACCESS_SECRET: z.string().min(1).default(DEV_ACCESS_SECRET),
-		JWT_REFRESH_SECRET: z.string().min(1).default(DEV_REFRESH_SECRET),
 		RAZORPAY_KEY_ID: z
 			.string()
 			.min(1)
@@ -62,13 +58,6 @@ export const env = createEnv({
 			.string()
 			.min(1)
 			.default(DEV_RAZORPAY_WEBHOOK_SECRET),
-		ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().int().positive().default(900),
-		REFRESH_TOKEN_TTL_SECONDS: z.coerce
-			.number()
-			.int()
-			.positive()
-			.default(2_592_000),
-		AUTH_ISSUER: z.string().min(1).default("voltaze-server"),
 		NODE_ENV: z
 			.enum(["development", "production", "test"])
 			.default("development"),

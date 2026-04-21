@@ -1,4 +1,4 @@
-import type { Ticket } from "@voltaze/db";
+import type { Ticket } from "@unievent/db";
 import { z } from "zod";
 
 export type { Ticket };
@@ -12,6 +12,16 @@ export const ticketSchema = z.object({
 	createdAt: z.date(),
 	updatedAt: z.date(),
 }) satisfies z.ZodType<Ticket>;
+
+export const ticketRecordSchema = ticketSchema
+	.omit({
+		createdAt: true,
+		updatedAt: true,
+	})
+	.extend({
+		createdAt: z.string(),
+		updatedAt: z.string(),
+	});
 
 export const createTicketSchema = ticketSchema
 	.omit({
@@ -40,4 +50,5 @@ export const ticketFilterSchema = z.object({
 
 export type CreateTicketInput = z.infer<typeof createTicketSchema>;
 export type UpdateTicketInput = z.infer<typeof updateTicketSchema>;
+export type TicketRecord = z.infer<typeof ticketRecordSchema>;
 export type TicketFilterInput = z.infer<typeof ticketFilterSchema>;

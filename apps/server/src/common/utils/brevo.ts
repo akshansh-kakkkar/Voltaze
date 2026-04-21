@@ -1,4 +1,6 @@
-import { env } from "@voltaze/env/server";
+import { env } from "@unievent/env/server";
+
+import { logger } from "./logger";
 
 interface BrevoEmailOptions {
 	to: string | string[];
@@ -7,6 +9,10 @@ interface BrevoEmailOptions {
 	textContent?: string;
 }
 
+type BrevoSendResponse = {
+	messageId?: string;
+};
+
 export async function sendEmailViaBrevo({
 	to,
 	subject,
@@ -14,9 +20,7 @@ export async function sendEmailViaBrevo({
 	textContent,
 }: BrevoEmailOptions) {
 	if (!env.BREVO_API_KEY || !env.BREVO_MAIL_FROM) {
-		console.warn(
-			"Brevo email not configured. Set BREVO_API_KEY and BREVO_MAIL_FROM.",
-		);
+		logger.warn("Brevo email not configured. Set BREVO_API_KEY and BREVO_MAIL_FROM.");
 		return;
 	}
 
@@ -24,7 +28,7 @@ export async function sendEmailViaBrevo({
 
 	const payload = {
 		sender: {
-			name: "Voltaze",
+			name: "UniEvent",
 			email: env.BREVO_MAIL_FROM,
 		},
 		to: toEmails.map((email) => ({ email })),
@@ -34,6 +38,9 @@ export async function sendEmailViaBrevo({
 	};
 
 	try {
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
 		const response = await fetch("https://api.brevo.com/v3/smtp/email", {
 			method: "POST",
 			headers: {
@@ -41,18 +48,21 @@ export async function sendEmailViaBrevo({
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify(payload),
+			signal: controller.signal,
 		});
 
+		clearTimeout(timeoutId);
+
 		if (!response.ok) {
-			const error = await response.json();
+			const error = (await response.json()) as Record<string, unknown>;
 			throw new Error(`Brevo API error: ${JSON.stringify(error)}`);
 		}
 
-		const data = await response.json();
-		console.log("Email sent successfully via Brevo:", data.messageId);
+		const data = (await response.json()) as BrevoSendResponse;
+		logger.info("Email sent successfully via Brevo", { messageId: data.messageId });
 		return data;
 	} catch (error) {
-		console.error("Error sending email via Brevo:", error);
+		logger.error("Error sending email via Brevo", error);
 		throw error;
 	}
 }

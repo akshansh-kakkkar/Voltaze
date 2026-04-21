@@ -1,4 +1,4 @@
-import type { Pass } from "@voltaze/db";
+import type { Pass } from "@unievent/db";
 import { z } from "zod";
 
 export type { Pass };

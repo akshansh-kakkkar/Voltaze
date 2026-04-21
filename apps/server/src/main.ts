@@ -1,17 +1,18 @@
 import { createApp } from "./app.module";
+import { logger } from "./common/utils/logger";
 
 export async function bootstrap() {
 	const app = createApp();
 	const port = Number(process.env.PORT ?? 3000);
 
 	const server = app.listen(port, () => {
-		console.log(`Server running on http://localhost:${port}`);
+		logger.info(`Server running on http://localhost:${port}`);
 	});
 
 	const shutdown = (signal: string) => {
-		console.log(`${signal} received, shutting down gracefully...`);
+		logger.info(`${signal} received, shutting down gracefully...`);
 		server.close(() => {
-			console.log("Server closed");
+			logger.info("Server closed");
 			process.exit(0);
 		});
 	};

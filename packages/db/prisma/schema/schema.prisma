@@ -76,6 +76,24 @@ enum PaymentGateway {
   RAZORPAY
 }
 
+enum NotificationType {
+  EVENT_CREATED
+  EVENT_UPDATED
+  EVENT_CANCELLED
+  EVENT_REMINDER
+  ORDER_CONFIRMED
+  PAYMENT_SUCCESS
+  PAYMENT_FAILED
+  CHECK_IN_CONFIRMED
+  PASS_ISSUED
+}
+
+enum NotificationStatus {
+  UNREAD
+  READ
+  ARCHIVED
+}
+
 // ─────────────────────────────────────────────
 // AUTH MODELS (BetterAuth compatible)
 // ─────────────────────────────────────────────
@@ -95,6 +113,7 @@ model User {
   sessions      Session[]
   attendees     Attendee[]
   hostedEvents  Event[]  @relation("hostedEvents")
+  notifications Notification[]
 
   @@unique([email])
   @@map("user")
@@ -192,6 +211,7 @@ model Event {
   passes      Pass[]
   attendees   Attendee[]
   orders      Order[]
+  notifications Notification[]
 
   @@index([slug])
   @@index([userId])
@@ -299,6 +319,7 @@ model Order {
 
   tickets     Ticket[]
   payment     Payment?
+  notifications Notification[]
 
   @@index([attendeeId])
   @@index([eventId])
@@ -377,3 +398,32 @@ model Payment {
   @@index([orderId])
   @@index([transactionId])
 }
+
+// ─────────────────────────────────────────────
+// NOTIFICATION
+// ─────────────────────────────────────────────
+
+model Notification {
+  id        String             @id @default(cuid())
+  type      NotificationType
+  title     String
+  message   String
+  status    NotificationStatus @default(UNREAD)
+  userId    String?
+  user      User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventId   String?
+  event     Event?             @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  orderId   String?
+  order     Order?             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  metadata  Json?
+  readAt    DateTime?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  @@index([userId])
+  @@index([eventId])
+  @@index([orderId])
+  @@index([status])
+  @@index([createdAt])
+}
+

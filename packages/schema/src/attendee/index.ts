@@ -1,11 +1,11 @@
-import type { Attendee } from "@voltaze/db";
+import type { Attendee } from "@unievent/db";
 import { z } from "zod";
 
 export type { Attendee };
 
 const ulidSchema = z
 	.string()
-	.regex(/^[0-9A-HJKMNP-TV-Z]{26}$/i, "Invalid ULID");
+	.min(10);
 
 export const attendeeSchema = z.object({
 	id: z.string().cuid(),

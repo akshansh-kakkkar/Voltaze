@@ -1,12 +1,12 @@
 import { randomUUID } from "node:crypto";
-import { Prisma, prisma, type UserRole } from "@voltaze/db";
+import { Prisma, prisma, type UserRole } from "@unievent/db";
 import {
 	type CreatePassInput,
 	createPaginationMeta,
 	type PassFilterInput,
 	type UpdatePassInput,
 	type ValidatePassInput,
-} from "@voltaze/schema";
+} from "@unievent/schema";
 
 import {
 	BadRequestError,

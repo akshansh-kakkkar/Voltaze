@@ -1,4 +1,4 @@
-import { env } from "@voltaze/env/server";
+import { env } from "@unievent/env/server";
 
 export function getAllowedCorsOrigins() {
 	return env.CORS_ORIGIN.split(",")

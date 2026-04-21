@@ -1,10 +1,19 @@
-import { prisma, type UserRole } from "@voltaze/db";
+import { prisma } from "@unievent/db";
+import { type AuthUserRole, userRoleSchema } from "@unievent/schema";
 import { fromNodeHeaders } from "better-auth/node";
 import type { RequestHandler } from "express";
 import { auth } from "@/common/utils/better-auth";
-import { verifyAccessToken } from "@/modules/auth/auth.utils";
 import { ForbiddenError, UnauthorizedError } from "../exceptions/app-error";
 import type { RequestWithAuth } from "../types/auth-request";
+
+function normalizeRole(role: unknown): AuthUserRole {
+	const parsed = userRoleSchema.safeParse(role);
+	if (parsed.success) {
+		return parsed.data;
+	}
+
+	return "USER";
+}
 
 function getBearerToken(authorizationHeader?: string) {
 	if (!authorizationHeader) {
@@ -19,14 +28,13 @@ function getBearerToken(authorizationHeader?: string) {
 	return token;
 }
 
-async function attachAuthContext(authReq: RequestWithAuth, token: string) {
-	const payload = await verifyAccessToken(token);
+async function attachBearerSessionContext(authReq: RequestWithAuth, token: string) {
 	const session = await prisma.session.findUnique({
-		where: { id: payload.sessionId },
+		where: { token },
 		include: { user: true },
 	});
 
-	if (!session || session.userId !== payload.sub) {
+	if (!session) {
 		throw new UnauthorizedError("Session not found");
 	}
 
@@ -57,7 +65,7 @@ async function attachBetterAuthContext(authReq: RequestWithAuth) {
 		userId: session.user.id,
 		sessionId: session.session.id,
 		email: session.user.email,
-		role: session.user.role,
+		role: normalizeRole(session.user.role),
 	};
 	authReq.user = session.user as typeof authReq.user;
 	return true;
@@ -69,12 +77,13 @@ export const requireAuth: RequestHandler = async (req, _res, next) => {
 		if (await attachBetterAuthContext(authReq)) {
 			return next();
 		}
+
 		const token = getBearerToken(req.get("authorization"));
 		if (!token) {
 			throw new UnauthorizedError("Missing bearer token");
 		}
 
-		await attachAuthContext(authReq, token);
+		await attachBearerSessionContext(authReq, token);
 
 		next();
 	} catch (error) {
@@ -98,7 +107,7 @@ export const optionalAuth: RequestHandler = async (req, _res, next) => {
 	}
 
 	try {
-		await attachAuthContext(authReq, token);
+		await attachBearerSessionContext(authReq, token);
 	} catch {
 		authReq.auth = undefined;
 		authReq.user = undefined;
@@ -107,7 +116,7 @@ export const optionalAuth: RequestHandler = async (req, _res, next) => {
 	next();
 };
 
-export function requireRoles(...roles: UserRole[]): RequestHandler {
+export function requireRoles(...roles: AuthUserRole[]): RequestHandler {
 	return (req, _res, next) => {
 		const authReq = req as RequestWithAuth;
 

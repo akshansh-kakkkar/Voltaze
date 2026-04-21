@@ -1,17 +1,18 @@
 import crypto from "node:crypto";
-import { Prisma, prisma, type UserRole } from "@voltaze/db";
-import { env } from "@voltaze/env/server";
+import { Prisma, prisma, type UserRole } from "@unievent/db";
+import { env } from "@unievent/env/server";
 import {
 	type ConfirmFreeOrderInput,
 	createPaginationMeta,
 	type InitiatePaymentInput,
+	type InitiatePaymentItemInput,
 	type PaymentFilterInput,
 	type RazorpayWebhookInput,
 	type RefundPaymentInput,
 	type TicketHolderInput,
 	type UpdatePaymentInput,
 	type VerifyPaymentInput,
-} from "@voltaze/schema";
+} from "@unievent/schema";
 
 import {
 	BadRequestError,
@@ -19,12 +20,14 @@ import {
 	ForbiddenError,
 	NotFoundError,
 } from "@/common/exceptions/app-error";
+import { logger } from "@/common/utils/logger";
 import { sendEmailViaBrevo } from "@/common/utils/brevo";
 import {
 	createRazorpayOrder,
 	createRazorpayRefund,
 	fetchRazorpayPayment,
 	type RazorpayOrder,
+	type RazorpayPayment,
 } from "@/common/utils/razorpay";
 
 type PaymentActor = {
@@ -34,10 +37,7 @@ type PaymentActor = {
 
 type WebhookMappedStatus = "PENDING" | "SUCCESS" | "FAILED" | "REFUNDED";
 type OrderSyncStatus = "PENDING" | "COMPLETED" | "CANCELLED";
-type CheckoutItem = {
-	tierId: string;
-	quantity: number;
-};
+type CheckoutItem = InitiatePaymentItemInput;
 
 type TicketHolder = TicketHolderInput;
 
@@ -52,12 +52,6 @@ type TicketEmailTicket = {
 		code: string;
 	};
 };
-
-const CUID_REGEX = /^c[a-z0-9]{24}$/i;
-
-function isCuid(value: string) {
-	return CUID_REGEX.test(value);
-}
 
 function escapeHtml(value: string) {
 	return value
@@ -95,6 +89,26 @@ export class PaymentsService {
 		return actor.role === "ADMIN";
 	}
 
+	private buildOrderWhere(
+		orderId: string,
+		actor: PaymentActor,
+	): Prisma.OrderWhereInput {
+		const where: Prisma.OrderWhereInput = {
+			id: orderId,
+			deletedAt: null,
+		};
+
+		if (actor.role === "HOST") {
+			where.event = { userId: actor.userId };
+		}
+
+		if (actor.role === "USER") {
+			where.attendee = { userId: actor.userId };
+		}
+
+		return where;
+	}
+
 	private buildAccessWhere(actor: PaymentActor): Prisma.PaymentWhereInput {
 		if (this.canManageAll(actor)) {
 			return {};
@@ -117,6 +131,24 @@ export class PaymentsService {
 				},
 			},
 		};
+	}
+
+	private signaturesMatch(expected: string, received: string) {
+		const expectedBuffer = Buffer.from(expected, "utf8");
+		const receivedBuffer = Buffer.from(received, "utf8");
+
+		if (expectedBuffer.length !== receivedBuffer.length) {
+			return false;
+		}
+
+		return crypto.timingSafeEqual(expectedBuffer, receivedBuffer);
+	}
+
+	private getRazorpayOrderIdFromMeta(meta: Prisma.JsonValue | null) {
+		const normalizedMeta = this.normalizeGatewayMeta(meta);
+		return typeof normalizedMeta.razorpayOrderId === "string"
+			? normalizedMeta.razorpayOrderId
+			: null;
 	}
 
 	private ensureMutableFieldsUnchanged(
@@ -547,7 +579,7 @@ export class PaymentsService {
 			.join("");
 
 		const htmlContent = `
-			<h1>Your Voltaze ticket is confirmed</h1>
+			<h1>Your UniEvent ticket is confirmed</h1>
 			<p>Hi ${safeAttendeeName},</p>
 			<p>Your registration for <strong>${safeEventName}</strong> is successful.</p>
 			<p><strong>Order ID:</strong> ${escapeHtml(orderId)}<br/>
@@ -574,7 +606,7 @@ export class PaymentsService {
 			.join("\n");
 
 		const textContent = [
-			"Your Voltaze ticket is confirmed",
+			"Your UniEvent ticket is confirmed",
 			`Hi ${attendeeName},`,
 			`Your registration for ${eventName} is successful.`,
 			`Order ID: ${orderId}`,
@@ -697,9 +729,10 @@ export class PaymentsService {
 				},
 			});
 		} catch (error) {
-			console.error(
-				`Failed to send ticket confirmation email for payment ${payment.id}:`,
+			logger.error(
+				`Failed to send ticket confirmation email for payment ${payment.id}`,
 				error,
+				{ paymentId: payment.id },
 			);
 		}
 	}
@@ -747,23 +780,8 @@ export class PaymentsService {
 	}
 
 	async create(input: InitiatePaymentInput, actor: PaymentActor) {
-		const orderWhere: Prisma.OrderWhereInput = {
-			id: input.orderId,
-			deletedAt: null,
-		};
-
-		if (actor.role === "HOST") {
-			orderWhere.event = {
-				userId: actor.userId,
-			};
-		} else if (actor.role === "USER") {
-			orderWhere.attendee = {
-				userId: actor.userId,
-			};
-		}
-
 		const order = await prisma.order.findFirst({
-			where: orderWhere,
+			where: this.buildOrderWhere(input.orderId, actor),
 			include: {
 				tickets: {
 					include: {
@@ -792,9 +810,45 @@ export class PaymentsService {
 		});
 
 		if (existingPayment) {
-			throw new ConflictError(
-				"A payment already exists for this order. Use verify endpoint to complete it.",
+			const existingOrderId = this.getRazorpayOrderIdFromMeta(
+				existingPayment.gatewayMeta,
 			);
+
+			if (
+				existingPayment.status === "PENDING" &&
+				typeof existingOrderId === "string"
+			) {
+				const existingMeta = this.normalizeGatewayMeta(existingPayment.gatewayMeta);
+				const checkoutItems = this.normalizeCheckoutItems(
+					Array.isArray(existingMeta.checkoutItems)
+						? existingMeta.checkoutItems
+						: undefined,
+				);
+
+				return {
+					payment: existingPayment,
+					razorpayOrderId: existingOrderId,
+					razorpayKeyId: env.RAZORPAY_KEY_ID,
+					amount: existingPayment.amount,
+					currency: existingPayment.currency,
+					checkoutItems,
+					prefill: {
+						name: order.attendee.name,
+						email: order.attendee.email,
+						contact: order.attendee.phone ?? undefined,
+					},
+					notes: {
+						orderId: order.id,
+						eventName: order.event.name,
+					},
+				};
+			}
+
+			if (existingPayment.status === "SUCCESS") {
+				throw new ConflictError("Payment already completed for this order");
+			}
+
+			throw new ConflictError("A payment already exists for this order");
 		}
 
 		const requestedCheckoutItems = this.normalizeCheckoutItems(input.items);
@@ -878,23 +932,8 @@ export class PaymentsService {
 	}
 
 	async confirmFreeOrder(input: ConfirmFreeOrderInput, actor: PaymentActor) {
-		const orderWhere: Prisma.OrderWhereInput = {
-			id: input.orderId,
-			deletedAt: null,
-		};
-
-		if (actor.role === "HOST") {
-			orderWhere.event = {
-				userId: actor.userId,
-			};
-		} else if (actor.role === "USER") {
-			orderWhere.attendee = {
-				userId: actor.userId,
-			};
-		}
-
 		const order = await prisma.order.findFirst({
-			where: orderWhere,
+			where: this.buildOrderWhere(input.orderId, actor),
 			include: {
 				event: true,
 				attendee: true,
@@ -987,9 +1026,9 @@ export class PaymentsService {
 			.update(`${input.razorpayOrderId}|${input.razorpayPaymentId}`)
 			.digest("hex");
 
-		const isSignatureValid = crypto.timingSafeEqual(
-			Buffer.from(expectedSignature),
-			Buffer.from(input.razorpaySignature),
+		const isSignatureValid = this.signaturesMatch(
+			expectedSignature,
+			input.razorpaySignature,
 		);
 
 		if (!isSignatureValid) {
@@ -1042,7 +1081,14 @@ export class PaymentsService {
 			return { payment, alreadyVerified: true };
 		}
 
-		const razorpayPayment = await fetchRazorpayPayment(input.razorpayPaymentId);
+		let razorpayPayment: RazorpayPayment;
+		try {
+			razorpayPayment = await fetchRazorpayPayment(input.razorpayPaymentId);
+		} catch {
+			throw new BadRequestError(
+				"Unable to fetch Razorpay payment details for verification",
+			);
+		}
 
 		if (razorpayPayment.order_id !== input.razorpayOrderId) {
 			throw new BadRequestError("Payment order ID mismatch");
@@ -1335,7 +1381,38 @@ export class PaymentsService {
 			},
 		});
 
-		if (!payment && isCuid(orderReference)) {
+		if (!payment) {
+			payment = await prisma.payment.findFirst({
+				where: {
+					deletedAt: null,
+					gatewayMeta: {
+						path: ["razorpayOrderId"],
+						equals: orderReference,
+					},
+				},
+				select: {
+					id: true,
+					orderId: true,
+					amount: true,
+					currency: true,
+					gateway: true,
+					gatewayMeta: true,
+					transactionId: true,
+					status: true,
+					deletedAt: true,
+					order: {
+						select: {
+							id: true,
+							eventId: true,
+							attendeeId: true,
+							status: true,
+						},
+					},
+				},
+			});
+		}
+
+		if (!payment) {
 			payment = await prisma.payment.findFirst({
 				where: {
 					orderId: orderReference,

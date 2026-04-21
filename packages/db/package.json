@@ -1,5 +1,5 @@
 {
-	"name": "@voltaze/db",
+	"name": "@unievent/db",
 	"type": "module",
 	"exports": {
 		".": {
@@ -21,7 +21,7 @@
 		"seed": "bun run prisma/seed.ts"
 	},
 	"dependencies": {
-		"@voltaze/env": "workspace:*",
+		"@unievent/env": "workspace:*",
 		"@neondatabase/serverless": "^1.0.2",
 		"@prisma/adapter-neon": "^7.2.0",
 		"@prisma/client": "catalog:",
@@ -29,7 +29,7 @@
 		"zod": "catalog:"
 	},
 	"devDependencies": {
-		"@voltaze/config": "workspace:*",
+		"@unievent/config": "workspace:*",
 		"prisma": "^7.2.0",
 		"typescript": "^6"
 	}

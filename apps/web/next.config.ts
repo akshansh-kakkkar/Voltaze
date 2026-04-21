@@ -1,4 +1,4 @@
-import "@voltaze/env/web";
+import "@unievent/env/web";
 import type { NextConfig } from "next";
 
 const allowedDevOrigins = (

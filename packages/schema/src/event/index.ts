@@ -1,11 +1,11 @@
-import type { Event, TicketTier } from "@voltaze/db";
+import type { Event, TicketTier } from "@unievent/db";
 import { z } from "zod";
 
 export type { Event, TicketTier };
 
 const ulidSchema = z
 	.string()
-	.regex(/^[0-9A-HJKMNP-TV-Z]{26}$/i, "Invalid ULID");
+	.min(10);
 
 function validateDateRange(
 	startDate: Date | null | undefined,
@@ -48,6 +48,20 @@ export const eventSchema = z.object({
 	createdAt: z.date(),
 	updatedAt: z.date(),
 }) satisfies z.ZodType<Event>;
+
+export const eventRecordSchema = eventSchema
+	.omit({
+		startDate: true,
+		endDate: true,
+		createdAt: true,
+		updatedAt: true,
+	})
+	.extend({
+		startDate: z.string(),
+		endDate: z.string(),
+		createdAt: z.string(),
+		updatedAt: z.string(),
+	});
 
 const createEventSchemaBase = eventSchema
 	.omit({
@@ -162,6 +176,20 @@ export const ticketTierSchema = z.object({
 	updatedAt: z.date(),
 }) satisfies z.ZodType<TicketTier>;
 
+export const ticketTierRecordSchema = ticketTierSchema
+	.omit({
+		salesStart: true,
+		salesEnd: true,
+		createdAt: true,
+		updatedAt: true,
+	})
+	.extend({
+		salesStart: z.string().nullable(),
+		salesEnd: z.string().nullable(),
+		createdAt: z.string(),
+		updatedAt: z.string(),
+	});
+
 const createTicketTierSchemaBase = ticketTierSchema
 	.omit({
 		id: true,
@@ -218,8 +246,10 @@ export const updateEventTicketTierSchema = updateTicketTierSchemaBase
 
 export type CreateEventInput = z.infer<typeof createEventSchema>;
 export type UpdateEventInput = z.infer<typeof updateEventSchema>;
+export type EventRecord = z.infer<typeof eventRecordSchema>;
 export type EventFilterInput = z.infer<typeof eventFilterSchema>;
 export type TicketTierFilterInput = z.infer<typeof ticketTierFilterSchema>;
+export type TicketTierRecord = z.infer<typeof ticketTierRecordSchema>;
 export type CreateTicketTierInput = z.infer<typeof createTicketTierSchema>;
 export type UpdateTicketTierInput = z.infer<typeof updateTicketTierSchema>;
 export type CreateEventTicketTierInput = z.infer<

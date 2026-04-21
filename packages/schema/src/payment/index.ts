@@ -1,4 +1,4 @@
-import type { Payment } from "@voltaze/db";
+import type { Payment } from "@unievent/db";
 import { z } from "zod";
 
 export type { Payment };
@@ -37,6 +37,59 @@ export const createPaymentSchema = paymentSchema
 			.default("INR"),
 		gateway: z.enum(["RAZORPAY"]),
 	});
+
+export const razorpayOrderOptionsSchema = z.object({
+	amount: z.number().int().positive(),
+	currency: z
+		.string()
+		.trim()
+		.regex(/^[A-Z]{3}$/),
+	receipt: z.string().min(1),
+	notes: z.record(z.string(), z.string()).optional(),
+});
+
+export const razorpayOrderSchema = z.object({
+	id: z.string(),
+	entity: z.string(),
+	amount: z.number().int(),
+	amount_paid: z.number().int(),
+	amount_due: z.number().int(),
+	currency: z.string(),
+	receipt: z.string(),
+	status: z.enum(["created", "attempted", "paid"]),
+	attempts: z.number().int().nonnegative(),
+	notes: z.record(z.string(), z.string()),
+	created_at: z.number().int().nonnegative(),
+});
+
+export const razorpayPaymentSchema = z.object({
+	id: z.string(),
+	entity: z.string(),
+	amount: z.number().int(),
+	currency: z.string(),
+	status: z.string(),
+	order_id: z.string(),
+	method: z.string(),
+	captured: z.boolean(),
+	refund_status: z.string().nullable(),
+	amount_refunded: z.number().int().nonnegative(),
+});
+
+export const razorpayRefundSchema = z.object({
+	id: z.string(),
+	entity: z.string(),
+	amount: z.number().int(),
+	currency: z.string(),
+	payment_id: z.string(),
+	status: z.enum(["pending", "processed", "failed"]),
+	created_at: z.number().int().nonnegative(),
+});
+
+export const razorpayCheckoutResponseSchema = z.object({
+	razorpay_payment_id: z.string(),
+	razorpay_order_id: z.string(),
+	razorpay_signature: z.string(),
+});
 
 export const updatePaymentSchema = createPaymentSchema.partial().extend({
 	status: z.enum(["PENDING", "SUCCESS", "FAILED", "REFUNDED"]).optional(),
@@ -228,10 +281,61 @@ export const refundPaymentSchema = z.object({
 	notes: z.record(z.string(), z.string()).optional(),
 });
 
+export const initiatePaymentResponseSchema = z.object({
+	payment: paymentSchema,
+	razorpayOrderId: z.string(),
+	amount: z.number().int().positive(),
+	currency: z
+		.string()
+		.trim()
+		.regex(/^[A-Z]{3}$/),
+	razorpayKeyId: z.string(),
+	checkoutItems: z.array(initiatePaymentItemSchema).optional(),
+	prefill: z
+		.object({
+			name: z.string().optional(),
+			email: z.string().email().optional(),
+			contact: z.string().optional(),
+		})
+		.optional(),
+	notes: z.record(z.string(), z.string()).optional(),
+});
+
+export const verifyPaymentResponseSchema = z.object({
+	payment: paymentSchema,
+	alreadyVerified: z.boolean(),
+});
+
+export const checkoutDraftItemSchema = initiatePaymentItemSchema;
+
+export const checkoutDraftTicketHolderSchema = z.object({
+	tierId: z.string().cuid(),
+	name: z.string().trim().min(1).max(100),
+	email: z.string().email(),
+	phone: z.string(),
+});
+
+export const checkoutDraftSchema = z.object({
+	eventId: z.string().cuid(),
+	eventSlug: z.string().trim().min(1),
+	items: z.array(checkoutDraftItemSchema).min(1),
+	purchaserName: z.string().trim().min(1).max(100),
+	purchaserEmail: z.string().email(),
+	purchaserPhone: z.string(),
+	ticketHolders: z.array(checkoutDraftTicketHolderSchema),
+});
+
 export type CreatePaymentInput = z.infer<typeof createPaymentSchema>;
 export type UpdatePaymentInput = z.infer<typeof updatePaymentSchema>;
 export type RazorpayWebhookInput = z.infer<typeof razorpayWebhookSchema>;
 export type PaymentFilterInput = z.infer<typeof paymentFilterSchema>;
+export type RazorpayOrderOptions = z.infer<typeof razorpayOrderOptionsSchema>;
+export type RazorpayOrder = z.infer<typeof razorpayOrderSchema>;
+export type RazorpayPayment = z.infer<typeof razorpayPaymentSchema>;
+export type RazorpayRefund = z.infer<typeof razorpayRefundSchema>;
+export type RazorpayCheckoutResponse = z.infer<
+	typeof razorpayCheckoutResponseSchema
+>;
 export type InitiatePaymentItemInput = z.infer<
 	typeof initiatePaymentItemSchema
 >;
@@ -240,3 +344,37 @@ export type InitiatePaymentInput = z.infer<typeof initiatePaymentSchema>;
 export type ConfirmFreeOrderInput = z.infer<typeof confirmFreeOrderSchema>;
 export type VerifyPaymentInput = z.infer<typeof verifyPaymentSchema>;
 export type RefundPaymentInput = z.infer<typeof refundPaymentSchema>;
+export type InitiatePaymentResponse = z.infer<
+	typeof initiatePaymentResponseSchema
+>;
+export type VerifyPaymentResponse = z.infer<
+	typeof verifyPaymentResponseSchema
+>;
+export type CheckoutDraftItem = z.infer<typeof checkoutDraftItemSchema>;
+export type CheckoutDraftTicketHolder = z.infer<
+	typeof checkoutDraftTicketHolderSchema
+>;
+export type CheckoutDraft = z.infer<typeof checkoutDraftSchema>;
+
+export type RazorpayCheckoutOptions = {
+	key: string;
+	amount: number;
+	currency: string;
+	order_id: string;
+	name: string;
+	description?: string;
+	image?: string;
+	prefill?: {
+		name?: string;
+		email?: string;
+		contact?: string;
+	};
+	notes?: Record<string, string>;
+	theme?: {
+		color?: string;
+	};
+	modal?: {
+		ondismiss?: () => void;
+	};
+	handler?: (response: RazorpayCheckoutResponse) => void | Promise<void>;
+};

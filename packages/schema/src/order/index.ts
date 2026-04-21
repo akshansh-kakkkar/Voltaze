@@ -1,4 +1,4 @@
-import type { Order } from "@voltaze/db";
+import type { Order } from "@unievent/db";
 import { z } from "zod";
 
 export type { Order };

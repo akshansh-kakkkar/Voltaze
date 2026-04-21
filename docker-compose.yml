@@ -1,0 +1,47 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: unievent-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: unievent
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+      args:
+        DATABASE_URL: postgresql://postgres:postgres@postgres:5432/unievent?sslmode=disable
+    container_name: unievent-server
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/unievent?sslmode=disable
+      BETTER_AUTH_URL: http://localhost:3000/api/auth
+      CORS_ORIGIN: http://localhost:3001
+      WEB_APP_URL: http://localhost:3001
+      RAZORPAY_KEY_ID: rzp_test_development_key_id
+      RAZORPAY_KEY_SECRET: development-razorpay-key-secret-12345
+      RAZORPAY_WEBHOOK_SECRET: development-razorpay-webhook-secret-change-me-12345
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres-data:

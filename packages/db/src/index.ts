@@ -1,5 +1,5 @@
 import { PrismaNeon } from "@prisma/adapter-neon";
-import { env } from "@voltaze/env/server";
+import { env } from "@unievent/env/server";
 
 import { PrismaClient } from "../prisma/generated/client";
 

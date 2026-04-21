@@ -7,7 +7,7 @@ import {
 	refundPaymentSchema,
 	updatePaymentSchema,
 	verifyPaymentSchema,
-} from "@voltaze/schema";
+} from "@unievent/schema";
 import { Router } from "express";
 
 import {
