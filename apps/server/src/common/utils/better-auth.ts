@@ -6,6 +6,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import type { GoogleProfile } from "better-auth/social-providers";
 import { sendEmailViaBrevo } from "./brevo";
 import { getAllowedCorsOrigins } from "./cors-origins";
+import { renderAuthEmail } from "./mail-templates";
 
 type BetterAuthEmailHookPayload = {
 	user: {
@@ -64,13 +65,14 @@ export const auth = betterAuth({
 			await sendEmailViaBrevo({
 				to: data.user.email,
 				subject: "Reset your UniEvent password",
-				htmlContent: `
-					<h1>Reset Your Password</h1>
-					<p>Click the link below to reset your password:</p>
-					<a href="${resetLink}">${resetLink}</a>
-					<p>This link will expire in 1 hour.</p>
-				`,
-				textContent: `Reset your password: ${resetLink}`,
+				htmlContent: renderAuthEmail({
+					title: "PASSWORD<br/>RESET.",
+					description:
+						"The system has received a request to authorize a password override for your account. Click the button below to initiate the reset protocol.",
+					buttonText: "Reset Password",
+					link: resetLink,
+				}),
+				textContent: `Reset your UniEvent password by visiting: ${resetLink}`,
 			});
 		},
 	},
@@ -79,14 +81,15 @@ export const auth = betterAuth({
 			const verificationLink = data.url;
 			await sendEmailViaBrevo({
 				to: data.user.email,
-				subject: "Verify your UniEvent email",
-				htmlContent: `
-					<h1>Verify Your Email</h1>
-					<p>Click the link below to verify your email address:</p>
-					<a href="${verificationLink}">${verificationLink}</a>
-					<p>This link will expire in 24 hours.</p>
-				`,
-				textContent: `Verify your email: ${verificationLink}`,
+				subject: "Verify your UniEvent email address",
+				htmlContent: renderAuthEmail({
+					title: "IDENTITY<br/>VERIFICATION.",
+					description:
+						"To finalize your registration and activate your operational dashboard, please verify your email address using the secure link below.",
+					buttonText: "Verify Email",
+					link: verificationLink,
+				}),
+				textContent: `Verify your UniEvent email by visiting: ${verificationLink}`,
 			});
 		},
 	},

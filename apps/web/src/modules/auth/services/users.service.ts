@@ -24,7 +24,7 @@ type PublicUserRecord = {
 	emailVerified: boolean;
 	image: string | null;
 	role: string;
-	skills: string[];
+	isHost: boolean;
 	createdAt: string;
 	updatedAt: string;
 };

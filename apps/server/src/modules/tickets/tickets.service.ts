@@ -15,6 +15,7 @@ import {
 type TicketActor = {
 	userId: string;
 	role: UserRole;
+	isHost: boolean;
 };
 
 export class TicketsService {
@@ -27,7 +28,7 @@ export class TicketsService {
 			return {};
 		}
 
-		if (actor.role === "HOST") {
+		if (actor.isHost) {
 			return {
 				event: {
 					userId: actor.userId,
@@ -55,7 +56,7 @@ export class TicketsService {
 			return;
 		}
 
-		if (actor.role === "HOST") {
+		if (actor.isHost) {
 			if (!order.event.userId || order.event.userId !== actor.userId) {
 				throw new ForbiddenError("You can only manage tickets for your events");
 			}
@@ -90,7 +91,6 @@ export class TicketsService {
 			status: "PENDING" | "COMPLETED" | "CANCELLED";
 			payment: {
 				status: "PENDING" | "SUCCESS" | "FAILED" | "REFUNDED";
-				deletedAt: Date | null;
 			} | null;
 		},
 		tierPrice: number,
@@ -105,11 +105,7 @@ export class TicketsService {
 			);
 		}
 
-		if (
-			!order.payment ||
-			order.payment.deletedAt !== null ||
-			order.payment.status !== "SUCCESS"
-		) {
+		if (!order.payment || order.payment.status !== "SUCCESS") {
 			throw new BadRequestError(
 				"Cannot issue paid tickets without a successful payment",
 			);
@@ -193,7 +189,6 @@ export class TicketsService {
 					payment: {
 						select: {
 							status: true,
-							deletedAt: true,
 						},
 					},
 				},
@@ -204,9 +199,6 @@ export class TicketsService {
 		if (!order) throw new NotFoundError("Order not found");
 		if (!event) throw new NotFoundError("Event not found");
 		if (!tier) throw new NotFoundError("Ticket tier not found");
-		if (order.deletedAt) {
-			throw new BadRequestError("Order is no longer active");
-		}
 		if (order.eventId !== input.eventId) {
 			throw new BadRequestError("Order does not belong to event");
 		}
@@ -220,7 +212,7 @@ export class TicketsService {
 		this.ensureCanUseOrder(order, actor);
 		this.ensurePaidTierHasSettledPayment(order, tier.price);
 
-		if (tier.soldCount >= tier.maxQuantity) {
+		if (tier.soldCount >= tier.quantity) {
 			throw new BadRequestError("Ticket tier sold out");
 		}
 
@@ -278,7 +270,8 @@ export class TicketsService {
 		}
 
 		if (
-			actor.role === "USER" &&
+			!actor.isHost &&
+			actor.role !== "ADMIN" &&
 			(input.orderId !== undefined ||
 				input.eventId !== undefined ||
 				input.tierId !== undefined)
@@ -318,7 +311,6 @@ export class TicketsService {
 					payment: {
 						select: {
 							status: true,
-							deletedAt: true,
 						},
 					},
 				},
@@ -330,9 +322,6 @@ export class TicketsService {
 		if (!order) throw new NotFoundError("Order not found");
 		if (!event) throw new NotFoundError("Event not found");
 		if (!tier) throw new NotFoundError("Ticket tier not found");
-		if (order.deletedAt) {
-			throw new BadRequestError("Order is no longer active");
-		}
 		if (order.status === "CANCELLED") {
 			throw new BadRequestError("Cannot assign ticket to cancelled order");
 		}
@@ -350,7 +339,7 @@ export class TicketsService {
 			return prisma.ticket.update({ where: { id }, data: input });
 		}
 
-		if (tier.soldCount >= tier.maxQuantity) {
+		if (tier.soldCount >= tier.quantity) {
 			throw new BadRequestError("Ticket tier sold out");
 		}
 

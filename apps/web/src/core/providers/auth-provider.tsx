@@ -17,6 +17,7 @@ type SessionUser = {
 	emailVerified: boolean;
 	image: string | null;
 	role: string;
+	isHost: boolean;
 };
 
 type AuthState = {

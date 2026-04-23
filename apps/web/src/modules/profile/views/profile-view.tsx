@@ -1,15 +1,10 @@
 "use client";
 import {
-	Briefcase,
 	Loader2,
-	LogOut,
 	Monitor,
 	Pencil,
-	Plus,
-	ShieldCheck,
 	Smartphone,
 	User as UserIcon,
-	X,
 } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -22,7 +17,6 @@ import { useTickets } from "@/modules/tickets";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
-import { Skeleton } from "@/shared/ui/skeleton";
 
 function formatDate(value: string) {
 	return new Intl.DateTimeFormat("en", {
@@ -77,12 +71,16 @@ export function ProfileView() {
 	return (
 		<div className="fade-in mx-auto max-w-4xl animate-in space-y-1 pb-20 duration-500">
 			{/* Sharp Header */}
-			<div className="border border-[#dbe7ff] bg-white p-8">
-				<h1 className="font-black text-2xl text-[#071a78] uppercase tracking-tighter">
+			<div className="border border-[#dbe7ff] bg-white p-6 sm:p-8">
+				<span className="font-black text-[10px] text-slate-400 uppercase tracking-[0.3em]">
+					Identity Registry
+				</span>
+				<h1 className="mt-2 font-black text-2xl text-[#071a78] uppercase tracking-tighter sm:text-3xl">
 					My Profile
 				</h1>
-				<p className="mt-1 font-bold text-[10px] text-slate-400 uppercase tracking-[0.3em]">
-					Manage your personal information and account security.
+				<p className="mt-2 max-w-xl font-bold text-slate-400 text-xs sm:text-sm">
+					Manage your personal information, security credentials, and active
+					operational sessions.
 				</p>
 			</div>
 
@@ -93,10 +91,7 @@ export function ProfileView() {
 				{/* 2. Personal Information Workspace */}
 				<PersonalInfoCard user={user} />
 
-				{/* 3. Matrix Skills Cloud */}
-				<SkillsCard user={user} />
-
-				{/* 4. Operational Access Monitor */}
+				{/* 3. Operational Access Monitor */}
 				<ActiveSessionsCard sessions={sessions} isLoading={isSessionsLoading} />
 			</div>
 		</div>
@@ -153,7 +148,7 @@ function ProfileHeroCard({ user, stats }: { user: unknown; stats: unknown }) {
 		typeof stats.joined === "string"
 			? stats.joined
 			: "";
-	const userEmailVerified =
+	const _userEmailVerified =
 		user &&
 		typeof user === "object" &&
 		"emailVerified" in user &&
@@ -176,10 +171,10 @@ function ProfileHeroCard({ user, stats }: { user: unknown; stats: unknown }) {
 				</div>
 			</div>
 
-			<div className="relative flex flex-col items-center gap-10 p-8 md:flex-row">
+			<div className="relative flex flex-col items-center gap-6 p-6 sm:gap-10 sm:p-10 md:flex-row">
 				{/* Avatar - Sharp Border */}
-				<div className="-mt-20 shrink-0">
-					<div className="flex h-40 w-40 items-center justify-center overflow-hidden border-4 border-white bg-white shadow-2xl">
+				<div className="-mt-16 shrink-0 sm:-mt-20">
+					<div className="flex h-32 w-32 items-center justify-center overflow-hidden border-4 border-white bg-white shadow-2xl sm:h-40 sm:w-40">
 						{userImage ? (
 							<Image
 								src={userImage}
@@ -196,12 +191,14 @@ function ProfileHeroCard({ user, stats }: { user: unknown; stats: unknown }) {
 					</div>
 				</div>
 
-				<div className="flex-1 space-y-4 text-center md:text-left">
+				<div className="flex-1 space-y-3 text-center md:text-left">
 					<div className="space-y-1">
-						<h2 className="font-black text-3xl text-slate-900 uppercase tracking-tighter">
+						<h2 className="font-black text-2xl text-slate-900 uppercase tracking-tighter sm:text-3xl">
 							{userName || "Anonymous User"}
 						</h2>
-						<p className="font-medium text-slate-500 text-sm">{userEmail}</p>
+						<p className="font-medium text-slate-500 text-xs sm:text-sm">
+							{userEmail}
+						</p>
 					</div>
 
 					{/* Matrix Row - Sharp */}
@@ -263,10 +260,10 @@ function PersonalInfoCard({ user }: { user: unknown }) {
 	};
 
 	return (
-		<div className="space-y-8 border border-[#dbe7ff] bg-white p-8">
-			<div className="flex items-center justify-between border-slate-100 border-b pb-6">
+		<div className="space-y-6 border border-[#dbe7ff] bg-white p-4 sm:p-8">
+			<div className="flex flex-col justify-between gap-4 border-slate-100 border-b pb-6 sm:flex-row sm:items-center">
 				<div className="flex items-center gap-4">
-					<div className="flex h-10 w-10 items-center justify-center bg-slate-900 text-white">
+					<div className="flex h-10 w-10 shrink-0 items-center justify-center bg-slate-900 text-white">
 						<UserIcon size={20} />
 					</div>
 					<div>
@@ -283,7 +280,7 @@ function PersonalInfoCard({ user }: { user: unknown }) {
 						variant="ghost"
 						size="sm"
 						onClick={() => setIsEditing(true)}
-						className="h-10 gap-2 rounded-none border border-[#dbe7ff] px-4 font-black text-[#030370] text-[10px] uppercase tracking-widest hover:bg-slate-50"
+						className="h-10 w-full gap-2 rounded-none border border-[#dbe7ff] px-4 font-black text-[#030370] text-[10px] uppercase tracking-widest hover:bg-slate-50 sm:w-auto"
 					>
 						<Pencil size={12} /> Edit Record
 					</Button>
@@ -310,7 +307,7 @@ function PersonalInfoCard({ user }: { user: unknown }) {
 				)}
 			</div>
 
-			<div className="grid grid-cols-1 gap-10 md:grid-cols-2">
+			<div className="grid grid-cols-1 gap-6 sm:gap-10 md:grid-cols-2">
 				<div className="space-y-3">
 					<label
 						htmlFor="display-name"
@@ -323,10 +320,10 @@ function PersonalInfoCard({ user }: { user: unknown }) {
 							id="display-name"
 							value={name}
 							onChange={(e) => setName(e.target.value)}
-							className="h-12 rounded-none border-[#dbe7ff] px-4 font-bold focus:ring-[#030370]"
+							className="h-11 rounded-none border-[#dbe7ff] px-4 font-bold text-xs focus:ring-[#030370] sm:h-12 sm:text-sm"
 						/>
 					) : (
-						<div className="flex h-12 items-center border border-[#eff3ff] bg-[#f8fafc] px-4 font-bold text-slate-800 uppercase tracking-tight">
+						<div className="flex h-11 items-center border border-[#eff3ff] bg-[#f8fafc] px-4 font-bold text-slate-800 text-xs uppercase tracking-tight sm:h-12 sm:text-sm">
 							{userName || "Not set"}
 						</div>
 					)}
@@ -340,133 +337,18 @@ function PersonalInfoCard({ user }: { user: unknown }) {
 					</label>
 					<div
 						id="email-display"
-						className="flex h-12 items-center justify-between border border-[#eff3ff] bg-[#f8fafc] px-4 opacity-60"
+						className="flex h-11 items-center justify-between border border-[#eff3ff] bg-[#f8fafc] px-4 opacity-60 sm:h-12"
 					>
-						<span className="font-bold text-slate-500">{userEmail}</span>
+						<span className="mr-2 truncate font-bold text-slate-500 text-xs sm:text-sm">
+							{userEmail}
+						</span>
 						<Badge
 							variant="outline"
-							className="rounded-none border-slate-200 font-black text-[8px] text-slate-400 uppercase tracking-widest"
+							className="shrink-0 rounded-none border-slate-200 font-black text-[8px] text-slate-400 uppercase tracking-widest"
 						>
 							LOCKED
 						</Badge>
 					</div>
-				</div>
-			</div>
-		</div>
-	);
-}
-
-function SkillsCard({ user }: { user: unknown }) {
-	const [isEditing, setIsEditing] = useState(false);
-	const userSkills =
-		user &&
-		typeof user === "object" &&
-		"skills" in user &&
-		Array.isArray(user.skills)
-			? user.skills
-			: [];
-	const [skills, setSkills] = useState<string[]>(userSkills);
-	const [newSkill, setNewSkill] = useState("");
-	const updateMe = useUpdateMe();
-
-	const handleSave = async () => {
-		await updateMe.mutateAsync({ skills });
-		setIsEditing(false);
-	};
-
-	return (
-		<div className="space-y-8 border border-[#dbe7ff] bg-white p-8">
-			<div className="flex items-center justify-between border-slate-100 border-b pb-6">
-				<div className="flex items-center gap-4">
-					<div className="flex h-10 w-10 items-center justify-center bg-slate-900 text-white">
-						<Briefcase size={20} />
-					</div>
-					<div>
-						<h3 className="font-black text-[#030370] text-lg uppercase tracking-tight">
-							My Skills
-						</h3>
-						<p className="font-bold text-[10px] text-slate-400 uppercase tracking-widest">
-							Areas of expertise
-						</p>
-					</div>
-				</div>
-				{!isEditing ? (
-					<Button
-						variant="ghost"
-						size="sm"
-						onClick={() => setIsEditing(true)}
-						className="h-10 gap-2 rounded-none border border-[#dbe7ff] px-4 font-black text-[10px] uppercase tracking-widest"
-					>
-						<Plus size={14} /> Update Matrix
-					</Button>
-				) : (
-					<div className="flex gap-2">
-						<Button
-							variant="ghost"
-							size="sm"
-							onClick={() => {
-								setIsEditing(false);
-								setSkills(userSkills);
-							}}
-							className="h-10 rounded-none"
-						>
-							Abort
-						</Button>
-						<Button
-							size="sm"
-							onClick={handleSave}
-							disabled={updateMe.isPending}
-							className="h-10 rounded-none px-6 font-black text-[10px] uppercase tracking-widest"
-						>
-							Sync Skills
-						</Button>
-					</div>
-				)}
-			</div>
-
-			<div className="space-y-6">
-				{isEditing && (
-					<div className="flex gap-3">
-						<Input
-							value={newSkill}
-							onChange={(e) => setNewSkill(e.target.value)}
-							placeholder="Type and press Enter to add..."
-							className="h-12 rounded-none border-[#dbe7ff] px-4 font-bold"
-							onKeyDown={(e) => {
-								if (e.key === "Enter") {
-									const val = newSkill.trim();
-									if (val && !skills.includes(val) && skills.length < 10) {
-										setSkills([...skills, val]);
-										setNewSkill("");
-									}
-								}
-							}}
-						/>
-					</div>
-				)}
-				<div className="flex flex-wrap gap-2">
-					{skills.map((s: string, i: number) => (
-						<div
-							key={i}
-							className="flex items-center gap-2 border border-[#eff3ff] bg-[#f8fafc] px-4 py-2 font-black text-[10px] text-slate-900 uppercase tracking-widest transition-all hover:border-blue-200"
-						>
-							{s}
-							{isEditing && (
-								<button
-									type="button"
-									onClick={() => setSkills(skills.filter((sk) => sk !== s))}
-									className="text-slate-300 transition-colors hover:text-red-500"
-								>
-									<X size={12} />
-								</button>
-							)}
-						</div>
-					))}
-					{skills.length === 0 && !isEditing && (
-						<p className="font-bold text-slate-400 text-xs">
-							No skills added yet.
-						</p>
-					)}
 				</div>
 			</div>
 		</div>
@@ -481,7 +363,7 @@ function ActiveSessionsCard({
 	isLoading: boolean;
 }) {
 	return (
-		<div className="space-y-8 border border-[#dbe7ff] bg-white p-8">
+		<div className="space-y-6 border border-[#dbe7ff] bg-white p-4 sm:p-8">
 			<div className="flex items-center justify-between border-slate-100 border-b pb-6">
 				<div className="flex items-center gap-4">
 					<div className="flex h-10 w-10 items-center justify-center bg-slate-900 text-white">
@@ -538,16 +420,16 @@ function ActiveSessionsCard({
 							<div
 								key={index}
 								className={cn(
-									"flex items-center justify-between rounded-lg border p-4 transition-all",
+									"flex flex-col justify-between gap-4 rounded-none border p-4 transition-all sm:flex-row sm:items-center",
 									isFirst
 										? "border-emerald-100 bg-emerald-50/30"
 										: "border-[#eff3ff] bg-[#f8fafc]",
 								)}
 							>
-								<div className="flex items-center gap-6">
+								<div className="flex items-center gap-4 sm:gap-6">
 									<div
 										className={cn(
-											"flex h-10 w-10 items-center justify-center border border-white",
+											"flex h-10 w-10 shrink-0 items-center justify-center border border-white",
 											isFirst
 												? "bg-white text-emerald-600 shadow-sm"
 												: "bg-white text-slate-400",
@@ -555,23 +437,23 @@ function ActiveSessionsCard({
 									>
 										<Smartphone size={20} />
 									</div>
-									<div className="space-y-0.5">
-										<div className="flex items-center gap-3">
-											<p className="font-black text-slate-900 text-sm uppercase tracking-tight">
+									<div className="min-w-0 space-y-0.5">
+										<div className="flex flex-wrap items-center gap-2 sm:gap-3">
+											<p className="truncate font-black text-slate-900 text-sm uppercase tracking-tight">
 												{sessionUserAgent?.split(" ")[0] || "SYSTEM DEVICE"}
 											</p>
 											{isFirst && (
-												<span className="border border-emerald-100 bg-emerald-50 px-2 py-0.5 font-black text-[8px] text-emerald-600 uppercase tracking-widest">
+												<span className="whitespace-nowrap border border-emerald-100 bg-emerald-50 px-2 py-0.5 font-black text-[8px] text-emerald-600 uppercase tracking-widest">
 													ORIGIN SESSION
 												</span>
 											)}
 										</div>
-										<p className="font-black text-[9px] text-slate-400 uppercase tracking-widest">
+										<p className="truncate font-black text-[9px] text-slate-400 uppercase tracking-widest">
 											Endpoint: {sessionIpAddress || "Unknown"}
 										</p>
 									</div>
 								</div>
-								<div className="text-right">
+								<div className="border-slate-100 border-t pt-3 sm:border-none sm:pt-0 sm:text-right">
 									<p className="font-black text-[9px] text-slate-400 uppercase tracking-widest">
 										Last Active
 									</p>

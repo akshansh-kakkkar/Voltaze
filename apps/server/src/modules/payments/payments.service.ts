@@ -22,6 +22,7 @@ import {
 } from "@/common/exceptions/app-error";
 import { sendEmailViaBrevo } from "@/common/utils/brevo";
 import { logger } from "@/common/utils/logger";
+import { renderOrderEmail } from "@/common/utils/mail-templates";
 import {
 	createRazorpayOrder,
 	createRazorpayRefund,
@@ -29,10 +30,12 @@ import {
 	type RazorpayOrder,
 	type RazorpayPayment,
 } from "@/common/utils/razorpay";
+import { ordersService } from "@/modules/orders/orders.service";
 
 type PaymentActor = {
 	userId: string;
 	role: UserRole;
+	isHost: boolean;
 };
 
 type WebhookMappedStatus = "PENDING" | "SUCCESS" | "FAILED" | "REFUNDED";
@@ -52,15 +55,6 @@ type TicketEmailTicket = {
 		code: string;
 	};
 };
-
-function escapeHtml(value: string) {
-	return value
-		.replace(/&/g, "&amp;")
-		.replace(/</g, "&lt;")
-		.replace(/>/g, "&gt;")
-		.replace(/"/g, "&quot;")
-		.replace(/'/g, "&#39;");
-}
 
 function mapWebhookEventToPaymentStatus(
 	event: string,
@@ -95,10 +89,9 @@ export class PaymentsService {
 	): Prisma.OrderWhereInput {
 		const where: Prisma.OrderWhereInput = {
 			id: orderId,
-			deletedAt: null,
 		};
 
-		if (actor.role === "HOST") {
+		if (actor.isHost) {
 			where.event = { userId: actor.userId };
 		}
 
@@ -114,7 +107,7 @@ export class PaymentsService {
 			return {};
 		}
 
-		if (actor.role === "HOST") {
+		if (actor.isHost) {
 			return {
 				order: {
 					event: {
@@ -381,7 +374,7 @@ export class PaymentsService {
 			select: {
 				id: true,
 				price: true,
-				maxQuantity: true,
+				quantity: true,
 				soldCount: true,
 			},
 		});
@@ -401,7 +394,7 @@ export class PaymentsService {
 				throw new BadRequestError("Invalid ticket tier in checkout request");
 			}
 
-			const remaining = tier.maxQuantity - tier.soldCount;
+			const remaining = tier.quantity - tier.soldCount;
 			if (item.quantity > remaining) {
 				throw new BadRequestError(
 					`Requested quantity exceeds remaining inventory for tier ${tier.id}`,
@@ -441,7 +434,7 @@ export class PaymentsService {
 			select: {
 				id: true,
 				price: true,
-				maxQuantity: true,
+				quantity: true,
 			},
 		});
 
@@ -464,7 +457,7 @@ export class PaymentsService {
 					id: tier.id,
 					eventId: order.eventId,
 					soldCount: {
-						lte: tier.maxQuantity - item.quantity,
+						lte: tier.quantity - item.quantity,
 					},
 				},
 				data: {
@@ -493,7 +486,6 @@ export class PaymentsService {
 						eventId: order.eventId,
 						attendeeId: order.attendeeId,
 						ticketId: ticket.id,
-						type: "GENERAL",
 						code: `pass_${crypto.randomUUID()}`,
 					},
 				});
@@ -538,8 +530,6 @@ export class PaymentsService {
 			ticketHolders,
 		} = args;
 
-		const safeAttendeeName = escapeHtml(attendeeName);
-		const safeEventName = escapeHtml(eventName);
 		const formattedAmount = this.formatMinorAmount(amount, currency);
 		const formattedEventDate = new Intl.DateTimeFormat("en-IN", {
 			dateStyle: "full",
@@ -554,56 +544,30 @@ export class PaymentsService {
 				queue.push(holder);
 				queueMap.set(holder.tierId, queue);
 			}
-
 			return queueMap;
 		};
 
-		const htmlHolderQueueByTier = buildHolderQueueByTier();
+		const holderQueue = buildHolderQueueByTier();
 
-		const ticketsListHtml = tickets
-			.map((ticket, index) => {
-				const createdAt = new Intl.DateTimeFormat("en-IN", {
-					dateStyle: "medium",
-					timeStyle: "short",
-					timeZone: eventTimezone,
-				}).format(ticket.createdAt);
-				const assignedHolder = htmlHolderQueueByTier
-					.get(ticket.tier.id)
-					?.shift();
-				const assignedTo = assignedHolder
-					? `<br/>Assigned To: ${escapeHtml(assignedHolder.name)} (${escapeHtml(assignedHolder.email)})`
-					: "";
+		const ticketsData = tickets.map((ticket) => {
+			const assignedHolder = holderQueue.get(ticket.tier.id)?.shift();
+			return {
+				tierName: ticket.tier.name,
+				passCode: ticket.pass.code,
+				attendeeName: assignedHolder?.name,
+				attendeeEmail: assignedHolder?.email,
+			};
+		});
 
-				return `<li><strong>Ticket ${index + 1}</strong><br/>Tier: ${escapeHtml(ticket.tier.name)}${assignedTo}<br/>Pass Code: <code>${escapeHtml(ticket.pass.code)}</code><br/>Issued: ${escapeHtml(createdAt)}</li>`;
-			})
-			.join("");
-
-		const htmlContent = `
-			<h1>Your UniEvent ticket is confirmed</h1>
-			<p>Hi ${safeAttendeeName},</p>
-			<p>Your registration for <strong>${safeEventName}</strong> is successful.</p>
-			<p><strong>Order ID:</strong> ${escapeHtml(orderId)}<br/>
-			<strong>Amount Paid:</strong> ${escapeHtml(formattedAmount)}<br/>
-			<strong>Event Time:</strong> ${escapeHtml(formattedEventDate)} (${escapeHtml(eventTimezone)})</p>
-			<p><strong>Your passes:</strong></p>
-			<ol>${ticketsListHtml}</ol>
-			<p>Please keep this email handy at venue check-in.</p>
-		`;
-
-		const textHolderQueueByTier = buildHolderQueueByTier();
-
-		const ticketsText = tickets
-			.map((ticket, index) => {
-				const assignedHolder = textHolderQueueByTier
-					.get(ticket.tier.id)
-					?.shift();
-				const assignedLabel = assignedHolder
-					? `, Assigned To: ${assignedHolder.name} <${assignedHolder.email}>`
-					: "";
-
-				return `${index + 1}. Tier: ${ticket.tier.name}${assignedLabel}, Pass Code: ${ticket.pass.code}`;
-			})
-			.join("\n");
+		const htmlContent = renderOrderEmail({
+			attendeeName,
+			eventName,
+			orderId,
+			amount: formattedAmount,
+			eventDate: `${formattedEventDate} (${eventTimezone})`,
+			tickets: ticketsData,
+			dashboardUrl: `${(env.BETTER_AUTH_URL ?? env.WEB_APP_URL ?? "http://localhost:3000").replace("/api/auth", "")}/tickets`,
+		});
 
 		const textContent = [
 			"Your UniEvent ticket is confirmed",
@@ -614,11 +578,16 @@ export class PaymentsService {
 			`Event Time: ${formattedEventDate} (${eventTimezone})`,
 			"",
 			"Your passes:",
-			ticketsText,
+			ticketsData
+				.map(
+					(t, i) =>
+						`${i + 1}. Tier: ${t.tierName}, Code: ${t.passCode}${t.attendeeName ? ` (Assigned to: ${t.attendeeName})` : ""}`,
+				)
+				.join("\n"),
 		].join("\n");
 
 		return {
-			subject: `Your ticket for ${eventName}`,
+			subject: `CONFIRMED: Your ticket for ${eventName}`,
 			htmlContent,
 			textContent,
 		};
@@ -630,44 +599,54 @@ export class PaymentsService {
 			select: {
 				id: true,
 				status: true,
-				deletedAt: true,
 				amount: true,
 				currency: true,
 				gatewayMeta: true,
-				order: {
+				orderId: true,
+			},
+		});
+
+		if (!payment || payment.status !== "SUCCESS") {
+			return;
+		}
+
+		const gatewayMeta = this.normalizeGatewayMeta(payment.gatewayMeta);
+		if (typeof gatewayMeta.ticketEmailSentAt === "string") {
+			return;
+		}
+
+		const order = await prisma.order.findUnique({
+			where: { id: payment.orderId },
+			include: {
+				event: {
+					select: {
+						name: true,
+						startDate: true,
+						timezone: true,
+					},
+				},
+				attendee: {
+					select: {
+						name: true,
+						email: true,
+					},
+				},
+				tickets: {
+					orderBy: {
+						createdAt: "asc",
+					},
 					select: {
 						id: true,
-						event: {
-							select: {
-								name: true,
-								startDate: true,
-								timezone: true,
-							},
-						},
-						attendee: {
-							select: {
-								name: true,
-								email: true,
-							},
-						},
-						tickets: {
-							orderBy: {
-								createdAt: "asc",
-							},
+						createdAt: true,
+						tier: {
 							select: {
 								id: true,
-								createdAt: true,
-								tier: {
-									select: {
-										id: true,
-										name: true,
-									},
-								},
-								pass: {
-									select: {
-										code: true,
-									},
-								},
+								name: true,
+							},
+						},
+						pass: {
+							select: {
+								code: true,
 							},
 						},
 					},
@@ -675,12 +654,7 @@ export class PaymentsService {
 			},
 		});
 
-		if (!payment || payment.deletedAt || payment.status !== "SUCCESS") {
-			return;
-		}
-
-		const gatewayMeta = this.normalizeGatewayMeta(payment.gatewayMeta);
-		if (typeof gatewayMeta.ticketEmailSentAt === "string") {
+		if (!order) {
 			return;
 		}
 
@@ -690,7 +664,7 @@ export class PaymentsService {
 				: undefined,
 		);
 
-		const tickets = payment.order.tickets.filter(
+		const tickets = order.tickets.filter(
 			(ticket): ticket is TicketEmailTicket =>
 				Boolean(ticket.pass?.code) && Boolean(ticket.tier?.name),
 		);
@@ -700,11 +674,11 @@ export class PaymentsService {
 		}
 
 		const { subject, htmlContent, textContent } = this.buildTicketEmailContent({
-			attendeeName: payment.order.attendee.name,
-			eventName: payment.order.event.name,
-			eventStartDate: payment.order.event.startDate,
-			eventTimezone: payment.order.event.timezone,
-			orderId: payment.order.id,
+			attendeeName: order.attendee.name,
+			eventName: order.event.name,
+			eventStartDate: order.event.startDate,
+			eventTimezone: order.event.timezone,
+			orderId: order.id,
 			amount: payment.amount,
 			currency: payment.currency,
 			tickets,
@@ -712,11 +686,24 @@ export class PaymentsService {
 		});
 
 		try {
+			const pdfBuffer = await ordersService.generateTicketPdf(order.id, {
+				userId: "SYSTEM_INTERNAL",
+				email: "noreply@unievent.com",
+				role: "ADMIN",
+				isHost: false,
+			});
+
 			await sendEmailViaBrevo({
-				to: payment.order.attendee.email,
+				to: order.attendee.email,
 				subject,
 				htmlContent,
 				textContent,
+				attachments: [
+					{
+						content: Buffer.from(pdfBuffer).toString("base64"),
+						name: `UniEvent_Ticket_${order.id.slice(0, 8)}.pdf`,
+					},
+				],
 			});
 
 			await prisma.payment.update({
@@ -743,7 +730,6 @@ export class PaymentsService {
 
 		const where: Prisma.PaymentWhereInput = {
 			...filters,
-			deletedAt: null,
 			...this.buildAccessWhere(actor),
 		};
 
@@ -767,8 +753,21 @@ export class PaymentsService {
 		const payment = await prisma.payment.findFirst({
 			where: {
 				id,
-				deletedAt: null,
 				...this.buildAccessWhere(actor),
+			},
+			include: {
+				order: {
+					include: {
+						event: true,
+						attendee: true,
+						tickets: {
+							include: {
+								tier: true,
+								pass: true,
+							},
+						},
+					},
+				},
 			},
 		});
 
@@ -804,7 +803,6 @@ export class PaymentsService {
 		const existingPayment = await prisma.payment.findFirst({
 			where: {
 				orderId: order.id,
-				deletedAt: null,
 				status: { in: ["PENDING", "SUCCESS"] },
 			},
 		});
@@ -872,6 +870,12 @@ export class PaymentsService {
 			: this.buildCheckoutFromExistingTickets(order.tickets);
 
 		const { checkoutItems, totalAmount } = checkoutPlan;
+
+		// Update order with totalAmount calculated from checkout
+		await prisma.order.update({
+			where: { id: order.id },
+			data: { totalAmount },
+		});
 
 		if (totalAmount <= 0) {
 			throw new BadRequestError(
@@ -955,7 +959,6 @@ export class PaymentsService {
 		const existingPayment = await prisma.payment.findFirst({
 			where: {
 				orderId: order.id,
-				deletedAt: null,
 				status: { in: ["PENDING", "SUCCESS"] },
 			},
 		});
@@ -981,6 +984,12 @@ export class PaymentsService {
 				"Selected tiers are paid. Use payment initiation for this order.",
 			);
 		}
+
+		// Update order with totalAmount (which should be 0 for free orders)
+		await prisma.order.update({
+			where: { id: order.id },
+			data: { totalAmount: checkoutPlan.totalAmount },
+		});
 
 		const payment = await prisma.$transaction(async (tx) => {
 			await this.issueTicketsAndPassesForCheckout(
@@ -1039,7 +1048,6 @@ export class PaymentsService {
 
 		const payment = await prisma.payment.findFirst({
 			where: {
-				deletedAt: null,
 				gatewayMeta: {
 					path: ["razorpayOrderId"],
 					equals: input.razorpayOrderId,
@@ -1156,7 +1164,6 @@ export class PaymentsService {
 		const payment = await prisma.payment.findFirst({
 			where: {
 				id,
-				deletedAt: null,
 				...this.buildAccessWhere(actor),
 			},
 			include: {
@@ -1240,7 +1247,6 @@ export class PaymentsService {
 		const payment = await prisma.payment.findFirst({
 			where: {
 				id,
-				deletedAt: null,
 				...this.buildAccessWhere(actor),
 			},
 			select: {
@@ -1322,7 +1328,6 @@ export class PaymentsService {
 		const payment = await prisma.payment.findFirst({
 			where: {
 				id,
-				deletedAt: null,
 				...this.buildAccessWhere(actor),
 			},
 			select: {
@@ -1342,9 +1347,8 @@ export class PaymentsService {
 
 		this.ensureCanDeletePayment(payment);
 
-		await prisma.payment.update({
+		await prisma.payment.delete({
 			where: { id: payment.id },
-			data: { deletedAt: new Date() },
 		});
 	}
 
@@ -1360,7 +1364,6 @@ export class PaymentsService {
 		let payment = await prisma.payment.findFirst({
 			where: {
 				transactionId,
-				deletedAt: null,
 			},
 			select: {
 				id: true,
@@ -1371,22 +1374,12 @@ export class PaymentsService {
 				gatewayMeta: true,
 				transactionId: true,
 				status: true,
-				deletedAt: true,
-				order: {
-					select: {
-						id: true,
-						eventId: true,
-						attendeeId: true,
-						status: true,
-					},
-				},
 			},
 		});
 
 		if (!payment) {
 			payment = await prisma.payment.findFirst({
 				where: {
-					deletedAt: null,
 					gatewayMeta: {
 						path: ["razorpayOrderId"],
 						equals: orderReference,
@@ -1401,15 +1394,6 @@ export class PaymentsService {
 					gatewayMeta: true,
 					transactionId: true,
 					status: true,
-					deletedAt: true,
-					order: {
-						select: {
-							id: true,
-							eventId: true,
-							attendeeId: true,
-							status: true,
-						},
-					},
 				},
 			});
 		}
@@ -1418,7 +1402,6 @@ export class PaymentsService {
 			payment = await prisma.payment.findFirst({
 				where: {
 					orderId: orderReference,
-					deletedAt: null,
 				},
 				select: {
 					id: true,
@@ -1429,20 +1412,11 @@ export class PaymentsService {
 					gatewayMeta: true,
 					transactionId: true,
 					status: true,
-					deletedAt: true,
-					order: {
-						select: {
-							id: true,
-							eventId: true,
-							attendeeId: true,
-							status: true,
-						},
-					},
 				},
 			});
 		}
 
-		if (!payment || payment.deletedAt) {
+		if (!payment) {
 			throw new BadRequestError("Payment transaction not found");
 		}
 
@@ -1465,6 +1439,20 @@ export class PaymentsService {
 			throw new BadRequestError("Webhook payment currency mismatch");
 		}
 
+		const order = await prisma.order.findUnique({
+			where: { id: payment.orderId },
+			select: {
+				id: true,
+				eventId: true,
+				attendeeId: true,
+				status: true,
+			},
+		});
+
+		if (!order) {
+			throw new BadRequestError("Order not found for payment");
+		}
+
 		const existingGatewayMeta = this.normalizeGatewayMeta(payment.gatewayMeta);
 		const checkoutItems = this.normalizeCheckoutItems(
 			Array.isArray(existingGatewayMeta.checkoutItems)
@@ -1483,9 +1471,9 @@ export class PaymentsService {
 				await this.issueTicketsAndPassesForCheckout(
 					tx,
 					{
-						id: payment.order.id,
-						eventId: payment.order.eventId,
-						attendeeId: payment.order.attendeeId,
+						id: order.id,
+						eventId: order.eventId,
+						attendeeId: order.attendeeId,
 					},
 					checkoutItems,
 				);
@@ -1536,15 +1524,15 @@ export class PaymentsService {
 				await this.issueTicketsAndPassesForCheckout(
 					tx,
 					{
-						id: payment.order.id,
-						eventId: payment.order.eventId,
-						attendeeId: payment.order.attendeeId,
+						id: order.id,
+						eventId: order.eventId,
+						attendeeId: order.attendeeId,
 					},
 					checkoutItems,
 				);
 			}
 
-			await this.syncOrderStatusForPayment(tx, payment.order, mappedStatus);
+			await this.syncOrderStatusForPayment(tx, order, mappedStatus);
 
 			return updatedPayment;
 		});

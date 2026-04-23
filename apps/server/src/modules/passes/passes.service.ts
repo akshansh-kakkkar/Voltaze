@@ -18,6 +18,7 @@ import {
 type PassActor = {
 	userId: string;
 	role: UserRole;
+	isHost: boolean;
 };
 
 type PassLifecycleStatus = "ACTIVE" | "USED" | "CANCELLED";
@@ -32,7 +33,7 @@ export class PassesService {
 			return {};
 		}
 
-		if (actor.role === "HOST") {
+		if (actor.isHost) {
 			return {
 				event: {
 					userId: actor.userId,
@@ -55,7 +56,7 @@ export class PassesService {
 			return;
 		}
 
-		if (actor.role === "HOST") {
+		if (actor.isHost) {
 			if (!entity.eventUserId || entity.eventUserId !== actor.userId) {
 				throw new ForbiddenError("You can only manage passes for your events");
 			}

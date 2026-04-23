@@ -2,8 +2,7 @@
 
 import type { EventRecord, TicketRecord } from "@unievent/schema";
 import { format } from "date-fns";
-import { Calendar, Clock, MapPin, Ticket as TicketIcon } from "lucide-react";
-import Image from "next/image";
+import { MapPin } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 
 interface MobileTicketPreviewProps {
@@ -15,104 +14,131 @@ export function MobileTicketPreview({
 	ticket,
 	event,
 }: MobileTicketPreviewProps) {
-	const eventDate = event?.startDate ? new Date(event.startDate) : new Date();
+	const bookingDate = new Date(ticket.createdAt);
+
+	const eventStartDate = event?.startDate
+		? new Date(event.startDate).toLocaleDateString("en-US", {
+				month: "long",
+				day: "numeric",
+			})
+		: "";
+
+	const eventEndDate = event?.endDate
+		? new Date(event.endDate).toLocaleDateString("en-US", {
+				day: "numeric",
+				year: "numeric",
+			})
+		: "";
+
+	const eventStartTime = event?.startDate
+		? format(new Date(event.startDate), "hh:mm a")
+		: "";
+	const eventEndTime = event?.endDate
+		? format(new Date(event.endDate), "hh:mm a")
+		: "";
+
+	const eventDateStr =
+		eventStartDate && eventEndDate
+			? `${eventStartDate} to ${eventEndDate}`
+			: eventStartDate || "";
+
+	const eventTimeStr =
+		eventStartTime && eventEndTime
+			? `(${eventStartTime} to ${eventEndTime} IST)`
+			: eventStartTime
+				? `(${eventStartTime} IST)`
+				: "";
 
 	return (
-		<div className="flex w-full flex-col bg-white">
-			{/* Sharp Header / Event Image */}
-			<div className="relative h-44 w-full overflow-hidden border-[#030370] border-b-4 bg-slate-900">
-				{event?.thumbnail ? (
-					<Image
-						src={event.thumbnail}
-						alt={event.name}
-						fill
-						className="object-cover opacity-60"
+		<div className="flex w-full flex-col overflow-hidden rounded-none border border-[#dbe7ff] bg-white">
+			{/* Top Section - Metadata */}
+			<div className="flex flex-col items-center justify-between gap-6 border-slate-50 border-b p-4 sm:flex-row sm:items-start sm:p-6">
+				<div className="flex-1 space-y-1 text-center sm:text-left">
+					<p className="font-black text-[10px] text-slate-400 uppercase tracking-widest">
+						Registry Date
+					</p>
+					<p className="font-black text-[#030370] text-sm uppercase">
+						{format(bookingDate, "dd MMM yyyy")}
+					</p>
+					<div className="pt-2">
+						<p className="font-black text-[10px] text-slate-400 uppercase tracking-widest">
+							Order Identifier
+						</p>
+						<p className="font-black font-mono text-slate-900 text-xs tracking-tighter">
+							ORD-
+							{ticket.orderId?.slice(-8).toUpperCase() ||
+								ticket.id.slice(-8).toUpperCase()}
+						</p>
+					</div>
+				</div>
+				<div className="shrink-0 border border-slate-100 bg-white p-2 shadow-inner">
+					<QRCodeSVG
+						value={ticket.id}
+						size={100}
+						level="H"
+						includeMargin={false}
+						className="h-24 w-24 sm:h-28 sm:w-28"
 					/>
-				) : (
-					<div className="flex h-full w-full items-center justify-center bg-slate-800">
-						<TicketIcon size={40} className="text-white/10" />
-					</div>
-				)}
-				<div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-				<div className="absolute bottom-0 left-0 w-full p-5">
-					<div className="mb-1.5 flex items-center gap-2">
-						<span className="bg-[#030370] px-3 py-0.5 font-black text-[8px] text-white uppercase tracking-[0.2em]">
-							{ticket.tierId.split("_").join(" ")}
-						</span>
-					</div>
-					<h2 className="line-clamp-2 font-black text-lg text-white uppercase leading-tight tracking-tighter">
-						{event?.name || "Ticket ID"}
-					</h2>
 				</div>
 			</div>
 
-			{/* Info Section - Sharp Grid */}
-			<div className="space-y-8 border-[#dbe7ff] border-x bg-white p-6">
-				<div className="grid grid-cols-2 divide-x divide-slate-100 border-slate-100 border-b pb-6">
-					<div className="space-y-1 pr-4">
-						<div className="flex items-center gap-1.5 text-slate-400">
-							<Calendar size={10} />
-							<span className="font-black text-[9px] uppercase tracking-[0.2em]">
-								Asset Date
-							</span>
-						</div>
-						<p className="font-black text-slate-900 text-xs uppercase tracking-tight">
-							{format(eventDate, "dd MMM yyyy")}
+			{/* Operational Asset Details */}
+			<div className="space-y-5 bg-slate-50/30 p-4 sm:p-6">
+				<div className="grid grid-cols-2 gap-4">
+					<div className="space-y-1">
+						<p className="font-black text-[9px] text-slate-400 uppercase tracking-widest">
+							Sector
+						</p>
+						<p className="truncate font-black text-[11px] text-slate-900 uppercase sm:text-xs">
+							{event?.name || "Unknown"}
 						</p>
 					</div>
-					<div className="space-y-1 pl-6">
-						<div className="flex items-center gap-1.5 text-slate-400">
-							<Clock size={10} />
-							<span className="font-black text-[9px] uppercase tracking-[0.2em]">
-								Entry Time
-							</span>
-						</div>
-						<p className="font-black text-slate-900 text-xs uppercase tracking-tight">
-							{format(eventDate, "hh:mm a")}
+					<div className="space-y-1 text-right">
+						<p className="font-black text-[9px] text-slate-400 uppercase tracking-widest">
+							Access Level
+						</p>
+						<p className="font-black text-[#030370] text-[11px] uppercase sm:text-xs">
+							{ticket.tierId.split("_").pop() || "Standard"}
 						</p>
 					</div>
 				</div>
 
 				<div className="space-y-1">
-					<div className="flex items-center gap-1.5 text-slate-400">
-						<MapPin size={10} />
-						<span className="font-black text-[9px] uppercase tracking-[0.2em]">
-							Venue
-						</span>
-					</div>
-					<p className="line-clamp-1 font-black text-slate-900 text-xs uppercase tracking-widest">
-						{event?.venueName || "TBA"}
+					<p className="font-black text-[9px] text-slate-400 uppercase tracking-widest">
+						Deployment Window
+					</p>
+					<p className="font-black text-[11px] text-slate-900 uppercase sm:text-xs">
+						{eventDateStr}
+					</p>
+					<p className="font-bold text-[10px] text-slate-400 uppercase">
+						{eventTimeStr}
 					</p>
 				</div>
 
-				{/* QR Code Section - Sharp Container */}
-				<div className="flex flex-col items-center pt-2">
-					<div className="group border border-slate-100 bg-slate-50 p-6 shadow-inner">
-						<div className="border border-slate-100 bg-white p-4 shadow-lg">
-							<QRCodeSVG
-								value={ticket.id}
-								size={160}
-								level="H"
-								includeMargin={false}
-							/>
-						</div>
-					</div>
-					<div className="mt-8 space-y-1 text-center">
-						<p className="mb-2 font-black text-[8px] text-slate-400 uppercase tracking-[0.4em]">
-							Verified Unique Identifier
-						</p>
-						<p className="border border-slate-100 bg-slate-50 px-4 py-2 font-black font-mono text-slate-900 text-sm uppercase tracking-widest">
-							{ticket.id.slice(0, 12)}
+				<div className="space-y-1">
+					<p className="font-black text-[9px] text-slate-400 uppercase tracking-widest">
+						Deployment Zone
+					</p>
+					<div className="flex items-start gap-1.5">
+						<MapPin size={10} className="mt-0.5 text-slate-400" />
+						<p className="font-black text-[11px] text-slate-900 uppercase leading-tight sm:text-xs">
+							{event?.venueName || "Sector TBA"}
 						</p>
 					</div>
 				</div>
 			</div>
 
-			{/* Footer - Professional Sharp */}
-			<div className="mt-auto bg-slate-900 p-5 text-center">
-				<p className="font-black text-[8px] text-white uppercase leading-relaxed tracking-[0.3em] opacity-60">
-					This pass is valid for one-time entry. Verified by UniEvents System
-					Protocol.
+			{/* Authentication Footer */}
+			<div className="border-[#dbe7ff] border-t bg-white p-4 text-center">
+				<div className="mb-2 flex items-center justify-center gap-3">
+					<div className="h-[1px] flex-1 bg-slate-100" />
+					<p className="font-black text-[8px] text-slate-300 uppercase tracking-[0.4em]">
+						Authorized Protocol
+					</p>
+					<div className="h-[1px] flex-1 bg-slate-100" />
+				</div>
+				<p className="font-black text-[#000031] text-base uppercase tracking-tighter">
+					UniEvent
 				</p>
 			</div>
 		</div>

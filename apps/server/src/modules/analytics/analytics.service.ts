@@ -11,6 +11,7 @@ import { ForbiddenError, NotFoundError } from "@/common/exceptions/app-error";
 type AnalyticsActor = {
 	userId: string;
 	role: UserRole;
+	isHost: boolean;
 };
 
 export class AnalyticsService {
@@ -22,7 +23,7 @@ export class AnalyticsService {
 			return;
 		}
 
-		if (actor.role === "HOST" && eventUserId === actor.userId) {
+		if (actor.isHost && eventUserId === actor.userId) {
 			return;
 		}
 
@@ -57,7 +58,6 @@ export class AnalyticsService {
 				where: {
 					order: { eventId },
 					status: "SUCCESS",
-					deletedAt: null,
 				},
 				_sum: { amount: true },
 			}),
@@ -93,7 +93,6 @@ export class AnalyticsService {
 	): Promise<RevenueAnalytics> {
 		const where: Prisma.PaymentWhereInput = {
 			status: "SUCCESS",
-			deletedAt: null,
 		};
 
 		if (input.eventId) {
@@ -108,9 +107,9 @@ export class AnalyticsService {
 
 			this.ensureCanViewAnalytics(actor, event.userId);
 			where.order = { eventId: input.eventId };
-		} else if (actor.role === "HOST") {
+		} else if (actor.isHost) {
 			where.order = { event: { userId: actor.userId } };
-		} else if (actor.role === "USER") {
+		} else {
 			where.order = { attendee: { userId: actor.userId } };
 		}
 
@@ -181,9 +180,9 @@ export class AnalyticsService {
 
 			this.ensureCanViewAnalytics(actor, event.userId);
 			where.eventId = input.eventId;
-		} else if (actor.role === "HOST") {
+		} else if (actor.isHost) {
 			where.event = { userId: actor.userId };
-		} else if (actor.role === "USER") {
+		} else {
 			where.userId = actor.userId;
 		}
 

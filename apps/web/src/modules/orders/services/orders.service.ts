@@ -59,4 +59,11 @@ export const ordersService = {
 	async remove(id: string) {
 		await apiClient.delete(`/orders/${id}`);
 	},
+
+	async downloadTicket(id: string) {
+		const response = await apiClient.get(`/orders/${id}/download`, {
+			responseType: "blob",
+		});
+		return response.data;
+	},
 };

@@ -19,6 +19,7 @@ import {
 type EventActor = {
 	userId: string;
 	role: UserRole;
+	isHost: boolean;
 };
 
 type EventStatus = "DRAFT" | "PUBLISHED" | "CANCELLED" | "COMPLETED";
@@ -40,13 +41,7 @@ export class EventsService {
 			return {};
 		}
 
-		if (actor.role === "HOST") {
-			return {
-				OR: [publicPublishedWhere, { userId: actor.userId }],
-			};
-		}
-
-		if (actor.role === "USER") {
+		if (actor.isHost) {
 			return {
 				OR: [publicPublishedWhere, { userId: actor.userId }],
 			};
@@ -425,12 +420,9 @@ export class EventsService {
 			nextSalesEnd,
 		);
 
-		if (
-			input.maxQuantity !== undefined &&
-			input.maxQuantity < ticketTier.soldCount
-		) {
+		if (input.quantity !== undefined && input.quantity < ticketTier.soldCount) {
 			throw new BadRequestError(
-				"Ticket tier maxQuantity cannot be less than soldCount",
+				"Ticket tier quantity cannot be less than soldCount",
 			);
 		}
 

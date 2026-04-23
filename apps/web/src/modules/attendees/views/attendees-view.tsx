@@ -2,7 +2,6 @@
 
 import { ChevronLeft, ChevronRight, Download, Search } from "lucide-react";
 import { useMemo, useState } from "react";
-import { useAuth } from "@/core/providers/auth-provider";
 import { useEvents } from "@/modules/events";
 import { useAttendees } from "../hooks/use-attendees";
 
@@ -35,7 +34,6 @@ export function AttendeesView() {
 	const [search, setSearch] = useState("");
 	const [selectedEventId, setSelectedEventId] = useState<string>("ALL");
 	const [page, setPage] = useState(1);
-	const { user } = useAuth();
 
 	const eventsQuery = useEvents({
 		page: 1,

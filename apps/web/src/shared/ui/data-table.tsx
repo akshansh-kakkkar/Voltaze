@@ -45,7 +45,7 @@ export function DataTable<TData, TValue>({
 
 	return (
 		<div className="fade-in animate-in space-y-4 duration-500">
-			<div className="overflow-hidden rounded-2xl border border-[#dbe7ff] bg-white shadow-sm transition-all hover:shadow-md">
+			<div className="scrollbar-thin overflow-x-auto rounded-2xl border border-[#dbe7ff] bg-white shadow-sm transition-all hover:shadow-md">
 				<table className="w-full text-left text-sm">
 					<thead>
 						{table.getHeaderGroups().map((headerGroup) => (

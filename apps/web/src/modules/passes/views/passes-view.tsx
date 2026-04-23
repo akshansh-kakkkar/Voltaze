@@ -25,23 +25,11 @@ const statusVariant: Record<
 	CANCELLED: "destructive",
 };
 
-const typeVariant: Record<
-	string,
-	"default" | "success" | "warning" | "destructive"
-> = {
-	GENERAL: "default",
-	VIP: "warning",
-	BACKSTAGE: "destructive",
-	SPEAKER: "success",
-};
-
 import { QRCodeSVG } from "qrcode.react";
 
 export function PassesView() {
 	const [page, setPage] = useState(1);
 	const [status, setStatus] = useState<string>("");
-	const [type, setType] = useState<string>("");
-
 	const passesQuery = usePasses({
 		page,
 		limit: 20,
@@ -49,12 +37,6 @@ export function PassesView() {
 			| "ACTIVE"
 			| "USED"
 			| "CANCELLED"
-			| undefined,
-		type: (type || undefined) as
-			| "GENERAL"
-			| "VIP"
-			| "BACKSTAGE"
-			| "SPEAKER"
 			| undefined,
 		sortBy: "createdAt",
 		sortOrder: "desc",
@@ -73,15 +55,6 @@ export function PassesView() {
 						{row.original.code}
 					</span>
 				</div>
-			),
-		},
-		{
-			accessorKey: "type",
-			header: "Type",
-			cell: ({ row }) => (
-				<Badge variant={typeVariant[row.original.type] ?? "default"}>
-					{row.original.type}
-				</Badge>
 			),
 		},
 		{
@@ -142,7 +115,7 @@ export function PassesView() {
 				description="View, filter, and manage entry passes. Each pass has a unique code for QR-based check-in."
 			/>
 
-			<section className="panel-soft grid gap-4 p-4 md:grid-cols-2 md:items-end md:p-5">
+			<section className="panel-soft flex items-end p-4 md:p-5">
 				<label htmlFor="status-filter" className="space-y-2">
 					<span className="font-semibold text-[#5f6984] text-xs uppercase tracking-wide">
 						Status
@@ -159,26 +132,6 @@ export function PassesView() {
 						<option value="ACTIVE">Active</option>
 						<option value="USED">Used</option>
 						<option value="CANCELLED">Cancelled</option>
-					</Select>
-				</label>
-
-				<label htmlFor="type-filter" className="space-y-2">
-					<span className="font-semibold text-[#5f6984] text-xs uppercase tracking-wide">
-						Type
-					</span>
-					<Select
-						id="type-filter"
-						value={type}
-						onChange={(e) => {
-							setType(e.target.value);
-							setPage(1);
-						}}
-					>
-						<option value="">All types</option>
-						<option value="GENERAL">General</option>
-						<option value="VIP">VIP</option>
-						<option value="BACKSTAGE">Backstage</option>
-						<option value="SPEAKER">Speaker</option>
 					</Select>
 				</label>
 			</section>

@@ -17,6 +17,13 @@ export const metadata: Metadata = {
 	title: "UniEvent | Event Platform",
 	description:
 		"Discover events, view schedules, manage mobile tickets, and track readiness from one frontend experience.",
+	icons: {
+		icon: [
+			{ url: "/favicon.png", type: "image/png" },
+			{ url: "/favicon.ico", type: "image/x-icon" },
+		],
+		apple: "/apple-touch-icon.png",
+	},
 };
 
 export default function RootLayout({

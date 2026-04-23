@@ -19,7 +19,7 @@ import { AppSidebar, type SidebarSection } from "./components/app-sidebar";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
 	const { user } = useAuth();
-	const isHost = user?.role === "HOST" || user?.role === "ADMIN";
+	const isHost = user?.isHost || user?.role === "ADMIN";
 
 	const userSections: SidebarSection[] = [
 		{
@@ -112,8 +112,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 			<div className="flex pt-16">
 				<AppSidebar sections={sections} />
 
-				<main className="min-h-[calc(100vh-64px)] flex-1 transition-all duration-500 lg:pl-64">
-					<div className="mx-auto max-w-7xl p-6 lg:p-10">{children}</div>
+				<main className="min-h-[calc(100vh-64px)] min-w-0 flex-1 overflow-x-hidden transition-all duration-500 lg:pl-64">
+					<div className="mx-auto min-w-0 max-w-7xl overflow-x-hidden p-4 lg:p-10">
+						{children}
+					</div>
 				</main>
 			</div>
 		</div>

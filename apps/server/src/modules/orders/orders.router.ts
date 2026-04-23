@@ -45,6 +45,12 @@ export function createOrdersRouter(): Router {
 		validatePipe({ params: idParamSchema }),
 		asyncHandler((req, res) => ordersController.delete(req, res)),
 	);
+	router.get(
+		"/:id/download",
+		requireAuth,
+		validatePipe({ params: idParamSchema }),
+		asyncHandler((req, res) => ordersController.downloadTicket(req, res)),
+	);
 
 	return router;
 }

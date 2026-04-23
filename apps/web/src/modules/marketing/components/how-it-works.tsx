@@ -251,7 +251,7 @@ export function HowItWorks() {
 									)}
 								>
 									<div className="relative flex aspect-square w-full items-center justify-center rounded-[48px] border border-slate-100 bg-white p-10 shadow-[0_30px_60px_-12px_rgba(0,0,0,0.12)]">
-										<div className="h-full w-full bg-[url('https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=UniEvents_VIP_PASS')] bg-cover opacity-90" />
+										<div className="h-full w-full bg-[url('https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=UniEvent_VIP_PASS')] bg-cover opacity-90" />
 									</div>
 									<div className="mt-12 text-center">
 										<div className="mb-4 inline-flex items-center gap-2 rounded-full bg-blue-600 px-6 py-2 font-black text-[10px] text-white uppercase tracking-widest shadow-blue-100 shadow-lg">

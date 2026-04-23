@@ -45,7 +45,6 @@ export function MarketingLayout({
 	const [notificationsOpen, setNotificationsOpen] = useState(false);
 	const locationMenuRef = useRef<HTMLDivElement | null>(null);
 	const profileMenuRef = useRef<HTMLDivElement | null>(null);
-	const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
 	useEffect(() => {
 		const handleScroll = () => setScrolled(window.scrollY > 400);
@@ -75,15 +74,15 @@ export function MarketingLayout({
 
 	return (
 		<div className="relative min-h-screen overflow-x-clip bg-[#fcfdff] font-jakarta">
-			{/* High-Impact Global Brand Background */}
+			{/* High-Impact Global Brand Background - Optimized */}
 			<div className="pointer-events-none absolute inset-0 overflow-hidden">
-				<div className="absolute top-[-5%] left-[-10%] h-[1200px] w-[1200px] rounded-full bg-[#0f3dd9]/10 blur-[140px]" />
-				<div className="absolute top-[15%] right-[-15%] h-[1000px] w-[1000px] rounded-full bg-indigo-500/10 blur-[120px]" />
-				<div className="absolute bottom-0 left-[-5%] h-[900px] w-[900px] rounded-full bg-blue-600/10 blur-[100px]" />
+				<div className="absolute top-[-5%] left-[-10%] h-[600px] w-[600px] rounded-full bg-[#0f3dd9]/10 blur-[80px]" />
+				<div className="absolute top-[15%] right-[-15%] h-[500px] w-[500px] rounded-full bg-indigo-500/10 blur-[70px]" />
+				<div className="absolute bottom-0 left-[-5%] h-[450px] w-[450px] rounded-full bg-blue-600/10 blur-[60px]" />
 
 				{/* Sharp Grid Pattern Overlay */}
 				<div
-					className="absolute inset-0 opacity-[0.05]"
+					className="absolute inset-0 opacity-[0.03]"
 					style={{
 						backgroundImage:
 							"linear-gradient(#0f3dd9 1.5px, transparent 1.5px), linear-gradient(90deg, #0f3dd9 1.5px, transparent 1.5px)",
@@ -299,18 +298,13 @@ export function MarketingLayout({
 																	onClick={() => setIsProfileOpen(false)}
 																/>
 																<DropdownItem
-																	href="/dashboard/tickets"
+																	href="/tickets"
 																	label="Tickets"
 																	onClick={() => setIsProfileOpen(false)}
 																/>
 																<DropdownItem
-																	href="/dashboard/liked"
+																	href="/liked"
 																	label="Liked"
-																	onClick={() => setIsProfileOpen(false)}
-																/>
-																<DropdownItem
-																	href="/dashboard/settings"
-																	label="Settings"
 																	onClick={() => setIsProfileOpen(false)}
 																/>
 															</div>

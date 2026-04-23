@@ -123,7 +123,7 @@ export function CreateEventView() {
 						name: tier.name,
 						description: "Created by host",
 						price: tier.price,
-						maxQuantity: tier.quantity,
+						quantity: tier.quantity,
 					});
 				}
 			}

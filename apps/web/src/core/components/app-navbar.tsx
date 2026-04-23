@@ -33,7 +33,7 @@ export function AppNavbar({ mobileDrawerItems }: AppNavbarProps) {
 	const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 	const unreadQuery = useUnreadCount({ enabled: isAuthenticated });
 	const unreadCount = unreadQuery.data?.count ?? 0;
-	const isHost = user?.role === "HOST" || user?.role === "ADMIN";
+	const isHost = user?.isHost || user?.role === "ADMIN";
 
 	useEffect(() => {
 		setIsDrawerOpen(false);

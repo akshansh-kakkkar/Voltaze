@@ -450,7 +450,7 @@ export function EventDetailView({ eventId }: { eventId: string }) {
 										{added && (
 											<Link
 												href="/cart"
-												className="flex h-16 w-full items-center justify-center gap-2 rounded-xl border border-[#000031] font-black text-[#000031] text-[10px] uppercase tracking-widest transition-all duration-300 hover:bg-[#000031] hover:text-white"
+												className="group hover:!text-white flex h-16 w-full items-center justify-center gap-2 rounded-xl border border-[#000031] font-black text-[#000031] text-[10px] uppercase tracking-widest transition-all duration-300 hover:bg-[#000031]"
 											>
 												View Cart & Checkout <ArrowRight size={14} />
 											</Link>

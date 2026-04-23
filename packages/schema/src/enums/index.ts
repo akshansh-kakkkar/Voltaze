@@ -6,7 +6,6 @@ import type {
 	EventVisibility,
 	OrderStatus,
 	PassStatus,
-	PassType,
 	PaymentGateway,
 	PaymentStatus,
 	UserRole,
@@ -20,7 +19,6 @@ export type {
 	EventVisibility,
 	OrderStatus,
 	PassStatus,
-	PassType,
 	PaymentGateway,
 	PaymentStatus,
 	UserRole,
@@ -28,7 +26,6 @@ export type {
 
 export const UserRoleSchema = {
 	ADMIN: "ADMIN",
-	HOST: "HOST",
 	USER: "USER",
 } as const;
 
@@ -58,13 +55,6 @@ export const OrderStatusSchema = {
 	PENDING: "PENDING",
 	COMPLETED: "COMPLETED",
 	CANCELLED: "CANCELLED",
-} as const;
-
-export const PassTypeSchema = {
-	GENERAL: "GENERAL",
-	VIP: "VIP",
-	BACKSTAGE: "BACKSTAGE",
-	SPEAKER: "SPEAKER",
 } as const;
 
 export const PassStatusSchema = {

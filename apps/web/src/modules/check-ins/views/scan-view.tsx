@@ -32,7 +32,7 @@ export function ScanView() {
 	const { user } = useAuth();
 
 	const eventsQuery = useEvents({
-		userId: user?.role === "HOST" ? user.id : undefined,
+		userId: user?.isHost ? user.id : undefined,
 		status: "PUBLISHED",
 		limit: 100,
 		sortBy: "startDate",

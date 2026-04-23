@@ -22,7 +22,7 @@ export function ManageTiersPanel({
 	const [isAdding, setIsAdding] = useState(false);
 	const [name, setName] = useState("");
 	const [price, setPrice] = useState(0);
-	const [maxQuantity, setMaxQuantity] = useState(100);
+	const [quantity, setQuantity] = useState(100);
 
 	if (!user || user.id !== eventUserId) {
 		return null; // Only the host can manage tiers
@@ -34,12 +34,12 @@ export function ManageTiersPanel({
 			await createTierEntry.mutateAsync({
 				name,
 				price,
-				maxQuantity,
+				quantity,
 			});
 			setIsAdding(false);
 			setName("");
 			setPrice(0);
-			setMaxQuantity(100);
+			setQuantity(100);
 		} catch (err: unknown) {
 			const error = err instanceof Error ? err.message : "Failed to add tier";
 			alert(error);
@@ -69,7 +69,7 @@ export function ManageTiersPanel({
 							<div>
 								<span className="font-bold text-[#0e1838]">{tier.name}</span>
 								<div className="mt-1 text-[#5f6984] text-sm">
-									Price: ₹{tier.price} • Capacity: {tier.maxQuantity}
+									Price: ₹{tier.price} • Capacity: {tier.quantity}
 								</div>
 							</div>
 							<span className="rounded-full bg-indigo-50 px-3 py-1 font-bold text-indigo-700 text-xs">
@@ -144,8 +144,8 @@ export function ManageTiersPanel({
 							<input
 								id="tier-capacity"
 								type="number"
-								value={maxQuantity}
-								onChange={(e) => setMaxQuantity(Number(e.target.value))}
+								value={quantity}
+								onChange={(e) => setQuantity(Number(e.target.value))}
 								min={1}
 								required
 								className="mt-1 h-10 w-full rounded-lg border px-3 outline-none"

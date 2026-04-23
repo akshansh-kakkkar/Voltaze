@@ -15,6 +15,7 @@ import {
 type CheckInActor = {
 	userId: string;
 	role: UserRole;
+	isHost: boolean;
 };
 
 export class CheckInsService {
@@ -27,7 +28,7 @@ export class CheckInsService {
 			return {};
 		}
 
-		if (actor.role === "HOST") {
+		if (actor.isHost) {
 			return {
 				attendee: {
 					event: {
@@ -52,8 +53,8 @@ export class CheckInsService {
 			return;
 		}
 
-		if (actor.role === "USER") {
-			throw new ForbiddenError("Only organizers can create check-ins");
+		if (!actor.isHost) {
+			throw new ForbiddenError("Only hosts can create check-ins");
 		}
 
 		if (!attendee.event.userId || attendee.event.userId !== actor.userId) {
@@ -66,8 +67,8 @@ export class CheckInsService {
 			return;
 		}
 
-		if (actor.role === "USER") {
-			throw new ForbiddenError("Users cannot delete check-ins");
+		if (!actor.isHost) {
+			throw new ForbiddenError("Only hosts can delete check-ins");
 		}
 	}
 

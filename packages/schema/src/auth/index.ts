@@ -5,7 +5,7 @@ export type { Account, Session, User, Verification };
 
 const ulidSchema = z.string().min(10);
 
-export const userRoleSchema = z.enum(["ADMIN", "HOST", "USER"]);
+export const userRoleSchema = z.enum(["ADMIN", "USER"]);
 
 export const userSchema = z.object({
 	id: ulidSchema,
@@ -14,7 +14,7 @@ export const userSchema = z.object({
 	emailVerified: z.boolean(),
 	image: z.string().nullable(),
 	role: userRoleSchema,
-	skills: z.array(z.string()).default([]),
+	isHost: z.boolean().default(false),
 	createdAt: z.date(),
 	updatedAt: z.date(),
 }) satisfies z.ZodType<User>;
@@ -26,7 +26,7 @@ export const publicUserSchema = userSchema.pick({
 	emailVerified: true,
 	image: true,
 	role: true,
-	skills: true,
+	isHost: true,
 	createdAt: true,
 	updatedAt: true,
 });
@@ -36,11 +36,13 @@ export const authRequestContextSchema = z.object({
 	sessionId: ulidSchema,
 	email: z.string().email(),
 	role: userRoleSchema,
+	isHost: z.boolean(),
 });
 
 export const authenticatedActorSchema = authRequestContextSchema.pick({
 	userId: true,
 	role: true,
+	isHost: true,
 });
 
 export const authRequestMetaSchema = z.object({
@@ -63,6 +65,7 @@ export const createUserSchema = userSchema
 		email: z.string().trim().email(),
 		name: z.string().trim().min(1).max(100).optional(),
 		role: userRoleSchema.default("USER"),
+		isHost: z.boolean().default(false),
 	});
 
 export const updateUserSchema = userSchema
@@ -76,14 +79,13 @@ export const updateUserSchema = userSchema
 		email: z.string().trim().email().optional(),
 		name: z.string().trim().min(1).max(100).nullable().optional(),
 		role: userRoleSchema.optional(),
-		skills: z.array(z.string()).max(5).optional(),
+		isHost: z.boolean().optional(),
 	});
 
 // Profile update — only the fields a user can change about themselves
 export const updateProfileSchema = z.object({
 	name: z.string().trim().min(1).max(100).nullable().optional(),
 	image: z.string().url().nullable().optional(),
-	skills: z.array(z.string().trim().min(1).max(60)).max(10).optional(),
 });
 
 // Admin update — can update profile fields plus the user's role

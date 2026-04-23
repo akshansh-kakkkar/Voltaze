@@ -11,7 +11,6 @@ import {
 	X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { useAuth } from "@/core/providers/auth-provider";
 import { useAttendees } from "@/modules/attendees";
 import { useEvents } from "@/modules/events";
 import { useValidatePass } from "@/modules/passes";
@@ -47,7 +46,6 @@ function TableRowSkeleton() {
 const PAGE_SIZE = 50;
 
 export function CheckInsView() {
-	const { user } = useAuth();
 	const [selectedEventId, setSelectedEventId] = useState<string>("ALL");
 	const [method, setMethod] = useState<"ALL" | "QR_SCAN" | "MANUAL">("ALL");
 	const [search, setSearch] = useState("");

@@ -47,10 +47,10 @@ export function EditEventView({ eventId }: { eventId: string }) {
 	const [newTier, setNewTier] = useState({
 		name: "",
 		price: "",
-		maxQuantity: "",
+		quantity: "",
 	});
 	const [tierDrafts, setTierDrafts] = useState<
-		Record<string, { name: string; price: string; maxQuantity: string }>
+		Record<string, { name: string; price: string; quantity: string }>
 	>({});
 
 	useEffect(() => {
@@ -81,8 +81,7 @@ export function EditEventView({ eventId }: { eventId: string }) {
 				next[tier.id] = {
 					name: current[tier.id]?.name ?? tier.name,
 					price: current[tier.id]?.price ?? String(tier.price),
-					maxQuantity:
-						current[tier.id]?.maxQuantity ?? String(tier.maxQuantity),
+					quantity: current[tier.id]?.quantity ?? String(tier.quantity),
 				};
 			}
 			return next;
@@ -144,7 +143,7 @@ export function EditEventView({ eventId }: { eventId: string }) {
 	};
 
 	const handleCreateTier = async () => {
-		if (!eventId || !newTier.name.trim() || Number(newTier.maxQuantity) <= 0) {
+		if (!eventId || !newTier.name.trim() || Number(newTier.quantity) <= 0) {
 			return;
 		}
 
@@ -154,10 +153,10 @@ export function EditEventView({ eventId }: { eventId: string }) {
 				name: newTier.name.trim(),
 				description: "Updated by host",
 				price: Number(newTier.price || 0),
-				maxQuantity: Number(newTier.maxQuantity),
+				quantity: Number(newTier.quantity),
 			});
 
-			setNewTier({ name: "", price: "", maxQuantity: "" });
+			setNewTier({ name: "", price: "", quantity: "" });
 			await invalidateTierData();
 		} finally {
 			setIsSavingTiers(false);
@@ -170,7 +169,7 @@ export function EditEventView({ eventId }: { eventId: string }) {
 		}
 
 		const draft = tierDrafts[tierId];
-		if (!draft?.name.trim() || Number(draft.maxQuantity) <= 0) {
+		if (!draft?.name.trim() || Number(draft.quantity) <= 0) {
 			return;
 		}
 
@@ -179,7 +178,7 @@ export function EditEventView({ eventId }: { eventId: string }) {
 			await eventsService.updateTicketTier(eventId, tierId, {
 				name: draft.name.trim(),
 				price: Number(draft.price || 0),
-				maxQuantity: Number(draft.maxQuantity),
+				quantity: Number(draft.quantity),
 			});
 			await invalidateTierData();
 		} finally {
@@ -422,7 +421,7 @@ export function EditEventView({ eventId }: { eventId: string }) {
 							const draft = tierDrafts[tier.id] ?? {
 								name: tier.name,
 								price: String(tier.price),
-								maxQuantity: String(tier.maxQuantity),
+								quantity: String(tier.quantity),
 							};
 
 							return (
@@ -462,13 +461,13 @@ export function EditEventView({ eventId }: { eventId: string }) {
 										<input
 											type="number"
 											min="1"
-											value={draft.maxQuantity}
+											value={draft.quantity}
 											onChange={(e) =>
 												setTierDrafts((current) => ({
 													...current,
 													[tier.id]: {
 														...draft,
-														maxQuantity: e.target.value,
+														quantity: e.target.value,
 													},
 												}))
 											}
@@ -477,7 +476,7 @@ export function EditEventView({ eventId }: { eventId: string }) {
 									</div>
 									<div className="mt-3 flex items-center justify-between text-xs">
 										<span className="text-slate-500">
-											Sold: {tier.soldCount} / {tier.maxQuantity}
+											Sold: {tier.soldCount} / {tier.quantity}
 										</span>
 										<div className="flex items-center gap-2">
 											<button
@@ -533,11 +532,11 @@ export function EditEventView({ eventId }: { eventId: string }) {
 							<input
 								type="number"
 								min="1"
-								value={newTier.maxQuantity}
+								value={newTier.quantity}
 								onChange={(e) =>
 									setNewTier((current) => ({
 										...current,
-										maxQuantity: e.target.value,
+										quantity: e.target.value,
 									}))
 								}
 								placeholder="Quantity"

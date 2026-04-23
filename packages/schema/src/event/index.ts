@@ -166,7 +166,7 @@ export const ticketTierSchema = z.object({
 	name: z.string(),
 	description: z.string().nullable(),
 	price: z.number().int(),
-	maxQuantity: z.number().int(),
+	quantity: z.number().int(),
 	soldCount: z.number().int(),
 	salesStart: z.date().nullable(),
 	salesEnd: z.date().nullable(),
@@ -199,7 +199,7 @@ const createTicketTierSchemaBase = ticketTierSchema
 		name: z.string().min(1).max(100),
 		description: z.string().max(500).optional().nullable(),
 		price: z.number().int().min(0),
-		maxQuantity: z.number().int().positive(),
+		quantity: z.number().int().positive(),
 		salesStart: z.coerce.date().optional().nullable(),
 		salesEnd: z.coerce.date().optional().nullable(),
 	});
@@ -214,7 +214,7 @@ const updateTicketTierSchemaBase = createTicketTierSchemaBase.partial().extend({
 	name: z.string().min(1).max(100).optional(),
 	description: z.string().max(500).optional().nullable(),
 	price: z.number().int().min(0).optional(),
-	maxQuantity: z.number().int().positive().optional(),
+	quantity: z.number().int().positive().optional(),
 	salesStart: z.coerce.date().optional().nullable(),
 	salesEnd: z.coerce.date().optional().nullable(),
 });

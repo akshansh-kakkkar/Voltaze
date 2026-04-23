@@ -22,6 +22,40 @@ type PaymentRecord = Omit<Payment, "createdAt" | "updatedAt" | "deletedAt"> & {
 	createdAt: string;
 	updatedAt: string;
 	deletedAt: string | null;
+	order?: {
+		id: string;
+		attendeeId: string;
+		eventId: string;
+		status: string;
+		totalAmount: number;
+		createdAt: string;
+		updatedAt: string;
+		event?: {
+			id: string;
+			name: string;
+			startDate?: string | Date;
+			endDate?: string | Date;
+			startTime?: string;
+			endTime?: string;
+		};
+		attendee?: {
+			id: string;
+			name: string;
+			email: string;
+		};
+		tickets?: Array<{
+			id: string;
+			tier?: {
+				id: string;
+				name: string;
+			};
+			pass?: {
+				id: string;
+				code: string;
+				status: string;
+			};
+		}>;
+	};
 };
 
 type PaymentListResponse = PaginatedResponse<PaymentRecord>;

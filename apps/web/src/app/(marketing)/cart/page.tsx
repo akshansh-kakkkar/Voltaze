@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { MarketingLayout } from "@/modules/marketing/components/marketing-layout";
 import { CartView } from "@/modules/orders/views/cart-view";
 
 export const metadata: Metadata = {
@@ -8,9 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function CartPage() {
-	return (
-		<MarketingLayout>
-			<CartView />
-		</MarketingLayout>
-	);
+	return <CartView />;
 }

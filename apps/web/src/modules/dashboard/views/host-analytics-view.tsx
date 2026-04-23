@@ -13,7 +13,7 @@ export function HostAnalyticsView() {
 
 	const analyticsQuery = useDashboardAnalytics({
 		groupBy,
-		userId: user?.role === "HOST" ? user.id : undefined,
+		userId: user?.isHost ? user.id : undefined,
 	});
 
 	const revenue = analyticsQuery.revenueQuery.data;

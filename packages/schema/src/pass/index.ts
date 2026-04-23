@@ -8,7 +8,6 @@ export const passSchema = z.object({
 	eventId: z.string().cuid(),
 	attendeeId: z.string().cuid(),
 	ticketId: z.string().cuid(),
-	type: z.enum(["GENERAL", "VIP", "BACKSTAGE", "SPEAKER"]),
 	status: z.enum(["ACTIVE", "USED", "CANCELLED"]),
 	code: z.string(),
 	createdAt: z.date(),
@@ -27,11 +26,9 @@ export const createPassSchema = passSchema
 		eventId: z.string().cuid(),
 		attendeeId: z.string().cuid(),
 		ticketId: z.string().cuid(),
-		type: z.enum(["GENERAL", "VIP", "BACKSTAGE", "SPEAKER"]).default("GENERAL"),
 	});
 
 export const updatePassSchema = createPassSchema.partial().extend({
-	type: z.enum(["GENERAL", "VIP", "BACKSTAGE", "SPEAKER"]).optional(),
 	status: z.enum(["ACTIVE", "USED", "CANCELLED"]).optional(),
 });
 
@@ -44,11 +41,10 @@ export const passFilterSchema = z.object({
 	eventId: z.string().cuid().optional(),
 	attendeeId: z.string().cuid().optional(),
 	ticketId: z.string().cuid().optional(),
-	type: z.enum(["GENERAL", "VIP", "BACKSTAGE", "SPEAKER"]).optional(),
 	status: z.enum(["ACTIVE", "USED", "CANCELLED"]).optional(),
 	page: z.coerce.number().int().positive().default(1),
 	limit: z.coerce.number().int().positive().max(100).default(20),
-	sortBy: z.enum(["createdAt", "type", "status"]).default("createdAt"),
+	sortBy: z.enum(["createdAt", "status"]).default("createdAt"),
 	sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });
 

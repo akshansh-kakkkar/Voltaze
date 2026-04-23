@@ -3,7 +3,6 @@
 import type { EventRecord } from "@unievent/schema";
 import Link from "next/link";
 import { useState } from "react";
-import { cn } from "@/core/lib/cn";
 import { EventCard } from "@/modules/events/components/event-card";
 import { Button } from "@/shared/ui/button";
 

@@ -7,6 +7,10 @@ interface BrevoEmailOptions {
 	subject: string;
 	htmlContent: string;
 	textContent?: string;
+	attachments?: Array<{
+		content: string; // Base64
+		name: string;
+	}>;
 }
 
 type BrevoSendResponse = {
@@ -18,12 +22,14 @@ export async function sendEmailViaBrevo({
 	subject,
 	htmlContent,
 	textContent,
+	attachments,
 }: BrevoEmailOptions) {
 	if (!env.BREVO_API_KEY || !env.BREVO_MAIL_FROM) {
-		logger.warn(
-			"Brevo email not configured. Set BREVO_API_KEY and BREVO_MAIL_FROM.",
+		const error = new Error(
+			"Brevo email not configured. Set BREVO_API_KEY and BREVO_MAIL_FROM environment variables.",
 		);
-		return;
+		logger.error(error.message);
+		throw error;
 	}
 
 	const toEmails = Array.isArray(to) ? to : [to];
@@ -37,6 +43,10 @@ export async function sendEmailViaBrevo({
 		subject,
 		htmlContent,
 		textContent,
+		attachment: attachments?.map((a) => ({
+			content: a.content,
+			name: a.name,
+		})),
 	};
 
 	try {

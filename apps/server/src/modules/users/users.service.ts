@@ -13,6 +13,7 @@ import { ForbiddenError, NotFoundError } from "@/common/exceptions/app-error";
 type UserActor = {
 	userId: string;
 	role: UserRole;
+	isHost: boolean;
 };
 
 /** Public fields returned on user profiles */
@@ -23,7 +24,7 @@ const PUBLIC_USER_SELECT = {
 	emailVerified: true,
 	image: true,
 	role: true,
-	skills: true,
+	isHost: true,
 	createdAt: true,
 	updatedAt: true,
 } as const;
@@ -34,20 +35,21 @@ export class UsersService {
 	}
 
 	async list(input: UserFilterInput, actor: UserActor) {
-		// Only ADMINs can list all users; others can list HOSTs only
+		// Only ADMINs can list all users; others can list hosts only
 		const { page, limit, sortBy, sortOrder, search, role } = input;
 		const skip = (page - 1) * limit;
 
-		// Non-admins may only browse HOST profiles
-		const effectiveRole = actor.role === "ADMIN" ? role : (role ?? "HOST");
-		if (actor.role !== "ADMIN" && role && role !== "HOST") {
-			throw new ForbiddenError("You may only browse host profiles");
+		// Non-admins may only browse host profiles
+		const effectiveRole = actor.role === "ADMIN" ? role : (role ?? "USER");
+		if (actor.role !== "ADMIN" && role && role !== "USER") {
+			throw new ForbiddenError("You may only browse user profiles");
 		}
 
 		const trimmedSearch = search?.trim();
 
 		const where: Prisma.UserWhereInput = {
 			role: effectiveRole,
+			...(actor.role !== "ADMIN" ? { isHost: true } : {}),
 			...(trimmedSearch
 				? {
 						OR: [
@@ -93,7 +95,7 @@ export class UsersService {
 	 */
 	async getHostProfile(hostId: string) {
 		const user = await prisma.user.findUnique({
-			where: { id: hostId, role: "HOST" },
+			where: { id: hostId, isHost: true },
 			select: {
 				...PUBLIC_USER_SELECT,
 				hostedEvents: {
@@ -133,7 +135,7 @@ export class UsersService {
 		};
 	}
 
-	/** Update the current user's own profile (name, image, skills). */
+	/** Update the current user's own profile (name, image). */
 	async updateProfile(
 		userId: string,
 		input: UpdateProfileInput,
@@ -143,7 +145,6 @@ export class UsersService {
 			data: {
 				...(input.name !== undefined ? { name: input.name } : {}),
 				...(input.image !== undefined ? { image: input.image } : {}),
-				...(input.skills !== undefined ? { skills: input.skills } : {}),
 			},
 			select: PUBLIC_USER_SELECT,
 		});
@@ -166,14 +167,13 @@ export class UsersService {
 			throw new ForbiddenError("Administrators cannot toggle host mode");
 		}
 
-		const nextRole = enabled ? "HOST" : "USER";
-		if (user.role === nextRole) {
+		if (user.isHost === enabled) {
 			return this.toPublicUser(user);
 		}
 
 		const updated = await prisma.user.update({
 			where: { id: userId },
-			data: { role: nextRole },
+			data: { isHost: enabled },
 			select: PUBLIC_USER_SELECT,
 		});
 

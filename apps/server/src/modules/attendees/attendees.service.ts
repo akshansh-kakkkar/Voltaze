@@ -17,6 +17,7 @@ type AttendeeActor = {
 	userId: string;
 	email: string;
 	role: UserRole;
+	isHost: boolean;
 };
 
 export class AttendeesService {
@@ -29,7 +30,7 @@ export class AttendeesService {
 			return {};
 		}
 
-		if (actor.role === "HOST") {
+		if (actor.isHost) {
 			return {
 				event: {
 					userId: actor.userId,
@@ -57,7 +58,7 @@ export class AttendeesService {
 		}
 
 		// Otherwise, if they have a role that implies management, check ownership
-		if (actor.role === "HOST") {
+		if (actor.isHost) {
 			if (!eventUserId || eventUserId !== actor.userId) {
 				throw new ForbiddenError(
 					"You can only manage attendees for events you host",

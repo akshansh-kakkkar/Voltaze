@@ -19,7 +19,7 @@ export function DashboardView() {
 		);
 	}
 
-	if (user?.role === "HOST") {
+	if (user?.isHost) {
 		return <HostDashboard />;
 	}
 

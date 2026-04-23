@@ -166,7 +166,7 @@ export function CheckoutView() {
 
 			// 4. Bypass if FREE
 			if (totalPrice === 0) {
-				await confirmFreeMutation.mutateAsync({
+				const payment = await confirmFreeMutation.mutateAsync({
 					orderId,
 					currency: "INR",
 					items: items.map((item) => ({
@@ -177,7 +177,7 @@ export function CheckoutView() {
 
 				toast.dismiss(loadingToast);
 				toast.success("Registration successful!");
-				window.location.href = "/checkout/success";
+				window.location.href = `/checkout/success?paymentId=${payment.id}`;
 				return;
 			}
 
@@ -226,7 +226,7 @@ export function CheckoutView() {
 							"Verifying transaction node...",
 						);
 
-						await verifyMutation.mutateAsync({
+						const verificationResult = await verifyMutation.mutateAsync({
 							razorpayOrderId: paymentResponse.razorpay_order_id,
 							razorpayPaymentId: paymentResponse.razorpay_payment_id,
 							razorpaySignature: paymentResponse.razorpay_signature,
@@ -234,7 +234,7 @@ export function CheckoutView() {
 
 						toast.dismiss(verificationToast);
 						toast.success("Transaction Secured.");
-						window.location.href = "/checkout/success";
+						window.location.href = `/checkout/success?paymentId=${verificationResult.payment.id}`;
 					} catch (error) {
 						console.error("Verification failed", error);
 						toast.error("Verification Protocol Failed.");

@@ -156,23 +156,23 @@ export function OrdersView() {
 	);
 
 	return (
-		<div className="fade-in animate-in space-y-1 pb-20 duration-500">
+		<div className="fade-in w-full min-w-0 animate-in space-y-1 overflow-hidden pb-20 duration-500">
 			{/* Top Bar - Sharp Header */}
-			<div className="flex flex-col justify-between gap-6 border border-[#dbe7ff] bg-white p-8 xl:flex-row xl:items-end">
-				<div className="space-y-2">
-					<span className="font-black text-[10px] text-slate-400 uppercase tracking-[0.3em]">
-						Order History
+			<div className="flex w-full min-w-0 flex-col justify-between gap-6 border border-[#dbe7ff] bg-white p-4 sm:p-8 xl:flex-row xl:items-end">
+				<div className="min-w-0 space-y-2 text-center sm:text-left">
+					<span className="block font-black text-[10px] text-slate-400 uppercase tracking-[0.3em]">
+						Operations Ledger
 					</span>
-					<h2 className="font-black text-3xl text-[#071a78] uppercase tracking-tighter">
+					<h2 className="truncate font-black text-2xl text-[#071a78] uppercase tracking-tighter sm:text-3xl">
 						My Orders
 					</h2>
-					<p className="max-w-xl font-bold text-slate-400 text-sm">
+					<p className="max-w-xl font-bold text-slate-400 text-xs sm:text-sm">
 						Track your ticket purchases, order status, and complete transaction
 						history.
 					</p>
 				</div>
 
-				<div className="flex flex-col items-center gap-4 md:flex-row">
+				<div className="flex w-full flex-col items-stretch gap-3 md:w-auto md:flex-row md:items-center">
 					<div className="relative w-full md:w-72">
 						<Search
 							className="absolute top-1/2 left-4 -translate-y-1/2 text-slate-400"
@@ -182,11 +182,11 @@ export function OrdersView() {
 							placeholder="Reference lookup..."
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
-							className="h-12 rounded-none border-[#dbe7ff] bg-white pl-11 font-black text-xs uppercase tracking-widest shadow-sm"
+							className="h-10 w-full rounded-none border-[#dbe7ff] bg-white pl-11 font-black text-[10px] uppercase tracking-widest shadow-sm sm:h-12 sm:text-xs"
 						/>
 					</div>
 
-					<div className="flex w-full items-center gap-3 border border-[#dbe7ff] bg-white p-1.5 shadow-sm md:w-auto">
+					<div className="flex w-full items-center gap-3 border border-[#dbe7ff] bg-white p-1 shadow-sm md:w-auto">
 						<Select
 							value={status}
 							onChange={(e) => {
@@ -195,7 +195,7 @@ export function OrdersView() {
 								);
 								setPage(1);
 							}}
-							className="h-9 min-w-[140px] rounded-none border-none bg-slate-50 font-black text-[10px] text-slate-500 uppercase tracking-widest"
+							className="h-8 min-w-[120px] rounded-none border-none bg-slate-50 font-black text-[9px] text-slate-500 uppercase tracking-widest sm:min-w-[140px] sm:text-[10px]"
 						>
 							<option value="">All Streams</option>
 							<option value="PENDING">Pending</option>
@@ -207,7 +207,7 @@ export function OrdersView() {
 			</div>
 
 			{/* Quick Stats Matrix - Sharp */}
-			<div className="grid grid-cols-1 gap-1 md:grid-cols-3">
+			<div className="grid w-full min-w-0 grid-cols-1 gap-2 md:grid-cols-3 md:gap-1">
 				<QuickStat
 					label="Total Orders"
 					value={ordersQuery.data?.meta.total ?? 0}
@@ -236,7 +236,8 @@ export function OrdersView() {
 				/>
 			</div>
 
-			<div className="overflow-hidden border border-[#dbe7ff] bg-white shadow-sm">
+			{/* Desktop Table View */}
+			<div className="hidden w-full overflow-hidden border border-[#dbe7ff] bg-white shadow-sm md:block">
 				<DataTable
 					columns={columns}
 					data={ordersQuery.data?.data ?? []}
@@ -244,6 +245,83 @@ export function OrdersView() {
 					onPageChange={setPage}
 					isLoading={ordersQuery.isLoading || eventsQuery.isLoading}
 				/>
+			</div>
+
+			{/* Mobile Card View */}
+			<div className="w-full min-w-0 space-y-2 md:hidden">
+				{ordersQuery.isLoading ? (
+					Array.from({ length: 3 }).map((_, i) => (
+						<div
+							key={i}
+							className="h-32 animate-pulse border border-[#dbe7ff] bg-white"
+						/>
+					))
+				) : ordersQuery.data?.data.length === 0 ? (
+					<div className="border border-[#dbe7ff] border-dashed bg-white py-12 text-center">
+						<p className="px-4 font-black text-[9px] text-slate-400 uppercase tracking-widest">
+							No records found in protocol
+						</p>
+					</div>
+				) : (
+					ordersQuery.data?.data.map((order: OrderRecord) => {
+						const event = eventMap.get(order.eventId);
+						return (
+							<div
+								key={order.id}
+								className="space-y-4 border border-[#dbe7ff] bg-white p-4 shadow-sm transition-colors active:bg-slate-50"
+							>
+								<div className="flex items-start justify-between gap-3">
+									<div className="flex min-w-0 items-center gap-3">
+										<div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden border border-slate-100 bg-white">
+											{event?.thumbnail ? (
+												<Image
+													src={event.thumbnail}
+													alt=""
+													width={40}
+													height={40}
+													className="h-full w-full object-cover"
+												/>
+											) : (
+												<ShoppingBag size={14} className="text-slate-200" />
+											)}
+										</div>
+										<div className="min-w-0">
+											<p className="truncate font-black text-[11px] text-slate-900 uppercase tracking-tight sm:text-xs">
+												{event?.name || "Unidentified Asset"}
+											</p>
+											<p className="mt-0.5 font-black font-mono text-[8px] text-slate-400 uppercase tracking-[0.2em]">
+												ORD-{order.id.slice(-8).toUpperCase()}
+											</p>
+										</div>
+									</div>
+									<Badge
+										variant={statusVariant[order.status] ?? "default"}
+										className="shrink-0 border-none bg-slate-100 px-2 py-0.5 font-black text-[8px] uppercase tracking-widest"
+									>
+										{order.status}
+									</Badge>
+								</div>
+
+								<div className="flex items-center justify-between border-slate-50 border-t pt-3">
+									<div className="flex items-center gap-2 text-slate-400">
+										<Calendar size={10} />
+										<span className="font-black text-[8px] uppercase tracking-[0.2em]">
+											{format(new Date(order.createdAt), "dd MMM yyyy")}
+										</span>
+									</div>
+									<div className="flex items-center gap-3">
+										<button
+											type="button"
+											className="h-8 bg-[#030370] px-4 font-black text-[8px] text-white uppercase tracking-widest transition-all hover:bg-slate-900 active:scale-95"
+										>
+											View Protocol
+										</button>
+									</div>
+								</div>
+							</div>
+						);
+					})
+				)}
 			</div>
 		</div>
 	);
@@ -267,18 +345,18 @@ function QuickStat({
 	};
 
 	return (
-		<div className="group flex items-center justify-between border border-[#dbe7ff] bg-white p-6 transition-all hover:bg-slate-50">
-			<div>
-				<p className="font-black text-[9px] text-slate-400 uppercase tracking-[0.2em]">
+		<div className="group flex w-full min-w-0 items-center justify-between border border-[#dbe7ff] bg-white p-4 transition-all hover:bg-slate-50 sm:p-6">
+			<div className="min-w-0 flex-1">
+				<p className="truncate font-black text-[9px] text-slate-400 uppercase tracking-[0.2em]">
 					{label}
 				</p>
-				<p className="mt-1 font-black text-2xl text-slate-900 uppercase tracking-tighter">
+				<p className="mt-1 truncate font-black text-slate-900 text-xl uppercase tracking-tighter sm:text-2xl">
 					{value}
 				</p>
 			</div>
 			<div
 				className={cn(
-					"flex h-12 w-12 items-center justify-center border shadow-inner transition-transform group-hover:scale-110",
+					"flex h-10 w-10 shrink-0 items-center justify-center border shadow-inner transition-transform group-hover:scale-110 sm:h-12 sm:w-12",
 					accents[accent],
 				)}
 			>

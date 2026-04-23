@@ -8,7 +8,7 @@ export const orderSchema = z.object({
 	attendeeId: z.string().cuid(),
 	eventId: z.string().cuid(),
 	status: z.enum(["PENDING", "COMPLETED", "CANCELLED"]),
-	deletedAt: z.date().nullable(),
+	totalAmount: z.number(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
 }) satisfies z.ZodType<Order>;
@@ -18,12 +18,12 @@ export const createOrderSchema = orderSchema
 		id: true,
 		createdAt: true,
 		updatedAt: true,
-		deletedAt: true,
 		status: true,
 	})
 	.extend({
 		attendeeId: z.string().cuid(),
 		eventId: z.string().cuid(),
+		totalAmount: z.number().optional(),
 	});
 
 export const updateOrderSchema = createOrderSchema.partial().extend({

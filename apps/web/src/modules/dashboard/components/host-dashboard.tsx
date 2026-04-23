@@ -11,6 +11,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { cn } from "@/core/lib/cn";
 import { useAuth } from "@/core/providers/auth-provider";
 import { useEvents } from "@/modules/events";
 import { useOrders } from "@/modules/orders";
@@ -20,28 +21,28 @@ import { useDashboardAnalytics } from "../hooks/use-dashboard-analytics";
 // Loading skeleton component
 function MetricCardSkeleton() {
 	return (
-		<div className="rounded-2xl border border-slate-200 bg-white p-6">
+		<div className="border border-[#dbe7ff] bg-white p-6">
 			<div className="flex items-start justify-between gap-3">
 				<div className="min-w-0 flex-1">
-					<div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
-					<div className="mt-2 h-8 w-20 animate-pulse rounded bg-slate-200" />
-					<div className="mt-2 h-3 w-32 animate-pulse rounded bg-slate-200" />
+					<div className="h-4 w-24 animate-pulse bg-slate-100" />
+					<div className="mt-2 h-8 w-20 animate-pulse bg-slate-100" />
+					<div className="mt-2 h-3 w-32 animate-pulse bg-slate-100" />
 				</div>
-				<div className="h-11 w-11 animate-pulse rounded-xl bg-slate-200" />
+				<div className="h-10 w-10 animate-pulse border border-slate-100 bg-slate-50" />
 			</div>
 		</div>
 	);
 }
 
-function StatusCardSkeleton() {
+function _StatusCardSkeleton() {
 	return (
-		<div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+		<div className="border border-[#dbe7ff] bg-slate-50 p-4">
 			<div className="flex items-center justify-between gap-3">
 				<div className="min-w-0 flex-1">
-					<div className="h-4 w-16 animate-pulse rounded bg-slate-200" />
-					<div className="mt-1 h-8 w-12 animate-pulse rounded bg-slate-200" />
+					<div className="h-4 w-16 animate-pulse bg-slate-100" />
+					<div className="mt-1 h-8 w-12 animate-pulse bg-slate-100" />
 				</div>
-				<div className="h-3.5 w-3.5 animate-pulse rounded-full bg-slate-200" />
+				<div className="h-3.5 w-3.5 animate-pulse border border-slate-100 bg-slate-50" />
 			</div>
 		</div>
 	);
@@ -92,7 +93,6 @@ export function HostDashboard() {
 		() => hostEvents.filter((event) => event.status === "CANCELLED").length,
 		[hostEvents],
 	);
-	const allEventsTotal = hostEvents.length;
 
 	const pendingOrdersTotal = orders.filter(
 		(o) => o.status === "PENDING",
@@ -131,30 +131,37 @@ export function HostDashboard() {
 		analyticsQuery.isLoading;
 
 	return (
-		<div className="space-y-8">
-			{/* Create Event (home first) */}
-			<div className="relative overflow-hidden rounded-2xl border border-[#dbe7ff] bg-gradient-to-br from-[#030370]/5 via-white to-[#245ed1]/5 p-6">
-				<div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-					<div className="min-w-0">
-						<h2 className="font-bold text-[#071a78] text-xl">
-							Create your next event
+		<div className="fade-in w-full max-w-full animate-in space-y-1 overflow-x-hidden pb-20 duration-500">
+			{/* Welcome Banner - Sharp Header */}
+			<div className="group relative overflow-hidden border border-[#dbe7ff] bg-white p-6 sm:p-10">
+				<div className="absolute top-0 right-0 p-10 opacity-5 transition-transform duration-700 group-hover:scale-110">
+					<Zap size={160} className="hidden sm:block" />
+				</div>
+				<div className="relative z-10 flex flex-col gap-6 sm:gap-8 md:flex-row md:items-center md:justify-between">
+					<div className="space-y-2 text-center md:text-left">
+						<span className="font-black text-[#030370] text-[10px] uppercase tracking-[0.4em]">
+							Host Control
+						</span>
+						<h2 className="font-black text-2xl text-[#071a78] uppercase tracking-tighter sm:text-3xl">
+							Operational Dashboard
 						</h2>
-						<p className="mt-1 text-slate-600">
-							Create and manage your events from one place.
+						<p className="max-w-xl font-bold text-slate-400 text-xs sm:text-sm">
+							Monitor event performance, track attendee deployments, and manage
+							revenue streams with precision.
 						</p>
 					</div>
 					<Link
 						href="/events/create"
-						className="!text-white inline-flex items-center justify-center gap-2 rounded-xl bg-[#030370] px-5 py-3 font-semibold shadow-[0_14px_40px_rgba(3,3,112,0.25)] transition-colors hover:bg-[#030370]/90"
+						className="flex h-12 w-full items-center justify-center gap-3 bg-[#030370] px-8 font-black text-[10px] text-white! uppercase tracking-[0.2em] shadow-xl transition-all hover:bg-slate-900 active:scale-95 sm:h-14 md:w-auto"
 					>
-						<Plus className="h-5 w-5" />
-						Create event
+						<Plus className="h-4 w-4" />
+						Initiate New Event
 					</Link>
 				</div>
 			</div>
 
-			{/* Key metrics */}
-			<div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+			{/* Key Metrics Matrix - Sharp */}
+			<div className="grid grid-cols-1 gap-1 md:grid-cols-2 lg:grid-cols-4">
 				{isMetricsLoading ? (
 					<>
 						<MetricCardSkeleton />
@@ -167,22 +174,22 @@ export function HostDashboard() {
 						<MetricCard
 							icon={<Zap className="h-5 w-5" />}
 							label="Total Events"
-							value={allEventsTotal}
-							subLabel="Draft + Published + Completed"
+							value={hostEvents.length}
+							subLabel="Global Inventory"
 							accent="blue"
 						/>
 						<MetricCard
 							icon={<Users className="h-5 w-5" />}
-							label="Total Attendees"
+							label="Attendees"
 							value={attendeesCount}
-							subLabel="Across your host events"
+							subLabel="Verified Deployment"
 							accent="green"
 						/>
 						<MetricCard
 							icon={<ClipboardList className="h-5 w-5" />}
 							label="Active Orders"
 							value={activeOrdersTotal}
-							subLabel={`Conversion: ${conversionRate.toFixed(1)}%`}
+							subLabel={`Conv. Rate: ${conversionRate.toFixed(1)}%`}
 							accent="amber"
 						/>
 						<MetricCard
@@ -193,111 +200,106 @@ export function HostDashboard() {
 								currency: "INR",
 								maximumFractionDigits: 0,
 							}).format(revenue)}
-							subLabel="Successful payments only"
+							subLabel="Settled Settlements"
 							accent="violet"
 						/>
 					</>
 				)}
 			</div>
 
-			{/* Charts + event overview */}
-			<div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-				<div className="rounded-2xl border border-[#dbe7ff] bg-white p-6 lg:col-span-1">
-					<h3 className="font-semibold text-[#071a78] text-lg">
-						Orders status
-					</h3>
-					<p className="mt-1 text-slate-600 text-sm">
-						Pending, completed, and cancelled orders across your events.
-					</p>
+			{/* Charts + overview - Sharp Grid */}
+			<div className="grid grid-cols-1 gap-1 lg:grid-cols-3">
+				<div className="border border-[#dbe7ff] bg-white p-8 lg:col-span-1">
+					<div className="mb-6 border-slate-100 border-b pb-6">
+						<h3 className="font-black text-[#071a78] text-lg uppercase tracking-tight">
+							Order Pipeline
+						</h3>
+						<p className="mt-1 font-black text-[10px] text-slate-400 uppercase tracking-widest">
+							Current transaction status
+						</p>
+					</div>
 
-					{isMetricsLoading ? (
-						<div className="mt-4 flex h-72 items-center justify-center">
-							<div className="h-48 w-48 animate-pulse rounded-full bg-slate-200" />
-						</div>
-					) : (
-						<>
-							<div className="mt-4 h-72">
-								<ResponsiveContainer width="100%" height="100%">
-									<PieChart>
-										<Tooltip
-											formatter={(value: unknown) => {
-												const n =
-													typeof value === "number" ? value : Number(value);
-												return n.toLocaleString("en-IN");
-											}}
-										/>
-										<Pie
-											data={orderStatusPieData}
-											dataKey="value"
-											nameKey="name"
-											cx="50%"
-											cy="50%"
-											innerRadius={55}
-											outerRadius={95}
-											paddingAngle={3}
-										>
-											{orderStatusPieData.map((entry) => (
-												<Cell key={entry.name} fill={entry.color} />
-											))}
-										</Pie>
-									</PieChart>
-								</ResponsiveContainer>
-							</div>
+					<div className="relative h-64">
+						<ResponsiveContainer width="100%" height="100%">
+							<PieChart>
+								<Tooltip
+									contentStyle={{
+										borderRadius: "0px",
+										border: "1px solid #dbe7ff",
+										boxShadow: "0 10px 30px rgba(3,3,112,0.1)",
+										fontSize: "10px",
+										fontWeight: "900",
+										textTransform: "uppercase",
+									}}
+								/>
+								<Pie
+									data={orderStatusPieData}
+									dataKey="value"
+									nameKey="name"
+									cx="50%"
+									cy="50%"
+									innerRadius={60}
+									outerRadius={85}
+									paddingAngle={2}
+									stroke="none"
+								>
+									{orderStatusPieData.map((entry) => (
+										<Cell key={entry.name} fill={entry.color} />
+									))}
+								</Pie>
+							</PieChart>
+						</ResponsiveContainer>
+					</div>
 
-							<div className="mt-4 space-y-2">
-								{orderStatusPieData.map((d) => (
-									<LegendRow
-										key={d.name}
-										label={d.name}
-										value={d.value}
-										color={d.color}
-									/>
-								))}
-							</div>
-						</>
-					)}
+					<div className="mt-6 space-y-1">
+						{orderStatusPieData.map((d) => (
+							<LegendRow
+								key={d.name}
+								label={d.name}
+								value={d.value}
+								color={d.color}
+							/>
+						))}
+					</div>
 				</div>
 
-				<div className="space-y-6 lg:col-span-2">
-					{isMetricsLoading ? (
-						<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-							<StatusCardSkeleton />
-							<StatusCardSkeleton />
-							<StatusCardSkeleton />
-							<StatusCardSkeleton />
-						</div>
-					) : (
-						<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-							<StatusCard
-								label="Draft"
-								value={draftEventsTotal}
-								color="#3b82f6"
-							/>
-							<StatusCard
-								label="Published"
-								value={publishedEventsTotal}
-								color="#0a4bb8"
-							/>
-							<StatusCard
-								label="Completed"
-								value={completedEventsTotal}
-								color="#8b5cf6"
-							/>
-							<StatusCard
-								label="Cancelled"
-								value={cancelledEventsTotal}
-								color="#ef4444"
-							/>
-						</div>
-					)}
+				<div className="space-y-1 lg:col-span-2">
+					<div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+						<StatusCard
+							label="Draft Protocol"
+							value={draftEventsTotal}
+							color="#3b82f6"
+						/>
+						<StatusCard
+							label="Live Deployment"
+							value={publishedEventsTotal}
+							color="#0a4bb8"
+						/>
+						<StatusCard
+							label="Completed Ops"
+							value={completedEventsTotal}
+							color="#8b5cf6"
+						/>
+						<StatusCard
+							label="Aborted Ops"
+							value={cancelledEventsTotal}
+							color="#ef4444"
+						/>
+					</div>
 
-					<div className="rounded-2xl border border-[#dbe7ff] bg-white p-6">
-						<h3 className="font-semibold text-[#071a78] text-lg">
-							Dashboard focus
-						</h3>
-						<p className="mt-1 text-slate-600 text-sm">
+					<div className="border border-[#dbe7ff] bg-white p-8">
+						<div className="mb-6 border-slate-100 border-b pb-6">
+							<h3 className="font-black text-[#071a78] text-lg uppercase tracking-tight">
+								Dashboard Focus
+							</h3>
+							<p className="mt-1 font-black text-[10px] text-slate-400 uppercase tracking-widest">
+								Operational Guidance
+							</p>
+						</div>
+						<p className="font-bold text-slate-400 text-sm leading-relaxed">
 							Use the Events page to manage event records. This dashboard stays
-							focused on analytics, orders, and operational health.
+							focused on real-time analytics, order processing, and the overall
+							health of your operational assets.
 						</p>
 					</div>
 				</div>
@@ -321,45 +323,47 @@ function MetricCard({
 }) {
 	const styles = {
 		blue: {
-			bg: "bg-[#030370]/5",
-			border: "border-[#030370]/15",
-			text: "text-[#030370]",
-			chip: "bg-[#030370] text-white",
+			bg: "bg-blue-50/30 border-blue-100",
+			text: "text-blue-600",
 		},
 		green: {
-			bg: "bg-[#10b981]/5",
-			border: "border-[#10b981]/15",
-			text: "text-[#059669]",
-			chip: "bg-[#10b981] text-white",
+			bg: "bg-emerald-50/30 border-emerald-100",
+			text: "text-emerald-600",
 		},
 		amber: {
-			bg: "bg-[#f59e0b]/5",
-			border: "border-[#f59e0b]/15",
-			text: "text-[#d97706]",
-			chip: "bg-[#f59e0b] text-white",
+			bg: "bg-amber-50/30 border-amber-100",
+			text: "text-amber-600",
 		},
 		violet: {
-			bg: "bg-[#8b5cf6]/5",
-			border: "border-[#8b5cf6]/15",
-			text: "text-[#6d28d9]",
-			chip: "bg-[#8b5cf6] text-white",
+			bg: "bg-violet-50/30 border-violet-100",
+			text: "text-violet-600",
 		},
 	}[accent];
 
 	return (
 		<div
-			className={`rounded-2xl border ${styles.border} bg-white ${styles.bg} p-6`}
+			className={cn(
+				"border bg-white p-6 transition-all hover:bg-slate-50",
+				styles.bg,
+			)}
 		>
-			<div className="flex items-start justify-between gap-3">
-				<div className="min-w-0">
-					<p className="truncate font-medium text-slate-600 text-sm">{label}</p>
-					<p className="mt-2 truncate font-bold text-3xl text-slate-900">
-						{value}
+			<div className="flex items-center justify-between">
+				<div>
+					<p className="font-black text-[10px] text-slate-400 uppercase tracking-widest">
+						{label}
 					</p>
-					<p className="mt-2 truncate text-slate-500 text-xs">{subLabel}</p>
+					<p className="mt-2 font-black text-2xl text-slate-900 tracking-tighter">
+						{value === null ? "-" : value}
+					</p>
+					<p className="mt-1 font-bold text-[10px] text-slate-400 uppercase tracking-tight">
+						{subLabel}
+					</p>
 				</div>
 				<div
-					className={`flex h-11 w-11 items-center justify-center rounded-xl ${styles.chip}`}
+					className={cn(
+						"flex h-10 w-10 items-center justify-center border border-white bg-white shadow-sm",
+						styles.text,
+					)}
 				>
 					{icon}
 				</div>
@@ -378,16 +382,14 @@ function LegendRow({
 	color: string;
 }) {
 	return (
-		<div className="flex items-center justify-between gap-3">
-			<div className="flex min-w-0 items-center gap-2">
-				<span
-					aria-hidden="true"
-					className="h-2.5 w-2.5 shrink-0 rounded-full"
-					style={{ backgroundColor: color }}
-				/>
-				<span className="truncate text-slate-700 text-sm">{label}</span>
+		<div className="flex items-center justify-between border border-slate-50 bg-[#f8fafc] px-3 py-2">
+			<div className="flex items-center gap-3">
+				<div className="h-2 w-2" style={{ backgroundColor: color }} />
+				<span className="font-black text-[10px] text-slate-500 uppercase tracking-widest">
+					{label}
+				</span>
 			</div>
-			<span className="font-semibold text-slate-900 text-sm">
+			<span className="font-black text-slate-900 text-xs">
 				{value.toLocaleString("en-IN")}
 			</span>
 		</div>
@@ -404,18 +406,19 @@ function StatusCard({
 	color: string;
 }) {
 	return (
-		<div className="rounded-2xl border border-[#dbe7ff] bg-slate-50 p-4">
-			<div className="flex items-center justify-between gap-3">
-				<div className="min-w-0">
-					<p className="font-medium text-slate-600 text-sm">{label}</p>
-					<p className="mt-1 font-bold text-2xl text-slate-900">
-						{value.toLocaleString("en-IN")}
-					</p>
-				</div>
+		<div className="group border border-[#dbe7ff] bg-white p-5 transition-all hover:bg-slate-50">
+			<div className="flex items-center justify-between">
+				<p className="font-black text-[10px] text-slate-400 uppercase tracking-widest">
+					{label}
+				</p>
 				<div
-					className="h-3.5 w-3.5 rounded-full"
-					style={{ backgroundColor: color }}
-				/>
+					className="flex h-10 w-10 items-center justify-center border border-slate-100 transition-transform group-hover:scale-110"
+					style={{ backgroundColor: `${color}10` }}
+				>
+					<span className="font-black text-lg" style={{ color }}>
+						{value.toLocaleString("en-IN")}
+					</span>
+				</div>
 			</div>
 		</div>
 	);

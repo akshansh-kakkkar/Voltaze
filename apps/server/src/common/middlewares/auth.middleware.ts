@@ -51,6 +51,7 @@ async function attachBearerSessionContext(
 		sessionId: session.id,
 		email: session.user.email,
 		role: session.user.role,
+		isHost: session.user.isHost,
 	};
 	authReq.user = session.user;
 }
@@ -69,6 +70,7 @@ async function attachBetterAuthContext(authReq: RequestWithAuth) {
 		sessionId: session.session.id,
 		email: session.user.email,
 		role: normalizeRole(session.user.role),
+		isHost: (session.user as { isHost?: boolean }).isHost ?? false,
 	};
 	authReq.user = session.user as typeof authReq.user;
 	return true;

@@ -17,6 +17,7 @@ export class OrdersController {
 			userId: authReq.auth.userId,
 			email: authReq.auth.email,
 			role: authReq.auth.role,
+			isHost: authReq.auth.isHost,
 		};
 	}
 
@@ -53,6 +54,26 @@ export class OrdersController {
 		const params = idParamSchema.parse(req.params);
 		await ordersService.delete(params.id, this.getActor(req));
 		res.status(204).send();
+	}
+
+	async downloadTicket(req: Request, res: Response) {
+		try {
+			const params = idParamSchema.parse(req.params);
+			const pdfBuffer = await ordersService.generateTicketPdf(
+				params.id,
+				this.getActor(req),
+			);
+
+			res.setHeader("Content-Type", "application/pdf");
+			res.setHeader(
+				"Content-Disposition",
+				`attachment; filename=ticket-${params.id.slice(0, 8)}.pdf`,
+			);
+			res.send(Buffer.from(pdfBuffer));
+		} catch (error) {
+			console.error("PDF Download Error:", error);
+			res.status(500).json({ message: "Failed to generate ticket PDF" });
+		}
 	}
 }
 

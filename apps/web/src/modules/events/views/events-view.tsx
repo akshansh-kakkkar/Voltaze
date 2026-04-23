@@ -4,7 +4,6 @@ import { ChevronRight, Hash, Search, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/core/lib/cn";
-import { useAuth } from "@/core/providers/auth-provider";
 import { EventCard } from "../components/event-card";
 import { useEvents } from "../hooks/use-events";
 
@@ -16,7 +15,6 @@ type TypeFilter = (typeof typeFilters)[number];
 type SortOption = "SOONEST" | "LATEST" | "ALPHA";
 
 export function EventsView() {
-	const { user } = useAuth();
 	const eventsQuery = useEvents({ limit: 100 });
 
 	const [query, setQuery] = useState("");
