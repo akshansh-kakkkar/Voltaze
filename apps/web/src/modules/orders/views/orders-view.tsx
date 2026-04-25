@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, ShoppingBag } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import { useEvents } from "@/modules/events";

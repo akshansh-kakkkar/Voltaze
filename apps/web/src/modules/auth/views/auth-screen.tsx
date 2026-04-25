@@ -58,48 +58,6 @@ const PASSWORD_RULES: PasswordRule[] = [
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function extractErrorMessage(error: unknown): string | null {
-	if (!error) {
-		return null;
-	}
-
-	if (error instanceof Error) {
-		return error.message;
-	}
-
-	if (typeof error === "object") {
-		const maybeRecord = error as Record<string, unknown>;
-		const fromMessage = maybeRecord.message;
-		if (typeof fromMessage === "string") {
-			return fromMessage;
-		}
-
-		const maybeNestedError = maybeRecord.error;
-		if (
-			typeof maybeNestedError === "object" &&
-			maybeNestedError !== null &&
-			typeof (maybeNestedError as Record<string, unknown>).message === "string"
-		) {
-			return (maybeNestedError as Record<string, string>).message;
-		}
-
-		const maybeData = maybeRecord.data;
-		if (
-			typeof maybeData === "object" &&
-			maybeData !== null &&
-			typeof (maybeData as Record<string, unknown>).message === "string"
-		) {
-			return (maybeData as Record<string, string>).message;
-		}
-	}
-
-	if (typeof error === "string") {
-		return error;
-	}
-
-	return null;
-}
-
 function getOAuthLoginError(searchParams: URLSearchParams): string | null {
 	const oauthError = searchParams.get("error")?.toLowerCase();
 	if (!oauthError) {

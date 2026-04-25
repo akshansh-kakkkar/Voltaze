@@ -29,7 +29,7 @@ export default function DashboardGroupLayout({
 	const [isNotificationDrawerOpen, setIsNotificationDrawerOpen] =
 		useState(false);
 
-	const _userSections: SidebarSection[] = [
+	const unifiedSections: SidebarSection[] = [
 		{
 			title: "Main menu",
 			items: [
@@ -66,17 +66,9 @@ export default function DashboardGroupLayout({
 				},
 			],
 		},
-	];
-
-	const _hostSections: SidebarSection[] = [
 		{
-			title: "Main menu",
+			title: "Event Management",
 			items: [
-				{
-					label: "Dashboard",
-					href: "/dashboard/events",
-					icon: <Home size={18} />,
-				},
 				{
 					label: "Create Event",
 					href: "/dashboard/events/create",
@@ -93,11 +85,6 @@ export default function DashboardGroupLayout({
 			title: "Operations",
 			items: [
 				{
-					label: "Orders",
-					href: "/dashboard/orders",
-					icon: <ClipboardList size={18} />,
-				},
-				{
 					label: "Attendees",
 					href: "/dashboard/attendees",
 					icon: <Users size={18} />,
@@ -109,65 +96,12 @@ export default function DashboardGroupLayout({
 				},
 			],
 		},
-	];
-
-	const unifiedSections: SidebarSection[] = [
-		{
-			title: "Main menu",
-			items: [
-				{ label: "Dashboard", href: "/dashboard", icon: <Home size={18} /> },
-				{ label: "Profile", href: "/profile", icon: <User size={18} /> },
-			],
-		},
-		{
-			title: "Tickets & Events",
-			items: [
-				{ label: "My Tickets", href: "/tickets", icon: <Ticket size={18} /> },
-			],
-		},
-		{
-			title: "Transactions",
-			items: [
-				{ label: "Orders", href: "/orders", icon: <CreditCard size={18} /> },
-				{
-					label: "Payments",
-					href: "/payments",
-					icon: <CreditCard size={18} />,
-				},
-			],
-		},
-		{
-			title: "Event Management",
-			items: [
-				{
-					label: "Create Event",
-					href: "/events/create",
-					icon: <PlusCircle size={18} />,
-				},
-				{ label: "Manage Events", href: "/events", icon: <Zap size={18} /> },
-			],
-		},
-		{
-			title: "Operations",
-			items: [
-				{
-					label: "Attendees",
-					href: "/attendees",
-					icon: <Users size={18} />,
-				},
-				{
-					label: "Check-ins",
-					href: "/check-ins",
-					icon: <Users size={18} />,
-				},
-			],
-		},
 		{
 			title: "Other",
 			items: [
 				{
 					label: "Notifications",
-					href: "/notifications",
+					href: "/dashboard/notifications",
 					icon: <Bell size={18} />,
 				},
 			],

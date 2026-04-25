@@ -23,7 +23,7 @@ const typeLabels: Record<string, string> = {
 	PASS_ISSUED: "Pass Issued",
 };
 
-const statusVariant: Record<string, "default" | "success" | "warning"> = {
+const _statusVariant: Record<string, "default" | "success" | "warning"> = {
 	UNREAD: "warning",
 	READ: "default",
 	ARCHIVED: "success",

@@ -328,7 +328,7 @@ export function CheckoutView({ eventId }: { eventId?: string }) {
 		orderId: string,
 		amount: number,
 		currency: string,
-		orderRefId: string,
+		_orderRefId: string,
 		customHandler?: (response: {
 			razorpay_order_id: string;
 			razorpay_payment_id: string;
