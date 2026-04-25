@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/core/lib/cn";
 import { useAuth } from "@/core/providers/auth-provider";
@@ -36,6 +37,7 @@ export function MarketingLayout({
 }) {
 	const { user, isAuthenticated, signOut } = useAuth();
 	const unreadQuery = useUnreadCount({ enabled: isAuthenticated });
+	const pathname = usePathname();
 
 	const [mobileOpen, setMobileOpen] = useState(false);
 	const [scrolled, setScrolled] = useState(false);
@@ -210,7 +212,7 @@ export function MarketingLayout({
 								{isAuthenticated ? (
 									<div className="flex items-center gap-4">
 										<Link
-											href="/events/create"
+											href="/dashboard/events/create"
 											className="!text-[#000066] hidden h-11 items-center gap-2 rounded-full border border-blue-200 bg-blue-50/80 px-6 font-black text-xs uppercase tracking-widest shadow-sm transition-all hover:bg-blue-100 active:scale-95 md:flex"
 										>
 											Create Event <Plus size={16} />
@@ -298,13 +300,13 @@ export function MarketingLayout({
 																	onClick={() => setIsProfileOpen(false)}
 																/>
 																<DropdownItem
-																	href="/tickets"
+																	href="/dashboard/tickets"
 																	label="Tickets"
 																	onClick={() => setIsProfileOpen(false)}
 																/>
 																<DropdownItem
-																	href="/liked"
-																	label="Liked"
+																	href="/dashboard/notifications"
+																	label="Notifications"
 																	onClick={() => setIsProfileOpen(false)}
 																/>
 															</div>
@@ -331,8 +333,13 @@ export function MarketingLayout({
 															</p>
 															<div className="space-y-2 sm:space-y-0">
 																<DropdownItem
-																	href="/dashboard/host"
-																	label="Host Dashboard"
+																	href="/dashboard/events"
+																	label="Manage Events"
+																	onClick={() => setIsProfileOpen(false)}
+																/>
+																<DropdownItem
+																	href="/dashboard/orders"
+																	label="Orders"
 																	onClick={() => setIsProfileOpen(false)}
 																/>
 															</div>
@@ -363,13 +370,13 @@ export function MarketingLayout({
 								) : (
 									<div className="flex items-center gap-3">
 										<Link
-											href="/auth/sign-in"
+											href={`/auth/sign-in?redirect=${encodeURIComponent(pathname || "/")}`}
 											className="px-4 font-black text-slate-900 text-sm uppercase tracking-widest transition-colors hover:text-blue-600"
 										>
 											Login
 										</Link>
 										<Link
-											href="/auth/sign-up"
+											href={`/auth/sign-up?redirect=${encodeURIComponent(pathname || "/")}`}
 											className="flex h-11 items-center rounded-full bg-[#000066] px-8 font-bold text-white! text-xs uppercase tracking-widest shadow-xl transition-all hover:scale-105 hover:bg-[#000044] active:scale-95"
 										>
 											Join Now

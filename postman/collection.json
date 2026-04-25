@@ -1,8 +1,8 @@
 {
 	"info": {
 		"_postman_id": "1e4fbf76-e8bb-4861-b2da-f467f4227a9f",
-		"name": "Voltaze API",
-		"description": "Postman collection for Voltaze server routes. Use Login (Seeded Admin) after running bun run db:seed for privileged endpoints. Authenticated requests use {{accessToken}}.",
+		"name": "UniEvent API",
+		"description": "Postman collection for UniEvent server routes. Use Login (Seeded Admin) after running bun run db:seed for privileged endpoints. Authenticated requests use {{accessToken}}.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"auth": {
@@ -335,7 +335,7 @@
 								"type": "text/javascript",
 								"exec": [
 									"const runStamp = Date.now();",
-									"pm.collectionVariables.set('eventName', `Voltaze Postman Event ${runStamp}`);"
+									"pm.collectionVariables.set('eventName', `UniEvent Postman Event ${runStamp}`);"
 								]
 							}
 						},
@@ -366,7 +366,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"name\": \"{{eventName}}\",\n  \"coverUrl\": \"https://images.unsplash.com/photo-1492684223066-81342ee5ff30\",\n  \"thumbnail\": \"https://images.unsplash.com/photo-1470229538611-16ba8c7ffbd7\",\n  \"venueName\": \"Voltaze Arena\",\n  \"address\": \"Bengaluru, Karnataka, India\",\n  \"latitude\": \"12.9716\",\n  \"longitude\": \"77.5946\",\n  \"timezone\": \"Asia/Kolkata\",\n  \"startDate\": \"2026-08-15T10:00:00.000Z\",\n  \"endDate\": \"2026-08-15T18:00:00.000Z\",\n  \"type\": \"PAID\",\n  \"mode\": \"OFFLINE\",\n  \"visibility\": \"PUBLIC\",\n  \"description\": \"Event created from Postman collection.\"\n}",
+							"raw": "{\n  \"name\": \"{{eventName}}\",\n  \"coverUrl\": \"https://images.unsplash.com/photo-1492684223066-81342ee5ff30\",\n  \"thumbnail\": \"https://images.unsplash.com/photo-1470229538611-16ba8c7ffbd7\",\n  \"venueName\": \"UniEvent Arena\",\n  \"address\": \"Bengaluru, Karnataka, India\",\n  \"latitude\": \"12.9716\",\n  \"longitude\": \"77.5946\",\n  \"timezone\": \"Asia/Kolkata\",\n  \"startDate\": \"2026-08-15T10:00:00.000Z\",\n  \"endDate\": \"2026-08-15T18:00:00.000Z\",\n  \"type\": \"PAID\",\n  \"mode\": \"OFFLINE\",\n  \"visibility\": \"PUBLIC\",\n  \"description\": \"Event created from Postman collection.\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1235,11 +1235,11 @@
 		},
 		{
 			"key": "seedAdminPassword",
-			"value": "AdminVoltaze@123"
+			"value": "AdminUniEvent@123"
 		},
 		{
 			"key": "seedEventSlug",
-			"value": "voltaze-product-summit-2026"
+			"value": "UniEvent-product-summit-2026"
 		},
 		{
 			"key": "seedTierName",

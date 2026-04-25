@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "voltaze",
+      "name": "UniEvent",
       "dependencies": {
         "@unievent/env": "workspace:*",
         "dayjs": "^1.11.20",

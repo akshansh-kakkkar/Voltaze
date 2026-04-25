@@ -138,7 +138,7 @@ export function CartWidget() {
 									</div>
 								</div>
 								<Link
-									href="/cart"
+									href="/checkout"
 									onClick={() => setIsOpen(false)}
 									className="!text-white flex h-14 items-center justify-center rounded-[18px] bg-[#000031] font-black text-[10px] uppercase tracking-[0.3em] shadow-[#000031]/10 shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
 								>

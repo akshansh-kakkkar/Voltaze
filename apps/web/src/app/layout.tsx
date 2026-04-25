@@ -1,28 +1,20 @@
-import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Space_Grotesk } from "next/font/google";
-import { AppProviders } from "@/core/providers/app-providers";
 import "./globals.css";
 
-const jakarta = Plus_Jakarta_Sans({
-	subsets: ["latin"],
-	variable: "--font-jakarta",
-});
+import type { Metadata } from "next";
+import { Poppins } from "next/font/google";
+import { AppProviders } from "@/core/providers/app-providers";
 
-const display = Space_Grotesk({
+const poppins = Poppins({
 	subsets: ["latin"],
-	variable: "--font-display",
+	weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+	variable: "--font-poppins",
 });
 
 export const metadata: Metadata = {
-	title: "UniEvent | Event Platform",
-	description:
-		"Discover events, view schedules, manage mobile tickets, and track readiness from one frontend experience.",
+	title: "UniEvent",
+	description: "Create, manage, and attend events with UniEvent",
 	icons: {
-		icon: [
-			{ url: "/favicon.png", type: "image/png" },
-			{ url: "/favicon.ico", type: "image/x-icon" },
-		],
-		apple: "/apple-touch-icon.png",
+		icon: "/assets/logo_circle_svg.svg",
 	},
 };
 
@@ -32,8 +24,8 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en">
-			<body className={`${jakarta.variable} ${display.variable}`}>
+		<html lang="en" className={poppins.variable}>
+			<body suppressHydrationWarning className="font-poppins antialiased">
 				<AppProviders>{children}</AppProviders>
 			</body>
 		</html>

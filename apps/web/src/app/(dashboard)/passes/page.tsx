@@ -1,10 +1,5 @@
-import { ProtectedRoute } from "@/core/components/protected-route";
-import { PassesView } from "@/modules/passes";
+import { redirect } from "next/navigation";
 
 export default function PassesPage() {
-	return (
-		<ProtectedRoute>
-			<PassesView />
-		</ProtectedRoute>
-	);
+	redirect("/tickets");
 }
