@@ -347,7 +347,7 @@ export class PaymentsService {
 				ticket.tierId,
 				(quantityByTier.get(ticket.tierId) ?? 0) + 1,
 			);
-			totalAmount += ticket.pricePaid * 100;
+			totalAmount += ticket.pricePaid;
 		}
 
 		return {
@@ -401,7 +401,7 @@ export class PaymentsService {
 				);
 			}
 
-			totalAmount += tier.price * item.quantity * 100;
+			totalAmount += tier.price * item.quantity;
 		}
 
 		return { checkoutItems, totalAmount };

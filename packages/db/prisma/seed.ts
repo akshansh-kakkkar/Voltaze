@@ -209,6 +209,7 @@ async function main() {
 			mode: EventMode.OFFLINE,
 			visibility: EventVisibility.PUBLIC,
 			status: EventStatus.PUBLISHED,
+			isApproved: true,
 			timezone: "Asia/Kolkata",
 		},
 	});
@@ -234,6 +235,7 @@ async function main() {
 			mode: EventMode.OFFLINE,
 			visibility: EventVisibility.PUBLIC,
 			status: EventStatus.CANCELLED,
+			isApproved: true,
 			timezone: "Asia/Kolkata",
 		},
 	});
@@ -255,6 +257,7 @@ async function main() {
 			mode: EventMode.ONLINE,
 			visibility: EventVisibility.PUBLIC,
 			status: EventStatus.COMPLETED,
+			isApproved: true,
 			timezone: "UTC",
 		},
 	});
@@ -274,6 +277,7 @@ async function main() {
 			mode: EventMode.ONLINE,
 			visibility: EventVisibility.PRIVATE,
 			status: EventStatus.DRAFT,
+			isApproved: false,
 			timezone: "Asia/Kolkata",
 		},
 	});
@@ -299,6 +303,55 @@ async function main() {
 			mode: EventMode.OFFLINE,
 			visibility: EventVisibility.PUBLIC,
 			status: EventStatus.PUBLISHED,
+			isApproved: true,
+			timezone: "Asia/Kolkata",
+		},
+	});
+
+	const comedyNight = await prisma.event.create({
+		data: {
+			name: "Laugh Out Loud: Comedy Night",
+			slug: "lol-comedy-night",
+			userId: hostA.id,
+			coverUrl:
+				"https://images.unsplash.com/photo-1516280440614-37939bbacd81?q=80&w=2070",
+			thumbnail:
+				"https://images.unsplash.com/photo-1516280440614-37939bbacd81?q=80&w=400",
+			description:
+				"Get ready for a night of rib-tickling laughter with some of the best stand-up comedians in the country.",
+			venueName: "The Laugh Club",
+			address: "Indiranagar, Bangalore, India",
+			startDate: new Date("2026-05-25T19:30:00Z"),
+			endDate: new Date("2026-05-25T22:00:00Z"),
+			type: EventType.PAID,
+			mode: EventMode.OFFLINE,
+			visibility: EventVisibility.PUBLIC,
+			status: EventStatus.PUBLISHED,
+			isApproved: true,
+			timezone: "Asia/Kolkata",
+		},
+	});
+
+	const aiSummit = await prisma.event.create({
+		data: {
+			name: "Generative AI Summit",
+			slug: "gen-ai-summit-2026",
+			userId: admin.id,
+			coverUrl:
+				"https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=2070",
+			thumbnail:
+				"https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=400",
+			description:
+				"Exploring the latest breakthroughs in Generative AI and LLMs. Keynotes from leading researchers and engineers.",
+			venueName: "Grand Ballroom, Tech Hotel",
+			address: "Cyber City, Hyderabad, India",
+			startDate: new Date("2026-08-20T10:00:00Z"),
+			endDate: new Date("2026-08-21T17:00:00Z"),
+			type: EventType.PAID,
+			mode: EventMode.OFFLINE,
+			visibility: EventVisibility.PUBLIC,
+			status: EventStatus.PUBLISHED,
+			isApproved: true,
 			timezone: "Asia/Kolkata",
 		},
 	});
@@ -309,7 +362,7 @@ async function main() {
 				eventId: techSummit.id,
 				name: "General Admission",
 				description: "Full access to all keynote sessions and exhibition area.",
-				price: 2999,
+				price: 299900,
 				quantity: 500,
 				salesStart: new Date("2026-02-01T00:00:00Z"),
 				salesEnd: new Date("2026-06-14T18:00:00Z"),
@@ -321,7 +374,7 @@ async function main() {
 				name: "VIP Pass",
 				description:
 					"Priority seating, exclusive lounge access, and dinner with speakers.",
-				price: 7999,
+				price: 799900,
 				quantity: 50,
 				salesStart: new Date("2026-02-01T00:00:00Z"),
 				salesEnd: new Date("2026-06-12T18:00:00Z"),
@@ -335,7 +388,7 @@ async function main() {
 				eventId: neonNights.id,
 				name: "Early Bird",
 				description: "Discounted entry for early supporters.",
-				price: 999,
+				price: 99900,
 				quantity: 200,
 				salesStart: new Date("2026-03-01T00:00:00Z"),
 				salesEnd: new Date("2026-04-15T00:00:00Z"),
@@ -346,7 +399,7 @@ async function main() {
 				eventId: neonNights.id,
 				name: "Regular Entry",
 				description: "Standard entry pass.",
-				price: 1999,
+				price: 199900,
 				quantity: 1000,
 				salesStart: new Date("2026-04-16T00:00:00Z"),
 				salesEnd: new Date("2026-07-20T12:00:00Z"),
@@ -372,7 +425,7 @@ async function main() {
 				eventId: hackathon.id,
 				name: "Participant",
 				description: "Team participant entry with coding arena access.",
-				price: 499,
+				price: 49900,
 				quantity: 800,
 				salesStart: new Date("2026-04-01T00:00:00Z"),
 				salesEnd: new Date("2026-09-10T23:59:00Z"),
@@ -387,6 +440,42 @@ async function main() {
 				quantity: 120,
 				salesStart: new Date("2026-04-01T00:00:00Z"),
 				salesEnd: new Date("2026-09-10T23:59:00Z"),
+			},
+		}),
+	]);
+
+	await Promise.all([
+		prisma.ticketTier.create({
+			data: {
+				eventId: comedyNight.id,
+				name: "Front Row",
+				price: 149900,
+				quantity: 50,
+				salesStart: new Date("2026-04-01T00:00:00Z"),
+				salesEnd: new Date("2026-05-25T18:00:00Z"),
+			},
+		}),
+		prisma.ticketTier.create({
+			data: {
+				eventId: comedyNight.id,
+				name: "General Admission",
+				price: 79900,
+				quantity: 150,
+				salesStart: new Date("2026-04-01T00:00:00Z"),
+				salesEnd: new Date("2026-05-25T19:00:00Z"),
+			},
+		}),
+	]);
+
+	await Promise.all([
+		prisma.ticketTier.create({
+			data: {
+				eventId: aiSummit.id,
+				name: "Delegate Pass",
+				price: 499900,
+				quantity: 300,
+				salesStart: new Date("2026-05-01T00:00:00Z"),
+				salesEnd: new Date("2026-08-19T18:00:00Z"),
 			},
 		}),
 	]);
@@ -476,7 +565,7 @@ async function main() {
 		await prisma.payment.create({
 			data: {
 				orderId: order.id,
-				amount: tier.price * input.quantity * 100,
+				amount: tier.price * input.quantity,
 				currency: "INR",
 				gateway: PaymentGateway.RAZORPAY,
 				transactionId: input.transactionId,
@@ -559,6 +648,7 @@ async function main() {
 		transactionId: "pay_hack_failed_001",
 	});
 
+	// Update sold counts
 	await prisma.ticketTier.update({
 		where: { id: techTiers[0].id },
 		data: { soldCount: 2 },
