@@ -42,27 +42,6 @@ function TicketsPageContent() {
 	const tickets = ticketsQuery.data?.data ?? [];
 	const events = eventsQuery.data?.data ?? [];
 
-	const eventMap = useMemo(() => {
-		const map = new Map();
-		for (const event of events) {
-			map.set(event.id, event);
-		}
-		return map;
-	}, [events]);
-
-	const filteredTickets = useMemo(() => {
-		return tickets.filter((ticket) => {
-			const matchesEvent =
-				eventFilter === "ALL" || ticket.eventId === eventFilter;
-			const eventName = eventMap.get(ticket.eventId)?.name.toLowerCase() || "";
-			const matchesSearch =
-				searchQuery === "" ||
-				ticket.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-				eventName.includes(searchQuery.toLowerCase());
-			return matchesEvent && matchesSearch;
-		});
-	}, [tickets, eventFilter, searchQuery, eventMap]);
-
 	const selectedTicket = useMemo(
 		() => tickets.find((t) => t.id === selectedTicketId) || null,
 		[tickets, selectedTicketId],

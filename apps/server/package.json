@@ -1,9 +1,12 @@
 {
-	"name": "server",
+	"name": "@unievent/server",
+	"version": "0.0.0",
+	"private": true,
 	"type": "module",
 	"main": "src/index.ts",
 	"scripts": {
 		"build": "tsdown",
+		"lint": "biome check .",
 		"check-types": "tsc -b",
 		"compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
 		"dev": "nodemon -w src -w ../../packages -e ts,json --exec \"bun run src/index.ts\"",
@@ -11,8 +14,6 @@
 	},
 	"dependencies": {
 		"@better-auth/infra": "^0.1.14",
-		"@better-auth/prisma-adapter": "^1.4.0",
-		"@types/qrcode": "^1.5.6",
 		"@unievent/db": "workspace:*",
 		"@unievent/env": "workspace:*",
 		"@unievent/schema": "workspace:*",
@@ -32,6 +33,7 @@
 		"@types/bun": "catalog:",
 		"@types/cors": "^2.8.17",
 		"@types/express": "^5.0.1",
+		"@types/qrcode": "^1.5.6",
 		"@unievent/config": "workspace:*",
 		"nodemon": "^3.1.14",
 		"tsdown": "^0.16.5",

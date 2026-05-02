@@ -23,12 +23,6 @@ const typeLabels: Record<string, string> = {
 	PASS_ISSUED: "Pass Issued",
 };
 
-const _statusVariant: Record<string, "default" | "success" | "warning"> = {
-	UNREAD: "warning",
-	READ: "default",
-	ARCHIVED: "success",
-};
-
 export function NotificationsView() {
 	const [page, setPage] = useState(1);
 	const [status, setStatus] = useState<string>("");
@@ -37,7 +31,7 @@ export function NotificationsView() {
 	const notificationsQuery = useNotifications({
 		page,
 		limit: 20,
-		status: (status || undefined) as "UNREAD" | "READ" | "ARCHIVED" | undefined,
+		status: (status || undefined) as "UNREAD" | "READ" | undefined,
 		type: (type || undefined) as
 			| "EVENT_CREATED"
 			| "EVENT_UPDATED"
@@ -84,7 +78,6 @@ export function NotificationsView() {
 						<option value="">All Statuses</option>
 						<option value="UNREAD">Unread</option>
 						<option value="READ">Read</option>
-						<option value="ARCHIVED">Archived</option>
 					</select>
 					<select
 						value={type}

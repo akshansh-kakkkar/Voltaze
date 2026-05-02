@@ -96,9 +96,11 @@ export function EventCard({ event, className = "" }: EventCardProps) {
 										key={i}
 										className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-slate-100"
 									>
-										<img
+										<Image
 											src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i + event.id}`}
 											alt="avatar"
+											width={24}
+											height={24}
 										/>
 									</div>
 								))}

@@ -2,7 +2,6 @@
 
 import {
 	Bell,
-	ClipboardList,
 	CreditCard,
 	Home,
 	PlusCircle,

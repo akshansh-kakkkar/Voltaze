@@ -1,4 +1,23 @@
-FROM oven/bun:1.3.6 AS deps
+FROM oven/bun:1.3.6 AS base
+
+# --- Prune Stage ---
+FROM base AS pruner
+WORKDIR /app
+RUN bun add -g turbo
+COPY . .
+RUN turbo prune @unievent/web --docker
+
+# --- Installer Stage ---
+FROM base AS installer
+WORKDIR /app
+
+# First copy json files to install dependencies
+COPY --from=pruner /app/out/json/ .
+COPY --from=pruner /app/out/bun.lock ./bun.lock
+RUN bun install --frozen-lockfile
+
+# --- Builder Stage ---
+FROM base AS builder
 WORKDIR /app
 
 ARG NEXT_PUBLIC_APP_URL
@@ -7,7 +26,7 @@ ARG NEXT_PUBLIC_API_URLS
 ARG NEXT_PUBLIC_SERVER_URL
 ARG NEXT_PUBLIC_SERVER_URLS
 ARG NEXT_PUBLIC_RAZORPAY_KEY_ID
-ARG DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/postgres
+ARG DATABASE_URL
 
 ENV NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
@@ -17,23 +36,31 @@ ENV NEXT_PUBLIC_SERVER_URLS=${NEXT_PUBLIC_SERVER_URLS}
 ENV NEXT_PUBLIC_RAZORPAY_KEY_ID=${NEXT_PUBLIC_RAZORPAY_KEY_ID}
 ENV DATABASE_URL=${DATABASE_URL}
 
-COPY package.json bun.lock turbo.json tsconfig.json ./
-COPY apps ./apps
-COPY packages ./packages
+COPY --from=installer /app/ .
+COPY --from=pruner /app/out/full/ .
 
-RUN bun install --frozen-lockfile
+# Generate Prisma client if needed (since web might depend on db/schema)
+RUN bun run db:generate || true
 
-WORKDIR /app/apps/web
-RUN bun run build
+RUN bun run build --filter=@unievent/web
 
-FROM oven/bun:1.3.6 AS runtime
+# --- Runner Stage ---
+FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=3001
 
-COPY --from=deps /app /app
+# Don't run production as root
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+USER nextjs
 
-WORKDIR /app/apps/web
+COPY --from=builder /app/apps/web/public ./apps/web/public
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+
 EXPOSE 3001
-CMD ["bun", "run", "start"]
+
+# The standalone build uses a server.js file
+CMD ["bun", "run", "apps/web/server.js"]

@@ -17,6 +17,7 @@ const allowedDevOrigins = (
 	.filter(Boolean);
 
 const nextConfig: NextConfig = {
+	output: "standalone",
 	typedRoutes: false,
 	allowedDevOrigins,
 	images: {
