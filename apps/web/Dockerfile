@@ -33,6 +33,7 @@ ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ENV NEXT_PUBLIC_RAZORPAY_KEY_ID=$NEXT_PUBLIC_RAZORPAY_KEY_ID
 
 # Build the web app
+ENV PATH="/app/node_modules/.bin:${PATH}"
 RUN bun run build --filter=@unievent/web
 
 # Runner phase

@@ -23,6 +23,7 @@ COPY --from=pruner /app/out/bun.lock ./bun.lock
 COPY turbo.json turbo.json
 
 # Generate Prisma Client
+ENV PATH="/app/node_modules/.bin:${PATH}"
 RUN bun run db:generate
 
 # Build the server
