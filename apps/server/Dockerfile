@@ -19,6 +19,7 @@ RUN bun install --frozen-lockfile --ignore-scripts
 FROM base AS builder
 COPY --from=installer /app/node_modules ./node_modules
 COPY --from=pruner /app/out/full/ .
+COPY --from=pruner /app/out/bun.lock ./bun.lock
 COPY turbo.json turbo.json
 
 # Generate Prisma Client

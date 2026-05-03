@@ -20,6 +20,7 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=installer /app/node_modules ./node_modules
 COPY --from=pruner /app/out/full/ .
+COPY --from=pruner /app/out/bun.lock ./bun.lock
 COPY turbo.json turbo.json
 
 # Build arguments for public env vars
