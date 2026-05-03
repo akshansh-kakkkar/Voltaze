@@ -1,69 +1,53 @@
-FROM oven/bun:1.3.6 AS base
-
-# --- Prune Stage ---
-FROM base AS pruner
+# Base image
+FROM oven/bun:1.1-slim AS base
 WORKDIR /app
+
+# Prune phase
+FROM base AS pruner
 RUN bun add -g turbo
 COPY . .
 RUN turbo prune @unievent/web --docker
 
-# --- Installer Stage ---
+# Installer phase
 FROM base AS installer
-WORKDIR /app
-
-# First copy json files to install dependencies
 COPY --from=pruner /app/out/json/ .
 COPY --from=pruner /app/out/bun.lock ./bun.lock
-ENV PRISMA_SKIP_POSTINSTALL_GENERATE=1
-RUN bun install --frozen-lockfile
+RUN bun install --frozen-lockfile --ignore-scripts
 
-# --- Builder Stage ---
+# Build phase
 FROM base AS builder
 WORKDIR /app
-
-ARG NEXT_PUBLIC_APP_URL
-ARG NEXT_PUBLIC_API_URL
-ARG NEXT_PUBLIC_API_URLS
-ARG NEXT_PUBLIC_SERVER_URL
-ARG NEXT_PUBLIC_SERVER_URLS
-ARG NEXT_PUBLIC_RAZORPAY_KEY_ID
-ARG DATABASE_URL
-
-ENV NEXT_TELEMETRY_DISABLED=1
-ENV NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
-ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-ENV NEXT_PUBLIC_API_URLS=${NEXT_PUBLIC_API_URLS}
-ENV NEXT_PUBLIC_SERVER_URL=${NEXT_PUBLIC_SERVER_URL}
-ENV NEXT_PUBLIC_SERVER_URLS=${NEXT_PUBLIC_SERVER_URLS}
-ENV NEXT_PUBLIC_RAZORPAY_KEY_ID=${NEXT_PUBLIC_RAZORPAY_KEY_ID}
-ENV DATABASE_URL=${DATABASE_URL}
-
-COPY --from=installer /app/ .
+COPY --from=installer /app/node_modules ./node_modules
 COPY --from=pruner /app/out/full/ .
+COPY turbo.json turbo.json
 
-# Generate Prisma client if needed (since web might depend on db/schema)
-RUN bun run db:generate || true
+# Build arguments for public env vars
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_APP_URL
+ARG NEXT_PUBLIC_RAZORPAY_KEY_ID
 
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
+ENV NEXT_PUBLIC_RAZORPAY_KEY_ID=$NEXT_PUBLIC_RAZORPAY_KEY_ID
+
+# Build the web app
 RUN bun run build --filter=@unievent/web
 
-# --- Runner Stage ---
-FROM base AS runner
+# Runner phase
+FROM node:20-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3001
+ENV HOSTNAME="0.0.0.0"
 
-# Don't run production as root
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-USER nextjs
-
+# Automatically leverage output traces to reduce image size
+# https://nextjs.org/docs/advanced-features/output-file-tracing
 COPY --from=builder /app/apps/web/public ./apps/web/public
-COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder /app/apps/web/.next/standalone ./
+COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
 
 EXPOSE 3001
 
-# The standalone build uses a server.js file
-CMD ["bun", "server.js"]
+# The standalone output includes its own node_modules, so we just run the server
+CMD ["node", "apps/web/server.js"]
