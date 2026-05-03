@@ -1,5 +1,5 @@
 # Base image
-FROM oven/bun:1.1-slim AS base
+FROM oven/bun:1.3-slim AS base
 WORKDIR /app
 
 # Prune phase
