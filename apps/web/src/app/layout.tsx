@@ -2,10 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Space_Grotesk } from "next/font/google";
 import { AppProviders } from "@/core/providers/app-providers";
 import "./globals.css";
-
-import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
-import { AppProviders } from "@/core/providers/app-providers";
 
 const poppins = Poppins({
 	subsets: ["latin"],
