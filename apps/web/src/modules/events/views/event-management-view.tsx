@@ -31,8 +31,7 @@ export function EventManagementView({ eventId }: EventManagementViewProps) {
 	const tiersQuery = useEventTicketTiers(eventId);
 	const attendeesQuery = useAttendees({ eventId });
 	const ordersQuery = useOrders({ eventId });
-	const updateEvent = useUpdateEvent(eventId);
-	const [publishError, setPublishError] = useState("");
+	const updateEventMutation = useUpdateEvent(eventId);
 
 	const event = eventQuery.data;
 	const tiers = tiersQuery.data?.data ?? [];
@@ -91,71 +90,28 @@ export function EventManagementView({ eventId }: EventManagementViewProps) {
 
 	return (
 		<div className="space-y-6">
-			{/* ── DRAFT: Publish CTA ── */}
-			{event.status === "DRAFT" && (
-				<div className="overflow-hidden rounded-2xl border border-[#dbe7ff] bg-white shadow-sm">
-					<div className="bg-gradient-to-r from-[#030370] to-[#0a4bb8] px-6 py-5 text-white">
-						<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-							<div className="flex items-center gap-4">
-								<div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/15">
-									<Rocket className="h-6 w-6" />
-								</div>
-								<div>
-									<h3 className="font-black text-lg">Ready to go live?</h3>
-									<p className="mt-0.5 text-sm text-white/70">
-										Your event is in Draft. Publish it to submit for admin
-										approval — once approved it goes live on the discover page.
-									</p>
-								</div>
-							</div>
-							<button
-								type="button"
-								onClick={handlePublish}
-								disabled={updateEvent.isPending}
-								className="flex shrink-0 items-center gap-2 rounded-xl bg-white px-6 py-3 font-black text-[#030370] text-sm shadow-lg transition hover:bg-white/90 disabled:opacity-60"
-							>
-								{updateEvent.isPending ? (
-									<>
-										<Loader2 className="h-4 w-4 animate-spin" />
-										Publishing...
-									</>
-								) : (
-									<>
-										<Rocket className="h-4 w-4" />
-										Publish Event
-									</>
-								)}
-							</button>
-						</div>
-					</div>
-					{publishError && (
-						<p className="border-red-100 border-t bg-red-50 px-6 py-3 text-red-600 text-sm">
-							{publishError}
-						</p>
-					)}
-				</div>
-			)}
-
-			{/* ── PUBLISHED + awaiting admin approval ── */}
-			{event.status === "PUBLISHED" && !event.isApproved && (
-				<div className="flex items-center justify-between rounded-2xl border border-amber-100 bg-amber-50 p-6 shadow-sm">
+			{!event.isApproved && (
+				<div className="flex flex-col gap-4 rounded-2xl border border-amber-100 bg-amber-50 p-6 shadow-sm md:flex-row md:items-center md:justify-between">
 					<div className="flex items-center gap-4">
-						<div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
+						<div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
 							<Settings className="h-6 w-6 animate-pulse" />
 						</div>
 						<div>
 							<h3 className="font-black text-amber-900 text-lg">
-								Pending Admin Approval
+								{event.status === "DRAFT"
+									? "Finish Your Event Setup"
+									: "Pending Admin Approval"}
 							</h3>
 							<p className="text-amber-800/70 text-sm">
-								Your event has been submitted and is being reviewed. It will go
-								live on the discover page once approved.
+								{event.status === "DRAFT"
+									? "Your event is in Draft mode. Publish it to submit for admin review."
+									: "Your event has been submitted and is being reviewed. It will go live on the discover page once approved."}
 							</p>
 						</div>
 					</div>
 					<div className="hidden md:block">
 						<span className="rounded-full bg-amber-200/50 px-4 py-1.5 font-black text-amber-900 text-xs uppercase tracking-widest">
-							Under Review
+							Admin Action Required
 						</span>
 					</div>
 				</div>

@@ -89,6 +89,20 @@ export default function DashboardGroupLayout({
 				},
 			],
 		},
+		...(user?.role === "ADMIN"
+			? [
+					{
+						title: "Admin",
+						items: [
+							{
+								label: "Approvals",
+								href: "/dashboard/admin",
+								icon: <PlusCircle size={18} />,
+							},
+						],
+					},
+				]
+			: []),
 	];
 
 	const sections = unifiedSections;
