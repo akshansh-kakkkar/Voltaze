@@ -77,6 +77,7 @@ export const auth = betterAuth({
 		},
 	},
 	emailVerification: {
+		sendOnSignUp: true,
 		sendVerificationEmail: async (data: BetterAuthEmailHookPayload) => {
 			const verificationLink = data.url;
 			await sendEmailViaBrevo({
