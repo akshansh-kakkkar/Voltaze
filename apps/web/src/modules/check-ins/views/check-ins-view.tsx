@@ -7,7 +7,6 @@ import {
 	Download,
 	QrCode,
 	Search,
-	Trash2,
 	UserCheck,
 	X,
 } from "lucide-react";
@@ -16,11 +15,7 @@ import { useAttendees } from "@/modules/attendees";
 import { useEvents } from "@/modules/events";
 import { useValidatePass } from "@/modules/passes";
 import { QRScannerModal } from "../components/qr-scanner-modal";
-import {
-	useCheckIns,
-	useCreateCheckIn,
-	useDeleteCheckIn,
-} from "../hooks/use-check-ins";
+import { useCheckIns, useCreateCheckIn } from "../hooks/use-check-ins";
 
 // Skeleton loading component for table rows
 function TableRowSkeleton() {
@@ -37,9 +32,6 @@ function TableRowSkeleton() {
 			</td>
 			<td className="px-4 py-3">
 				<div className="h-4 w-32 animate-pulse rounded bg-slate-200" />
-			</td>
-			<td className="px-4 py-3">
-				<div className="h-8 w-8 animate-pulse rounded bg-slate-200" />
 			</td>
 		</tr>
 	);
@@ -119,7 +111,6 @@ export function CheckInsView() {
 	}, [visibleCheckIns, meta?.total]);
 
 	const createCheckIn = useCreateCheckIn();
-	const deleteCheckIn = useDeleteCheckIn();
 	const validatePass = useValidatePass();
 
 	// Duplicate detection
@@ -322,7 +313,9 @@ export function CheckInsView() {
 				</select>
 				<select
 					value={method}
-					onChange={(e) => handleMethodChange(e.target.value as typeof method)}
+					onChange={(e) =>
+						handleMethodChange(e.target.value as "ALL" | "QR_SCAN" | "MANUAL")
+					}
 					className="rounded-lg border border-slate-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#0a4bb8]"
 				>
 					<option value="ALL">All methods</option>
@@ -364,7 +357,6 @@ export function CheckInsView() {
 								<th className="px-4 py-3 text-left font-semibold text-slate-900 text-sm">
 									Timestamp
 								</th>
-								<th className="px-4 py-3 text-left font-semibold text-slate-900 text-sm" />
 							</tr>
 						</thead>
 						<tbody className="divide-y divide-slate-200">
@@ -378,7 +370,7 @@ export function CheckInsView() {
 								</>
 							) : filteredCheckIns.length === 0 ? (
 								<tr>
-									<td className="px-4 py-6 text-slate-600" colSpan={5}>
+									<td className="px-4 py-6 text-slate-600" colSpan={4}>
 										No check-ins found.
 									</td>
 								</tr>
@@ -406,17 +398,6 @@ export function CheckInsView() {
 										</td>
 										<td className="px-4 py-3 text-slate-600">
 											{new Date(checkIn.timestamp).toLocaleString("en-IN")}
-										</td>
-										<td className="px-4 py-3">
-											<button
-												type="button"
-												onClick={() => deleteCheckIn.mutate(checkIn.id)}
-												disabled={deleteCheckIn.isPending}
-												className="rounded p-1 text-slate-400 transition hover:bg-red-50 hover:text-red-500 disabled:opacity-40"
-												title="Delete check-in"
-											>
-												<Trash2 className="h-4 w-4" />
-											</button>
 										</td>
 									</tr>
 								))
