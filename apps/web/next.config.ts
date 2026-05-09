@@ -59,12 +59,30 @@ const allowedDevOrigins = (
 	.map((value) => value.trim())
 	.filter(Boolean);
 
+const backendTarget = (
+	process.env.NEXT_PUBLIC_API_URL ??
+	process.env.NEXT_PUBLIC_SERVER_URL ??
+	"http://localhost:3000"
+).replace(/\/+$/, "");
+
 const nextConfig: NextConfig = {
 	output: "standalone",
 	typedRoutes: false,
 	allowedDevOrigins,
+	async rewrites() {
+		return [
+			{
+				source: "/api/:path*",
+				destination: `${backendTarget}/:path*`,
+			},
+		];
+	},
 	images: {
 		remotePatterns: [
+			{
+				protocol: "https",
+				hostname: "**",
+			},
 			{
 				protocol: "https",
 				hostname: "lh3.googleusercontent.com",

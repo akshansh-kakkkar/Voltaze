@@ -1,13 +1,18 @@
 "use client";
 
+import { Html5QrcodeScanner } from "html5-qrcode";
 import {
+	AlertCircle,
+	Camera,
 	ChevronLeft,
 	ChevronRight,
 	QrCode,
 	Search,
 	Trash2,
+	X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { getApiErrorMessage } from "@/core/lib/api-error";
 import { useAttendees } from "@/modules/attendees/hooks/use-attendees";
 import {
 	useCheckIns,
@@ -40,6 +45,7 @@ function TableRowSkeleton() {
 const PAGE_SIZE = 50;
 
 export function EventCheckInsView({ eventId }: { eventId: string }) {
+	const [scannerMode, setScannerMode] = useState<"camera" | "manual">("camera");
 	const [method, _setMethod] = useState<"ALL" | "QR_SCAN" | "MANUAL">("ALL");
 	const [search, setSearch] = useState("");
 	const [page, setPage] = useState(1);
@@ -47,6 +53,10 @@ export function EventCheckInsView({ eventId }: { eventId: string }) {
 	// Action states
 	const [showScanner, setShowScanner] = useState(false);
 	const [qrCode, setQrCode] = useState("");
+	const [scannerKey, setScannerKey] = useState(0);
+	const [cameraError, setCameraError] = useState("");
+	const [qrError, setQrError] = useState("");
+	const [qrSuccess, setQrSuccess] = useState(false);
 
 	const _eventQuery = useEvent(eventId);
 	const checkInsQuery = useCheckIns({
@@ -84,27 +94,108 @@ export function EventCheckInsView({ eventId }: { eventId: string }) {
 	const createCheckIn = useCreateCheckIn();
 	const deleteCheckIn = useDeleteCheckIn();
 	const validatePass = useValidatePass();
+	const scannerId = useMemo(
+		() => `event-checkins-scanner-${scannerKey}`,
+		[scannerKey],
+	);
+	const isQrProcessing = validatePass.isPending || createCheckIn.isPending;
 
-	async function handleQrCheckIn() {
-		if (!qrCode.trim()) return;
-		try {
-			const result = await validatePass.mutateAsync({
-				code: qrCode.trim(),
-				eventId,
-			});
-			if (!result.valid || !result.pass) return;
+	const handleQrCheckIn = useCallback(
+		async (rawCode?: string) => {
+			const code = (rawCode ?? qrCode).trim();
+			if (!code) return;
 
-			await createCheckIn.mutateAsync({
-				attendeeId: result.pass.attendeeId,
-				eventId,
-				method: "QR_SCAN",
-			});
-			setQrCode("");
-			setShowScanner(false);
-		} catch (error) {
-			console.error("Check-in failed", error);
+			setQrError("");
+			setQrSuccess(false);
+			try {
+				const result = await validatePass.mutateAsync({
+					code,
+					eventId,
+				});
+				if (!result.valid || !result.pass) {
+					setQrError(result.message || "Invalid or already used pass.");
+					return;
+				}
+
+				await createCheckIn.mutateAsync({
+					attendeeId: result.pass.attendeeId,
+					eventId,
+					method: "QR_SCAN",
+				});
+
+				setQrSuccess(true);
+				setQrCode("");
+				setTimeout(() => {
+					setQrSuccess(false);
+					setShowScanner(false);
+				}, 1200);
+			} catch (error) {
+				setQrError(getApiErrorMessage(error, "Check-in failed"));
+			}
+		},
+		[createCheckIn, eventId, qrCode, validatePass],
+	);
+
+	useEffect(() => {
+		if (!showScanner || scannerMode !== "camera") {
+			return;
 		}
-	}
+
+		let scanner: Html5QrcodeScanner | null = null;
+		let isMounted = true;
+
+		const timeoutId = setTimeout(() => {
+			if (!isMounted) {
+				return;
+			}
+
+			const scannerElement = document.getElementById(scannerId);
+			if (!scannerElement) {
+				setCameraError("Scanner did not initialize. Please try again.");
+				return;
+			}
+
+			try {
+				scanner = new Html5QrcodeScanner(
+					scannerId,
+					{ fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1 },
+					false,
+				);
+
+				scanner.render(
+					(decodedText) => {
+						if (!isMounted || isQrProcessing) {
+							return;
+						}
+						void scanner?.clear().catch(() => {});
+						setCameraError("");
+						void handleQrCheckIn(decodedText);
+					},
+					() => {
+						// Ignore non-match frames.
+					},
+				);
+			} catch (error) {
+				if (!isMounted) {
+					return;
+				}
+
+				setCameraError(
+					error instanceof Error
+						? error.message
+						: "Failed to access camera. Check browser permissions.",
+				);
+			}
+		}, 100);
+
+		return () => {
+			isMounted = false;
+			clearTimeout(timeoutId);
+			if (scanner) {
+				void scanner.clear().catch(() => {});
+			}
+		};
+	}, [handleQrCheckIn, isQrProcessing, scannerId, scannerMode, showScanner]);
 
 	const filteredCheckIns = useMemo(() => {
 		const q = search.trim().toLowerCase();
@@ -269,44 +360,118 @@ export function EventCheckInsView({ eventId }: { eventId: string }) {
 
 			{showScanner && (
 				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-					<div className="w-full max-w-md scale-in animate-in overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-2xl duration-300">
-						<div className="flex items-center justify-between border-slate-50 border-b px-8 py-6">
+					<div className="w-full max-w-md overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-2xl">
+						<div className="flex items-center justify-between border-slate-100 border-b px-6 py-5">
 							<h3 className="font-black text-slate-900 text-xl tracking-tight">
 								QR Check-in
 							</h3>
 							<button
 								type="button"
-								onClick={() => setShowScanner(false)}
+								onClick={() => {
+									setShowScanner(false);
+									setQrCode("");
+									setQrError("");
+									setCameraError("");
+									setQrSuccess(false);
+								}}
 								className="rounded-xl p-2 text-slate-400 hover:bg-slate-50"
 							>
-								<ChevronLeft className="rotate-90" />
+								<X className="h-5 w-5" />
 							</button>
 						</div>
-						<div className="p-8">
-							<div className="mb-6 flex h-48 w-full flex-col items-center justify-center rounded-2xl border-2 border-slate-200 border-dashed bg-slate-50">
-								<QrCode size={48} className="mb-4 text-slate-300" />
-								<p className="text-center font-semibold text-slate-400 text-sm">
-									Paste pass code below <br /> to simulate scan
-								</p>
-							</div>
-							<div className="space-y-4">
-								<input
-									type="text"
-									value={qrCode}
-									onChange={(e) => setQrCode(e.target.value)}
-									placeholder="Enter pass code..."
-									className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#030370]"
-								/>
-								<Button
-									className="w-full rounded-xl bg-[#030370] py-6 font-black text-white uppercase tracking-widest hover:bg-[#030370]/90 disabled:opacity-50"
-									onClick={handleQrCheckIn}
-									disabled={!qrCode.trim() || createCheckIn.isPending}
+
+						<div className="space-y-4 p-6">
+							<div className="grid grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-1">
+								<button
+									type="button"
+									onClick={() => {
+										setScannerMode("camera");
+										setCameraError("");
+										setQrError("");
+										setScannerKey((prev) => prev + 1);
+									}}
+									className={`rounded-lg px-3 py-2 font-semibold text-sm transition ${
+										scannerMode === "camera"
+											? "bg-[#030370] text-white"
+											: "text-slate-700 hover:bg-white"
+									}`}
 								>
-									{createCheckIn.isPending
-										? "Processing..."
-										: "Validate & Check In"}
-								</Button>
+									<span className="inline-flex items-center gap-2">
+										<Camera className="h-4 w-4" />
+										Camera
+									</span>
+								</button>
+								<button
+									type="button"
+									onClick={() => {
+										setScannerMode("manual");
+										setCameraError("");
+									}}
+									className={`rounded-lg px-3 py-2 font-semibold text-sm transition ${
+										scannerMode === "manual"
+											? "bg-[#030370] text-white"
+											: "text-slate-700 hover:bg-white"
+									}`}
+								>
+									Manual
+								</button>
 							</div>
+
+							{scannerMode === "camera" && (
+								<div className="space-y-3">
+									{cameraError ? (
+										<div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-red-800 text-sm">
+											<AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+											<p>{cameraError}</p>
+										</div>
+									) : (
+										<div
+											id={scannerId}
+											className="min-h-65 overflow-hidden rounded-2xl border-2 border-slate-200 border-dashed"
+										/>
+									)}
+									<p className="text-center text-slate-500 text-xs">
+										Point camera at attendee QR pass
+									</p>
+								</div>
+							)}
+
+							{scannerMode === "manual" && (
+								<div className="space-y-3">
+									<input
+										type="text"
+										value={qrCode}
+										onChange={(e) => setQrCode(e.target.value)}
+										onKeyDown={(e) => {
+											if (e.key === "Enter") {
+												void handleQrCheckIn();
+											}
+										}}
+										placeholder="Enter pass code..."
+										className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#030370]"
+									/>
+									<Button
+										className="w-full rounded-xl bg-[#030370] py-6 font-black text-white uppercase tracking-widest hover:bg-[#030370]/90 disabled:opacity-50"
+										onClick={() => void handleQrCheckIn()}
+										disabled={!qrCode.trim() || isQrProcessing}
+									>
+										{isQrProcessing ? "Processing..." : "Validate & Check In"}
+									</Button>
+								</div>
+							)}
+
+							{qrError && (
+								<div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-red-800 text-sm">
+									<AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+									<p>{qrError}</p>
+								</div>
+							)}
+
+							{qrSuccess && (
+								<div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 font-medium text-emerald-800 text-sm">
+									Check-in successful.
+								</div>
+							)}
 						</div>
 					</div>
 				</div>

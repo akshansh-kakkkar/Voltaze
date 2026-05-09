@@ -4,6 +4,7 @@ import {
 	AlertTriangle,
 	ChevronLeft,
 	ChevronRight,
+	Download,
 	QrCode,
 	Search,
 	Trash2,
@@ -14,6 +15,7 @@ import { useMemo, useState } from "react";
 import { useAttendees } from "@/modules/attendees";
 import { useEvents } from "@/modules/events";
 import { useValidatePass } from "@/modules/passes";
+import { QRScannerModal } from "../components/qr-scanner-modal";
 import {
 	useCheckIns,
 	useCreateCheckIn,
@@ -53,15 +55,12 @@ export function CheckInsView() {
 
 	// Modal state
 	const [showManual, setShowManual] = useState(false);
-	const [showScanner, setShowScanner] = useState(false);
+	const [showQrScanner, setShowQrScanner] = useState(false);
+	const [qrScannerEventId, setQrScannerEventId] = useState("");
 
 	// Manual check-in form
 	const [manualEventId, setManualEventId] = useState("");
 	const [manualAttendeeId, setManualAttendeeId] = useState("");
-
-	// QR scanner
-	const [qrEventId, setQrEventId] = useState("");
-	const [qrCode, setQrCode] = useState("");
 
 	const eventsQuery = useEvents({
 		page: 1,
@@ -101,21 +100,15 @@ export function CheckInsView() {
 	const visibleCheckIns = checkInsQuery.data?.data ?? [];
 	const meta = checkInsQuery.data?.meta;
 
-	// Fetch attendees for name resolution (current page only)
-	const allAttendeesQuery = useAttendees({
-		page: 1,
-		limit: 100,
-		sortBy: "createdAt",
-		sortOrder: "desc",
-		...(selectedEventId !== "ALL" ? { eventId: selectedEventId } : {}),
-	});
+	// Build name map from embedded attendee data on check-ins (no separate query needed)
 	const attendeeNameById = useMemo(() => {
 		const map = new Map<string, string>();
-		for (const a of allAttendeesQuery.data?.data ?? []) {
-			map.set(a.id, a.name);
+		for (const c of visibleCheckIns) {
+			const a = (c as any).attendee as { id: string; name: string } | undefined;
+			if (a) map.set(a.id, a.name);
 		}
 		return map;
-	}, [allAttendeesQuery.data?.data]);
+	}, [visibleCheckIns]);
 
 	const stats = useMemo(() => {
 		const total = meta?.total ?? 0;
@@ -173,24 +166,76 @@ export function CheckInsView() {
 		setManualAttendeeId("");
 	}
 
-	async function handleQrCheckIn() {
-		if (!qrEventId || !qrCode.trim()) return;
-		// Validate the pass code first, then create check-in
-		const result = await validatePass.mutateAsync({
-			code: qrCode.trim(),
-			eventId: qrEventId,
-		});
-		if (!result.valid || !result.pass) {
-			return;
+	async function handleQrScan(code: string): Promise<{
+		attendeeName?: string;
+		alreadyIn?: boolean;
+		errorMsg?: string;
+	}> {
+		if (!qrScannerEventId) return { errorMsg: "No event selected" };
+
+		try {
+			const result = await validatePass.mutateAsync({
+				code: code.trim(),
+				eventId: qrScannerEventId,
+			});
+
+			if (!result.valid || !result.pass) {
+				return { errorMsg: result.message || "Invalid or already used pass." };
+			}
+
+			const attendeeName: string =
+				result.attendee?.name ||
+				attendeeNameById.get(result.pass.attendeeId) ||
+				"";
+
+			// Create check-in
+			await createCheckIn.mutateAsync({
+				attendeeId: result.pass.attendeeId,
+				eventId: qrScannerEventId,
+				method: "QR_SCAN",
+			});
+
+			return { attendeeName };
+		} catch (error) {
+			const msg =
+				error instanceof Error
+					? error.message
+					: "Check-in failed. Please try again.";
+			// Conflict = already checked in
+			if (
+				msg.toLowerCase().includes("already checked in") ||
+				msg.includes("409") ||
+				msg.includes("Conflict")
+			) {
+				return { alreadyIn: true };
+			}
+			// Pass not active = scanned a used/already checked-in pass
+			if (msg.toLowerCase().includes("not active")) {
+				return { alreadyIn: true };
+			}
+			return { errorMsg: msg };
 		}
-		await createCheckIn.mutateAsync({
-			attendeeId: result.pass.attendeeId,
-			eventId: qrEventId,
-			method: "QR_SCAN",
-		});
-		setShowScanner(false);
-		setQrCode("");
-		setQrEventId("");
+	}
+
+	function exportCsv() {
+		const rows = filteredCheckIns.map((c) => ({
+			Name: attendeeNameById.get(c.attendeeId) ?? c.attendeeId,
+			Event: eventNameById.get(c.eventId) ?? c.eventId,
+			Method: c.method,
+			Time: new Date(c.timestamp).toLocaleString("en-IN"),
+		}));
+		const header = ["Name", "Event", "Method", "Time"];
+		const csv = [
+			header.join(","),
+			...rows.map((r) => header.map((h) => `"${(r as any)[h]}"`).join(",")),
+		].join("\n");
+		const blob = new Blob([csv], { type: "text/csv" });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = `check-ins-${new Date().toISOString().slice(0, 10)}.csv`;
+		a.click();
+		URL.revokeObjectURL(url);
 	}
 
 	// Filter visible check-ins by search (client-side on current page)
@@ -217,13 +262,20 @@ export function CheckInsView() {
 						Manage and track event check-ins.
 					</p>
 				</div>
-				<div className="flex gap-2">
+				<div className="flex flex-wrap gap-2">
+					<button
+						type="button"
+						onClick={exportCsv}
+						className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 font-semibold text-slate-700 text-sm transition hover:bg-slate-50"
+					>
+						<Download className="h-4 w-4" />
+						Export CSV
+					</button>
 					<button
 						type="button"
 						onClick={() => {
-							setShowScanner(true);
-							setQrEventId("");
-							setQrCode("");
+							setShowQrScanner(true);
+							setQrScannerEventId("");
 						}}
 						className="flex items-center gap-2 rounded-lg border border-[#030370] px-4 py-2 font-semibold text-[#030370] text-sm transition hover:bg-[#f0f4ff]"
 					>
@@ -334,7 +386,8 @@ export function CheckInsView() {
 								filteredCheckIns.map((checkIn) => (
 									<tr key={checkIn.id} className="hover:bg-slate-50">
 										<td className="px-4 py-3 font-medium text-slate-900">
-											{attendeeNameById.get(checkIn.attendeeId) ??
+											{(checkIn as any).attendee?.name ||
+												attendeeNameById.get(checkIn.attendeeId) ||
 												checkIn.attendeeId}
 										</td>
 										<td className="px-4 py-3 text-slate-700">
@@ -415,7 +468,7 @@ export function CheckInsView() {
 											key={p}
 											type="button"
 											onClick={() => setPage(p as number)}
-											className={`min-w-[32px] rounded-lg px-2 py-1 font-medium text-sm transition ${
+											className={`min-w-8 rounded-lg px-2 py-1 font-medium text-sm transition ${
 												p === page
 													? "bg-[#030370] text-white"
 													: "text-slate-700 hover:bg-slate-100"
@@ -517,77 +570,18 @@ export function CheckInsView() {
 				</Modal>
 			)}
 
-			{/* QR Scan Modal */}
-			{showScanner && (
-				<Modal title="QR Code Check-in" onClose={() => setShowScanner(false)}>
-					<div className="space-y-4">
-						<div>
-							<label
-								htmlFor="qr-event"
-								className="mb-1 block font-medium text-slate-700 text-sm"
-							>
-								Event
-							</label>
-							<select
-								id="qr-event"
-								value={qrEventId}
-								onChange={(e) => setQrEventId(e.target.value)}
-								className="w-full rounded-lg border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0a4bb8]"
-							>
-								<option value="">Select event...</option>
-								{hostEvents.map((e) => (
-									<option key={e.id} value={e.id}>
-										{e.name}
-									</option>
-								))}
-							</select>
-						</div>
-						<div>
-							<label
-								htmlFor="qr-code"
-								className="mb-1 block font-medium text-slate-700 text-sm"
-							>
-								Pass Code
-							</label>
-							<input
-								id="qr-code"
-								type="text"
-								value={qrCode}
-								onChange={(e) => setQrCode(e.target.value)}
-								placeholder="Paste or type pass code..."
-								className="w-full rounded-lg border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0a4bb8]"
-							/>
-							<p className="mt-1 text-slate-500 text-xs">
-								Enter the pass code from the attendee's QR ticket.
-							</p>
-						</div>
-						<div className="flex justify-end gap-2 pt-2">
-							<button
-								type="button"
-								onClick={() => setShowScanner(false)}
-								className="rounded-lg border border-slate-200 px-4 py-2 font-medium text-slate-700 text-sm hover:bg-slate-50"
-							>
-								Cancel
-							</button>
-							<button
-								type="button"
-								onClick={handleQrCheckIn}
-								disabled={
-									!qrEventId ||
-									!qrCode.trim() ||
-									validatePass.isPending ||
-									createCheckIn.isPending
-								}
-								className="rounded-lg bg-[#030370] px-4 py-2 font-semibold text-sm text-white hover:bg-[#0a4bb8] disabled:cursor-not-allowed disabled:opacity-50"
-							>
-								{validatePass.isPending || createCheckIn.isPending
-									? "Processing..."
-									: "Check In"}
-							</button>
-						</div>
-					</div>
-				</Modal>
-			)}
+			{/* QR Scanner Modal */}
+			<QRScannerModal
+				isOpen={showQrScanner}
+				onClose={() => {
+					setShowQrScanner(false);
+					setQrScannerEventId("");
+				}}
+				onScan={handleQrScan}
+				eventOptions={hostEvents.map((e) => ({ id: e.id, name: e.name }))}
+				selectedEventId={qrScannerEventId}
+				onEventChange={setQrScannerEventId}
+			/>
 		</div>
 	);
 }

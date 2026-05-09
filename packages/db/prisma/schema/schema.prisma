@@ -333,7 +333,7 @@ model Pass {
   ticket     Ticket     @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
   status     PassStatus @default(ACTIVE)
-  code       String     @unique // QR code for scanning
+  code       String     @unique // Opaque QR token for scanning; do not expose the DB id
 
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt

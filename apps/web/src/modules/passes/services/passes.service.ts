@@ -24,6 +24,7 @@ type PassListResponse = PaginatedResponse<PassRecord>;
 type PassValidationResult = {
 	valid: boolean;
 	pass?: PassRecord;
+	attendee?: { id: string; name: string; email: string } | null;
 	message: string;
 };
 

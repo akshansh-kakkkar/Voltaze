@@ -1,13 +1,19 @@
 import { createAuthClient } from "better-auth/react";
-import { getApiBaseUrl } from "@/core/lib/backend-url";
+import { getApiBaseUrlCandidates } from "@/core/lib/backend-url";
 
 function getAuthBaseUrl(): string {
-	const apiBase = getApiBaseUrl().replace(/\/+$/, "");
+	if (typeof window !== "undefined") {
+		// Keep auth calls same-origin in the browser; Next rewrites /api/* to the server.
+		return `${window.location.origin}/api/auth`;
+	}
 
-	// Ensure we always target the canonical `/auth` mount on the server.
-	// If the configured API base accidentally includes a trailing `/api`, strip it.
-	const baseWithoutApi = apiBase.replace(/\/api$/i, "");
-	return `${baseWithoutApi}/auth`;
+	const [firstCandidate] = getApiBaseUrlCandidates();
+	if (firstCandidate) {
+		const normalized = firstCandidate.replace(/\/+$/, "");
+		return `${normalized.replace(/\/api$/i, "")}/auth`;
+	}
+
+	return "http://localhost:3001/api/auth";
 }
 
 export const authClient = createAuthClient({

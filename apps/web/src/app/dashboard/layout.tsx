@@ -7,7 +7,6 @@ import {
 	PlusCircle,
 	Ticket,
 	User,
-	Users,
 	Zap,
 } from "lucide-react";
 import { useState } from "react";
@@ -77,16 +76,6 @@ export default function DashboardGroupLayout({
 					label: "Manage Events",
 					href: "/dashboard/events",
 					icon: <Zap size={18} />,
-				},
-			],
-		},
-		{
-			title: "Operations",
-			items: [
-				{
-					label: "Orders",
-					href: "/dashboard/orders",
-					icon: <CreditCard size={18} />,
 				},
 			],
 		},

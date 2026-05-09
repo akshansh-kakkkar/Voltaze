@@ -60,22 +60,13 @@ export function getApiBaseUrlCandidates(): string[] {
 }
 
 export function getApiBaseUrl(): string {
-	const candidates = getApiBaseUrlCandidates();
-
 	if (typeof window !== "undefined") {
-		const isLocalhost =
-			window.location.hostname === "localhost" ||
-			window.location.hostname === "127.0.0.1";
-		if (isLocalhost) {
-			const localCandidate = candidates.find(
-				(c) => c.includes("localhost") || c.includes("127.0.0.1"),
-			);
-			if (localCandidate) {
-				return localCandidate;
-			}
-		}
+		// Use same-origin proxy from the browser to avoid local port/config drift.
+		return "/api";
 	}
 
+	const candidates = getApiBaseUrlCandidates();
+
 	const [firstCandidate] = candidates;
-	return firstCandidate ?? "";
+	return firstCandidate ?? "http://localhost:3000";
 }

@@ -138,7 +138,7 @@ function TicketsPageContent() {
 					onDownloadPDF={handleDownloadPDF}
 				/>
 			) : (
-				<PassesTab passes={passes} />
+				<PassesTab passes={passes} events={events} />
 			)}
 		</div>
 	);
@@ -312,9 +312,16 @@ function TicketsTab({
 
 interface PassesTabProps {
 	passes: PassRecord[];
+	events: EventRecord[];
 }
 
-function PassesTab({ passes }: PassesTabProps) {
+function PassesTab({ passes, events }: PassesTabProps) {
+	const eventNameById = useMemo(() => {
+		const map = new Map<string, string>();
+		for (const e of events) map.set(e.id, e.name);
+		return map;
+	}, [events]);
+
 	return (
 		<div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
 			{passes.length === 0 ? (
@@ -323,51 +330,60 @@ function PassesTab({ passes }: PassesTabProps) {
 					<p className="text-slate-500">No passes found</p>
 				</div>
 			) : (
-				passes.map((pass) => (
-					<div
-						key={pass.id}
-						className="rounded-2xl border border-[#dbe7ff] bg-white p-5 shadow-sm"
-					>
-						<div className="mb-4 flex items-center justify-between">
-							<span
-								className={cn(
-									"rounded-full px-3 py-1 font-semibold text-xs",
-									pass.status === "ACTIVE"
-										? "bg-emerald-100 text-emerald-700"
-										: pass.status === "USED"
-											? "bg-slate-100 text-slate-700"
-											: "bg-rose-100 text-rose-700",
-								)}
+				passes.map((pass) => {
+					const eventName =
+						eventNameById.get(pass.eventId) ?? `${pass.eventId.slice(0, 8)}...`;
+					return (
+						<div
+							key={pass.id}
+							className="rounded-2xl border border-[#dbe7ff] bg-white p-5 shadow-sm"
+						>
+							<div className="mb-4 flex items-center justify-between">
+								<span
+									className={cn(
+										"rounded-full px-3 py-1 font-semibold text-xs",
+										pass.status === "ACTIVE"
+											? "bg-emerald-100 text-emerald-700"
+											: pass.status === "USED"
+												? "bg-slate-100 text-slate-700"
+												: "bg-rose-100 text-rose-700",
+									)}
+								>
+									{pass.status}
+								</span>
+								<span className="text-slate-500 text-xs">
+									{formatDate(pass.createdAt)}
+								</span>
+							</div>
+
+							{/* QR encodes pass.code — the opaque token used for scanning */}
+							<div className="mb-3 flex justify-center">
+								<div className="rounded-lg border border-[#dbe7ff] bg-white p-4">
+									<QRCodeSVG value={pass.code} size={120} level="M" />
+								</div>
+							</div>
+
+							{/* Event name shown directly under QR */}
+							<p
+								className="mb-3 truncate text-center font-semibold text-[#071a78]"
+								title={eventName}
 							>
-								{pass.status}
-							</span>
-							<span className="text-slate-500 text-xs">
-								{formatDate(pass.createdAt)}
-							</span>
-						</div>
+								{eventName}
+							</p>
 
-						<div className="mb-4 flex justify-center">
-							<div className="rounded-lg border border-[#dbe7ff] bg-white p-4">
-								<QRCodeSVG value={pass.code} size={120} level="M" />
+							<div className="space-y-1 border-[#dbe7ff] border-t pt-3">
+								<div className="flex items-center justify-between gap-2">
+									<span className="shrink-0 text-slate-500 text-xs">
+										Pass Code
+									</span>
+									<span className="truncate font-mono font-semibold text-slate-800 text-xs">
+										{pass.code}
+									</span>
+								</div>
 							</div>
 						</div>
-
-						<div className="space-y-2">
-							<div className="flex items-center justify-between">
-								<span className="text-slate-600 text-sm">Pass Code</span>
-								<span className="font-mono font-semibold text-sm">
-									{pass.code}
-								</span>
-							</div>
-							<div className="flex items-center justify-between">
-								<span className="text-slate-600 text-sm">Event ID</span>
-								<span className="font-mono text-slate-500 text-xs">
-									{pass.eventId.slice(0, 8)}...
-								</span>
-							</div>
-						</div>
-					</div>
-				))
+					);
+				})
 			)}
 		</div>
 	);

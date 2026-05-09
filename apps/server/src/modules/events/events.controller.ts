@@ -70,7 +70,19 @@ export class EventsController {
 
 	async create(req: Request, res: Response) {
 		const body = createEventSchema.parse(req.body);
-		const event = await eventsService.create(body, this.getActor(req).userId);
+		const actor = this.getActor(req);
+		const event = await eventsService.create(body, actor.userId);
+
+		// Automatically grant host access when the user creates their first event.
+		// This is a no-op if they are already a host.
+		if (!actor.isHost) {
+			const { prisma } = await import("@unievent/db");
+			await prisma.user.update({
+				where: { id: actor.userId },
+				data: { isHost: true },
+			});
+		}
+
 		res.status(201).json(event);
 	}
 

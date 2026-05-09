@@ -1,7 +1,8 @@
 "use client";
 
 import { QRCodeSVG } from "qrcode.react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useEvents } from "@/modules/events";
 import { Button } from "@/shared/ui/button";
 import { usePasses } from "../hooks/use-passes";
 
@@ -26,6 +27,17 @@ export function PassesView() {
 		sortBy: "createdAt",
 		sortOrder: "desc",
 	});
+
+	const eventsQuery = useEvents({
+		page: 1,
+		limit: 100,
+		sortBy: "createdAt",
+		sortOrder: "desc",
+	});
+	const eventNameById = useMemo(
+		() => new Map((eventsQuery.data?.data ?? []).map((e) => [e.id, e.name])),
+		[eventsQuery.data?.data],
+	);
 
 	if (passesQuery.isLoading) {
 		return (
@@ -66,56 +78,60 @@ export function PassesView() {
 
 			<div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
 				{passesQuery.data?.data && passesQuery.data.data.length > 0 ? (
-					passesQuery.data.data.map((pass) => (
-						<div
-							key={pass.id}
-							className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
-						>
-							<div className="mb-4 flex items-center justify-between">
-								<span
-									className={`rounded-full px-3 py-1 font-semibold text-xs ${
-										pass.status === "ACTIVE"
-											? "bg-green-100 text-green-700"
-											: pass.status === "USED"
-												? "bg-slate-100 text-slate-700"
-												: "bg-red-100 text-red-700"
-									}`}
+					passesQuery.data.data.map((pass) => {
+						const eventName =
+							eventNameById.get(pass.eventId) ??
+							`${pass.eventId.slice(0, 8)}...`;
+						return (
+							<div
+								key={pass.id}
+								className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+							>
+								<div className="mb-4 flex items-center justify-between">
+									<span
+										className={`rounded-full px-3 py-1 font-semibold text-xs ${
+											pass.status === "ACTIVE"
+												? "bg-green-100 text-green-700"
+												: pass.status === "USED"
+													? "bg-slate-100 text-slate-700"
+													: "bg-red-100 text-red-700"
+										}`}
+									>
+										{pass.status}
+									</span>
+									<span className="text-slate-500 text-xs">
+										{formatDate(pass.createdAt)}
+									</span>
+								</div>
+
+								{/* QR code — encodes the pass.code, NOT the pass id */}
+								<div className="mb-3 flex justify-center">
+									<div className="rounded-lg border border-slate-200 bg-white p-4">
+										<QRCodeSVG value={pass.code} size={120} level="M" />
+									</div>
+								</div>
+
+								{/* Event name clearly shown under QR */}
+								<p
+									className="mb-4 truncate text-center font-semibold text-slate-800 text-sm"
+									title={eventName}
 								>
-									{pass.status}
-								</span>
-								<span className="text-slate-500 text-xs">
-									{formatDate(pass.createdAt)}
-								</span>
-							</div>
+									{eventName}
+								</p>
 
-							<div className="mb-4 flex justify-center">
-								<div className="rounded-lg border border-slate-200 bg-white p-4">
-									<QRCodeSVG value={pass.code} size={120} level="M" />
+								<div className="space-y-2 border-slate-100 border-t pt-3">
+									<div className="flex items-center justify-between gap-2">
+										<span className="shrink-0 text-slate-500 text-xs">
+											Pass Code
+										</span>
+										<span className="truncate font-mono font-semibold text-slate-800 text-xs">
+											{pass.code}
+										</span>
+									</div>
 								</div>
 							</div>
-
-							<div className="space-y-2">
-								<div className="flex items-center justify-between">
-									<span className="text-slate-600 text-sm">Pass Code</span>
-									<span className="font-mono font-semibold text-sm">
-										{pass.code}
-									</span>
-								</div>
-								<div className="flex items-center justify-between">
-									<span className="text-slate-600 text-sm">Event ID</span>
-									<span className="font-mono text-slate-500 text-xs">
-										{pass.eventId.slice(0, 8)}...
-									</span>
-								</div>
-								<div className="flex items-center justify-between">
-									<span className="text-slate-600 text-sm">Attendee ID</span>
-									<span className="font-mono text-slate-500 text-xs">
-										{pass.attendeeId.slice(0, 10)}...
-									</span>
-								</div>
-							</div>
-						</div>
-					))
+						);
+					})
 				) : (
 					<div className="col-span-full p-12 text-center text-slate-500">
 						No passes found.

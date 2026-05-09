@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import { Prisma, prisma, type UserRole } from "@unievent/db";
 import {
 	type CreatePassInput,
@@ -9,6 +9,7 @@ import {
 } from "@unievent/schema";
 
 import {
+	AppError,
 	BadRequestError,
 	ConflictError,
 	ForbiddenError,
@@ -22,6 +23,34 @@ type PassActor = {
 };
 
 type PassLifecycleStatus = "ACTIVE" | "USED" | "CANCELLED";
+
+function normalizeScanCode(value: string): string {
+	const trimmed = value.trim();
+	if (!trimmed) {
+		return trimmed;
+	}
+
+	try {
+		const parsed = new URL(trimmed);
+		const queryCode =
+			parsed.searchParams.get("code") ??
+			parsed.searchParams.get("passCode") ??
+			parsed.searchParams.get("qr");
+		if (queryCode) {
+			return queryCode.trim();
+		}
+
+		const segments = parsed.pathname.split("/").filter(Boolean);
+		const lastSegment = segments[segments.length - 1];
+		if (lastSegment) {
+			return decodeURIComponent(lastSegment).trim();
+		}
+	} catch {
+		// Not a URL; fall back to the trimmed raw value.
+	}
+
+	return trimmed;
+}
 
 export class PassesService {
 	private canManageAll(actor: PassActor) {
@@ -183,10 +212,12 @@ export class PassesService {
 		);
 
 		try {
+			const passCode = `pv_${randomBytes(9).toString("base64url")}`;
+
 			return await prisma.pass.create({
 				data: {
 					...input,
-					code: `pass_${randomUUID()}`,
+					code: passCode,
 				},
 			});
 		} catch (error) {
@@ -341,14 +372,46 @@ export class PassesService {
 	}
 
 	async validate(input: ValidatePassInput, actor: PassActor) {
+		const normalizedCode = normalizeScanCode(input.code);
+		// If the scanned value matches an internal pass id, reject it explicitly.
+		// This prevents accidental acceptance when users scan DB ids instead of the
+		// intended opaque pass code.
+		try {
+			const byId = await prisma.pass.findUnique({
+				where: { id: normalizedCode },
+			});
+			if (byId) {
+				throw new BadRequestError(
+					"Scanned value looks like an internal id. Please scan the pass QR or use the pass code printed on the ticket.",
+				);
+			}
+		} catch (err) {
+			// Re-throw application errors (BadRequestError, etc.) so they propagate.
+			// Only swallow unexpected DB/infrastructure errors from the id-check lookup.
+			if (err instanceof AppError) throw err;
+		}
 		const pass = await prisma.pass.findFirst({
 			where: {
-				code: input.code,
+				code: normalizedCode,
 				eventId: input.eventId,
-				...this.buildAccessWhere(actor),
+			},
+			include: {
+				attendee: { select: { id: true, name: true, email: true } },
 			},
 		});
 		if (!pass) throw new NotFoundError("Pass not found");
+		// For non-admins, verify they own the event before allowing validation.
+		if (actor.role !== "ADMIN") {
+			const event = await prisma.event.findUnique({
+				where: { id: pass.eventId },
+				select: { userId: true },
+			});
+			if (!event || event.userId !== actor.userId) {
+				throw new ForbiddenError(
+					"You do not have access to validate this pass",
+				);
+			}
+		}
 		if (pass.status !== "ACTIVE")
 			throw new BadRequestError("Pass is not active");
 		return pass;

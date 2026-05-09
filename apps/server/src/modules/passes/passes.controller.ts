@@ -53,7 +53,12 @@ export class PassesController {
 	async validate(req: Request, res: Response) {
 		const body = validatePassSchema.parse(req.body);
 		const pass = await passesService.validate(body, this.getActor(req));
-		res.status(200).json(pass);
+		res.status(200).json({
+			valid: true,
+			pass,
+			attendee: (pass as any).attendee ?? null,
+			message: "Pass is valid",
+		});
 	}
 
 	async delete(req: Request, res: Response) {

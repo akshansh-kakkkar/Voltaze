@@ -29,6 +29,16 @@ type TicketTierDraft = {
 	quantity: string;
 };
 
+function isValidAbsoluteUrl(value: string): boolean {
+	if (!value) return false;
+	try {
+		const url = new URL(value);
+		return url.protocol === "http:" || url.protocol === "https:";
+	} catch {
+		return false;
+	}
+}
+
 const STEPS = [
 	{ id: "basics", title: "Basic Info", icon: <Info size={18} /> },
 	{ id: "logistics", title: "When & Where", icon: <MapPin size={18} /> },
@@ -593,7 +603,7 @@ export function CreateEventView() {
 
 						<div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl shadow-slate-200/50">
 							<div className="relative aspect-video overflow-hidden bg-slate-100">
-								{form.coverUrl ? (
+								{isValidAbsoluteUrl(form.coverUrl) ? (
 									<Image
 										src={form.coverUrl}
 										alt="Cover"

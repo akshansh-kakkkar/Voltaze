@@ -28,20 +28,14 @@ export class CheckInsService {
 			return {};
 		}
 
-		if (actor.isHost) {
-			return {
-				attendee: {
-					event: {
-						userId: actor.userId,
-					},
-				},
-			};
-		}
-
+		// Show check-ins for events this user owns OR events they attended
 		return {
-			attendee: {
-				userId: actor.userId,
-			},
+			OR: [
+				// Events the actor hosts/owns
+				{ attendee: { event: { userId: actor.userId } } },
+				// Attendee records linked to this user (for attendees viewing own check-ins)
+				{ attendee: { userId: actor.userId } },
+			],
 		};
 	}
 
@@ -53,23 +47,31 @@ export class CheckInsService {
 			return;
 		}
 
-		if (!actor.isHost) {
-			throw new ForbiddenError("Only hosts can create check-ins");
+		// Allow if the actor owns the event (regardless of isHost flag)
+		if (attendee.event.userId && attendee.event.userId === actor.userId) {
+			return;
 		}
 
-		if (!attendee.event.userId || attendee.event.userId !== actor.userId) {
-			throw new ForbiddenError("You can only create check-ins for your events");
-		}
+		throw new ForbiddenError(
+			"You do not have permission to check in attendees for this event.",
+		);
 	}
 
-	private ensureCanDeleteCheckIn(actor: CheckInActor) {
+	private ensureCanDeleteCheckIn(
+		checkInEventUserId: string | null,
+		actor: CheckInActor,
+	) {
 		if (this.canManageAll(actor)) {
 			return;
 		}
 
-		if (!actor.isHost) {
-			throw new ForbiddenError("Only hosts can delete check-ins");
+		if (checkInEventUserId && checkInEventUserId === actor.userId) {
+			return;
 		}
+
+		throw new ForbiddenError(
+			"You do not have permission to delete check-ins for this event.",
+		);
 	}
 
 	async list(input: CheckInFilterInput, actor: CheckInActor) {
@@ -95,6 +97,11 @@ export class CheckInsService {
 				orderBy: { [sortBy]: sortOrder },
 				skip,
 				take: limit,
+				include: {
+					attendee: {
+						select: { id: true, name: true, email: true },
+					},
+				},
 			}),
 			prisma.checkIn.count({ where }),
 		]);
@@ -150,7 +157,19 @@ export class CheckInsService {
 		}
 
 		try {
-			return await prisma.checkIn.create({ data: input });
+			const checkIn = await prisma.checkIn.create({ data: input });
+
+			// Mark the pass as USED so re-scanning shows "already checked in"
+			await prisma.pass.updateMany({
+				where: {
+					attendeeId: input.attendeeId,
+					eventId: input.eventId,
+					status: "ACTIVE",
+				},
+				data: { status: "USED" },
+			});
+
+			return checkIn;
 		} catch (error) {
 			if (error instanceof Prisma.PrismaClientKnownRequestError) {
 				if (error.code === "P2002") {
@@ -167,8 +186,6 @@ export class CheckInsService {
 	}
 
 	async delete(id: string, actor: CheckInActor) {
-		this.ensureCanDeleteCheckIn(actor);
-
 		const checkIn = await prisma.checkIn.findFirst({
 			where: {
 				id,
@@ -176,12 +193,19 @@ export class CheckInsService {
 			},
 			select: {
 				id: true,
+				attendee: {
+					select: {
+						event: { select: { userId: true } },
+					},
+				},
 			},
 		});
 
 		if (!checkIn) {
 			throw new NotFoundError("Check-in not found");
 		}
+
+		this.ensureCanDeleteCheckIn(checkIn.attendee.event.userId, actor);
 
 		await prisma.checkIn.delete({ where: { id: checkIn.id } });
 	}

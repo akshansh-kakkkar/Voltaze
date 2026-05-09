@@ -33,7 +33,7 @@ export const updatePassSchema = createPassSchema.partial().extend({
 });
 
 export const validatePassSchema = z.object({
-	code: z.string(),
+	code: z.string().trim().min(1),
 	eventId: z.string().cuid(),
 });
 
