@@ -5,8 +5,7 @@ import {
 	type OrderFilterInput,
 	type UpdateOrderInput,
 } from "@unievent/schema";
-import Handlebars from "handlebars";
-import puppeteer from "puppeteer";
+import PDFDocument from "pdfkit";
 import QRCode from "qrcode";
 
 import {
@@ -431,7 +430,7 @@ export class OrdersService {
 
 		const tickets = await Promise.all(
 			order.tickets.map(async (ticket) => {
-				const qrCode = ticket.pass?.code
+				const qrCodeData = ticket.pass?.code
 					? await QRCode.toDataURL(ticket.pass.code, {
 							margin: 0,
 							width: 400,
@@ -440,91 +439,13 @@ export class OrdersService {
 
 				return {
 					...ticket,
-					qrCode,
+					qrCodeData,
 					tierName: ticket.tier?.name || "Standard",
 				};
 			}),
 		);
 
-		const templateSource = `
-      <html>
-        <head>
-          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800;900&display=swap" rel="stylesheet">
-          <style>
-            body { margin: 0; padding: 0; background: white; -webkit-print-color-adjust: exact; }
-            .ticket {
-              width: 657px;
-              height: 557px;
-              padding: 40px;
-              font-family: 'Inter', sans-serif;
-              background: white;
-              color: #000;
-              position: relative;
-              box-sizing: border-box;
-              overflow: hidden;
-              border: 1px solid #f1f5f9;
-              page-break-after: always;
-            }
-            .top-section { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 60px; }
-            .details-grid { display: flex; flex-direction: column; gap: 16px; }
-            .footer { position: absolute; bottom: 40px; left: 0; right: 0; text-align: center; }
-            .powered-by { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 12px; padding: 0 100px; }
-            .line { height: 1px; background: #e2e8f0; flex-grow: 1; }
-          </style>
-        </head>
-        <body>
-          {{#each tickets}}
-            <div class="ticket">
-              <div class="top-section">
-                <div style="line-height: 1.6;">
-                  <p style="margin: 0; font-size: 16px; font-weight: 500; color: #64748b;">Booking Date: <span style="color: #000;">{{../bookingDate}}</span></p>
-                  <p style="margin: 0; font-size: 16px; font-weight: 500; color: #64748b;">Booking ID: <span style="color: #000; font-family: monospace;">{{../shortOrderId}}</span></p>
-                </div>
-                {{#if qrCode}}
-                  <div style="width: 140px; height: 140px; background: white;">
-                    <img src="{{qrCode}}" style="width: 100%; height: 100%; object-fit: contain;" />
-                  </div>
-                {{/if}}
-              </div>
-
-              <div style="margin-bottom: 50px;">
-                <h2 style="margin: 0 0 10px 0; font-size: 20px; font-weight: 800; color: #000; text-transform: uppercase; letter-spacing: 0.025em;">Attendee Details</h2>
-                <p style="margin: 0; font-size: 18px; color: #000; font-weight: 500;">{{../attendeeName}}</p>
-              </div>
-
-              <div class="details-grid">
-                <div style="display: flex; align-items: flex-start;">
-                  <p style="margin: 0; font-size: 14px; font-weight: 800; width: 160px; color: #64748b; text-transform: uppercase;">Event Name:</p>
-                  <p style="margin: 0; font-size: 16px; color: #000; font-weight: 600;">{{../eventName}}</p>
-                </div>
-                <div style="display: flex; align-items: flex-start;">
-                  <p style="margin: 0; font-size: 14px; font-weight: 800; width: 160px; color: #64748b; text-transform: uppercase;">Event Date:</p>
-                  <p style="margin: 0; font-size: 16px; color: #000; font-weight: 600;">{{../eventDateStr}} {{../eventTimeStr}}</p>
-                </div>
-                <div style="display: flex; align-items: flex-start;">
-                  <p style="margin: 0; font-size: 14px; font-weight: 800; width: 160px; color: #64748b; text-transform: uppercase;">Ticket Name:</p>
-                  <p style="margin: 0; font-size: 16px; color: #000; font-weight: 600;">{{tierName}}</p>
-                </div>
-              </div>
-
-              <div class="footer">
-                <div class="powered-by">
-                  <div class="line"></div>
-                  <p style="margin: 0; font-size: 12px; font-weight: 800; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.1em;">Powered By</p>
-                  <div class="line"></div>
-                </div>
-                <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-                  <span style="font-weight: 900; font-size: 18px; color: #000031; letter-spacing: -0.05em;">UniEvent</span>
-                </div>
-              </div>
-            </div>
-          {{/each}}
-        </body>
-      </html>
-    `;
-
-		const template = Handlebars.compile(templateSource);
-		const html = template({
+		return this.buildPdfBuffer({
 			tickets,
 			bookingDate,
 			shortOrderId: order.id.slice(0, 8),
@@ -533,21 +454,113 @@ export class OrdersService {
 			eventDateStr,
 			eventTimeStr,
 		});
+	}
 
-		const browser = await puppeteer.launch({
-			headless: true,
-			args: ["--no-sandbox", "--disable-setuid-sandbox"],
-		});
-		const page = await browser.newPage();
-		await page.setContent(html, { waitUntil: "networkidle0" });
-		const pdfBuffer = await page.pdf({
-			width: "657px",
-			height: "557px",
-			printBackground: true,
-		});
+	private async buildPdfBuffer(data: {
+		tickets: Array<{
+			qrCodeData: string | null;
+			tierName: string;
+		}>;
+		bookingDate: string;
+		shortOrderId: string;
+		attendeeName: string;
+		eventName: string;
+		eventDateStr: string;
+		eventTimeStr: string;
+	}): Promise<Buffer> {
+		return new Promise((resolve, reject) => {
+			const doc = new PDFDocument({
+				size: [657, 557],
+				margins: { top: 40, left: 40, right: 40, bottom: 40 },
+			});
+			const chunks: Buffer[] = [];
 
-		await browser.close();
-		return pdfBuffer;
+			doc.on("data", (chunk: Buffer) => chunks.push(chunk));
+			doc.on("end", () => resolve(Buffer.concat(chunks)));
+			doc.on("error", reject);
+
+			for (const ticket of data.tickets) {
+				// Top row: Booking info left, QR right
+				doc.font("Helvetica").fontSize(12).fillColor("#64748b");
+				doc.text(`Booking Date: ${data.bookingDate}`, 40, 40, { width: 420 });
+
+				doc.text("Booking ID:", 40, 55);
+				doc
+					.fillColor("#000")
+					.font("Courier-Bold")
+					.text(data.shortOrderId, 105, 55);
+				doc.font("Helvetica");
+
+				// QR code
+				if (ticket.qrCodeData) {
+					const qrBuffer = Buffer.from(
+						ticket.qrCodeData.replace(/^data:\w+\/[\w+]+;base64,/, ""),
+						"base64",
+					);
+					doc.image(qrBuffer, 497, 35, { width: 120, height: 120 });
+				}
+
+				// Attendee section
+				doc.fontSize(10).fillColor("#1e40af").text("ATTENDEE DETAILS", 40, 175);
+				doc.fontSize(14).fillColor("#000").text(data.attendeeName, 40, 190);
+
+				// Details - stacked vertically with labels above values
+				const startY = 230;
+				const rowH = 45;
+
+				doc.fontSize(9).fillColor("#64748b").text("EVENT NAME", 40, startY);
+				doc
+					.fontSize(11)
+					.fillColor("#000")
+					.text(data.eventName, 40, startY + 12, { width: 577 });
+
+				doc
+					.fontSize(9)
+					.fillColor("#64748b")
+					.text("EVENT DATE", 40, startY + rowH);
+				doc
+					.fontSize(11)
+					.fillColor("#000")
+					.text(
+						`${data.eventDateStr} ${data.eventTimeStr}`,
+						40,
+						startY + rowH + 12,
+					);
+
+				doc
+					.fontSize(9)
+					.fillColor("#64748b")
+					.text("TICKET NAME", 40, startY + rowH * 2);
+				doc
+					.fontSize(11)
+					.fillColor("#000")
+					.text(ticket.tierName, 40, startY + rowH * 2 + 12);
+
+				// Footer
+				const footerY = 490;
+				doc.moveTo(40, footerY).lineTo(270, footerY).stroke("#e2e8f0");
+				doc
+					.fontSize(10)
+					.fillColor("#1e3a8a")
+					.text("POWERED BY", 270, footerY - 5, {
+						align: "center",
+						width: 117,
+					});
+				doc.moveTo(387, footerY).lineTo(617, footerY).stroke("#e2e8f0");
+				doc
+					.fontSize(14)
+					.fillColor("#000031")
+					.font("Helvetica-Bold")
+					.text("UniEvent", 0, footerY + 5, { align: "center", width: 657 });
+				doc.font("Helvetica");
+
+				if (data.tickets.indexOf(ticket) < data.tickets.length - 1) {
+					doc.addPage();
+				}
+			}
+
+			doc.end();
+		});
 	}
 }
 

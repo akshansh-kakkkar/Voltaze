@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useAttendees } from "@/modules/attendees/hooks/use-attendees";
 import { useOrders } from "@/modules/orders/hooks/use-orders";
 import { Button } from "@/shared/ui/button";

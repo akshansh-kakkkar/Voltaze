@@ -96,7 +96,7 @@ export function CheckInsView() {
 	const attendeeNameById = useMemo(() => {
 		const map = new Map<string, string>();
 		for (const c of visibleCheckIns) {
-			const a = (c as any).attendee as { id: string; name: string } | undefined;
+			const a = c.attendee;
 			if (a) map.set(a.id, a.name);
 		}
 		return map;
@@ -218,7 +218,9 @@ export function CheckInsView() {
 		const header = ["Name", "Event", "Method", "Time"];
 		const csv = [
 			header.join(","),
-			...rows.map((r) => header.map((h) => `"${(r as any)[h]}"`).join(",")),
+			...rows.map((r) =>
+				header.map((h) => `"${(r as Record<string, string>)[h]}"`).join(","),
+			),
 		].join("\n");
 		const blob = new Blob([csv], { type: "text/csv" });
 		const url = URL.createObjectURL(blob);
@@ -378,7 +380,7 @@ export function CheckInsView() {
 								filteredCheckIns.map((checkIn) => (
 									<tr key={checkIn.id} className="hover:bg-slate-50">
 										<td className="px-4 py-3 font-medium text-slate-900">
-											{(checkIn as any).attendee?.name ||
+											{checkIn.attendee?.name ||
 												attendeeNameById.get(checkIn.attendeeId) ||
 												checkIn.attendeeId}
 										</td>

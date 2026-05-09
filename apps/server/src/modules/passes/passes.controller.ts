@@ -56,7 +56,7 @@ export class PassesController {
 		res.status(200).json({
 			valid: true,
 			pass,
-			attendee: (pass as any).attendee ?? null,
+			attendee: "attendee" in pass && pass.attendee ? pass.attendee : null,
 			message: "Pass is valid",
 		});
 	}

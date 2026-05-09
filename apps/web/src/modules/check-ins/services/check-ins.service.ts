@@ -14,6 +14,7 @@ export type CheckInListQuery = Partial<CheckInFilterInput>;
 
 type CheckInRecord = Omit<CheckIn, "timestamp"> & {
 	timestamp: string;
+	attendee?: { id: string; name: string; email: string };
 };
 
 type CheckInListResponse = PaginatedResponse<CheckInRecord>;
