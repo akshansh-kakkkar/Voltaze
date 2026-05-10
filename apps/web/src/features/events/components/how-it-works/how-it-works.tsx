@@ -76,7 +76,7 @@ export function HowItWorks() {
 													"flex h-24 w-24 shrink-0 items-center justify-center rounded-[28px] font-black text-5xl transition-all duration-300",
 													isActive
 														? "bg-[#2563EB] text-white shadow-[0_16px_40px_rgba(41,98,255,0.4)]"
-														: "bg-[#e5ecf6] text-[#9ca3af] shadow-[0_12px_40px_rgba(20,40,70,0.06)] group-hover:bg-[#dfe7f3] group-hover:shadow-[0_16px_40px_rgba(41,98,255,0.1)]",
+														: "bg-[#e5ecf6] text-[#9ca3af] shadow-[0_12px_40px_rgba(20,40,70,0.06)] hover:text-[#2563EB] group-hover:bg-[#dfe7f3] group-hover:shadow-[0_16px_40px_rgba(41,98,255,0.1)]",
 												)}
 											>
 												{step.id}
