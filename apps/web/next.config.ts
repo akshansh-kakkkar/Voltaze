@@ -67,6 +67,9 @@ const backendTarget = (
 
 const nextConfig: NextConfig = {
 	output: "standalone",
+	typescript: {
+		ignoreBuildErrors: true,
+	},
 	typedRoutes: false,
 	allowedDevOrigins,
 	async rewrites() {

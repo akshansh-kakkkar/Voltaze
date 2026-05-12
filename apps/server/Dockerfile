@@ -19,8 +19,17 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 
-COPY --from=deps /app /app
+# Copy necessary files from deps
+COPY --from=deps /app/package.json /app/bun.lock /app/
+COPY --from=deps /app/apps/server/dist /app/apps/server/dist
+COPY --from=deps /app/apps/server/package.json /app/apps/server/
+COPY --from=deps /app/node_modules /app/node_modules
+COPY --from=deps /app/packages/db /app/packages/db
 
 WORKDIR /app/apps/server
 EXPOSE 3000
-CMD ["bun", "run", "start"]
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD bun -e "fetch('http://localhost:3000/health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"
+
+CMD ["bun", "dist/index.mjs"]

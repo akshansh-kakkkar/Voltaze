@@ -31,9 +31,17 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=3001
+ENV HOSTNAME="0.0.0.0"
 
-COPY --from=deps /app /app
+# Copy standalone build and static assets
+COPY --from=deps /app/apps/web/.next/standalone ./
+COPY --from=deps /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=deps /app/apps/web/public ./apps/web/public
 
-WORKDIR /app/apps/web
 EXPOSE 3001
-CMD ["bun", "run", "start"]
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+  CMD bun -e "fetch('http://localhost:3001').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"
+
+# The standalone server is located at apps/web/server.js
+CMD ["bun", "apps/web/server.js"]
