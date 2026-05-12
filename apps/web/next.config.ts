@@ -67,6 +67,7 @@ const backendTarget = (
 
 const nextConfig: NextConfig = {
 	output: "standalone",
+	turbopack: {},
 	typescript: {
 		ignoreBuildErrors: true,
 	},
