@@ -44,21 +44,21 @@ export function TicketDelivery() {
 	return (
 		<section className="w-full bg-[#EBF3FF] py-24">
 			<div className="mx-auto max-w-7xl px-6">
-				<div className="mb-4 text-center">
-					<span className="font-bold text-[#030370] text-sm uppercase tracking-widest">
-						Your Ticket
-					</span>
+				<div className="mb-8 flex items-center gap-4">
+					<div className="h-0.5 w-8 bg-[#080880]/40" />
+					<span className="font-bold text-[#080880] text-xs uppercase tracking-widest">
+						Your Ticket					</span>
+					<div className="h-0.5 max-w-105 flex-1 bg-[#080880]/40" />
 				</div>
 
-				<h2 className="mb-6 text-center font-extrabold text-4xl text-black tracking-tighter md:text-6xl">
-					Delivered to you{" "}
-					<span className="text-[#030370]">the second you book</span>
+				<h2 className="mb-6 capitalize font-black text-5xl text-[#1e293b] tracking-tight md:text-6xl">
+					delivered to you{" "}
+					<span className="text-[#1010a3]">the second you book</span>
 				</h2>
 
-				<p className="mx-auto mb-16 max-w-2xl text-center font-semibold text-lg text-slate-400 md:text-xl">
-					No printing, no hunting for emails. Your ticket is wherever you are.
+				<p className="mb-16 font-semibold text-[#64748b] text-[17px]">
+					No Printing, No Hunting for emails. Your ticket is wherever you are.
 				</p>
-
 				<div className="grid grid-cols-1 items-center gap-16 lg:grid-cols-2">
 					<div className="order-2 flex flex-col gap-8 lg:order-1">
 						{FEATURES.map((feature) => (

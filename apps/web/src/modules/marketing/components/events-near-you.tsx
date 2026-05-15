@@ -82,19 +82,21 @@ export function EventsNearYou() {
 
 				<div>
 					{isLoading ? (
-						<div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+						<div className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
 							{[...Array(8)].map((_, i) => (
 								<div
 									key={i}
-									className="h-64 animate-pulse rounded-2xl bg-slate-200"
+									className="h-24 min-w-[280px] sm:min-w-[320px] flex-none snap-start animate-pulse rounded-2xl bg-slate-200"
 								/>
 							))}
 						</div>
 					) : events.length > 0 ? (
 						<>
-							<div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+							<div className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
 								{events.map((event) => (
-									<EventCard key={event.id} event={event} />
+									<div key={event.id} className="min-w-[280px] sm:min-w-[320px] flex-none snap-start">
+										<EventCard event={event} />
+									</div>
 								))}
 							</div>
 							<div className="mt-10 flex justify-center">
