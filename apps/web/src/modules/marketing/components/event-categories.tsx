@@ -82,18 +82,18 @@ export function EventCategories() {
 	});
 
 	return (
-		<section className="w-full bg-[#EBF3FF] py-20">
+		<section className="w-full bg-[#EBF3FF] pt-20 pb-10">
 			<div className={"mx-auto max-w-7xl px-6"}>
 				<h2 className="mb-10 text-center font-extrabold text-3xl text-black tracking-tight md:text-left md:text-5xl">
 					What are you into?
 				</h2>
 
-				<div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+				<div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
 					{CATEGORIES.map((category, index) => (
 						<Link
 							key={category.id}
 							href={`/events?category=${category.id}`}
-							className="group flex aspect-square w-full flex-col items-center justify-center rounded-3xl border border-gray-100 bg-white p-4 text-center transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-xl"
+							className="group flex aspect-square w-[160px] flex-none snap-start flex-col items-center justify-center rounded-3xl border border-gray-100 bg-white p-4 text-center transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-xl sm:w-[180px]"
 						>
 							<div
 								className={`mb-4 rounded-2xl p-4 transition-transform duration-300 group-hover:scale-110 ${category.bg}`}
